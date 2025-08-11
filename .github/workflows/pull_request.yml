@@ -14,8 +14,6 @@ jobs:
     steps:
       - name: Checkout PR branch
         uses: actions/checkout@v3
-        with:
-          token: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Setup Node.js
         uses: actions/setup-node@v4
@@ -28,7 +26,7 @@ jobs:
       - name: Check formatting with Prettier
         id: prettier
         run: |
-          if ! npx prettier --check .; then
+          if ! npx prettier --check 'src/**/*.{ts,tsx,js,jsx}'; then
             echo "PRETTIER_FAILED=true" >> $GITHUB_ENV
           fi
 

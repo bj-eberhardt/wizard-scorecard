@@ -3,6 +3,7 @@
 A digital scoreboard for the card game Wizard, built with Vite, React, and TypeScript.
 
 ## Features
+
 - Easy management of players and rounds
 - Clear display of scores
 - Responsive design for desktop and mobile
@@ -24,4 +25,3 @@ docker run -p 8080:80 wizard-scoreboard
 ```
 
 It starts at `http://localhost:8080`.
-
