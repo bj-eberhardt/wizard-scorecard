@@ -1,5 +1,5 @@
-import { create } from "zustand";
-import { persist } from "zustand/middleware";
+import { create } from 'zustand';
+import { persist } from 'zustand/middleware';
 
 interface SettingsState {
   playerNames: string[];
@@ -11,13 +11,13 @@ interface SettingsState {
 const useSettingsStore = create<SettingsState>()(
   persist<SettingsState>(
     (set) => ({
-      playerNames: ["", "", "", "", "", ""],
+      playerNames: ['', '', '', '', '', ''],
       useAnniversaryRules: false,
       setPlayerNames: (names) => set({ playerNames: names }),
       setUseAnniversaryRules: (use) => set({ useAnniversaryRules: use }),
     }),
     {
-      name: "wizard_settings_v1",
+      name: 'wizard_settings_v1',
     }
   )
 );
