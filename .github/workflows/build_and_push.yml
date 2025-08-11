@@ -43,6 +43,7 @@ jobs:
         run: |
           git status
           git diff --name-only
+          git diff .husky/_/pre-commit
 
       - name: Increase version for release
         run: |
