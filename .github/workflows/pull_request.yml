@@ -1,0 +1,87 @@
+name: Pull Request Check
+
+on:
+  pull_request:
+    branches: [master]
+
+jobs:
+  check-and-build:
+    runs-on: ubuntu-latest
+
+    permissions:
+      pull-requests: write
+
+    steps:
+      - name: Checkout PR branch
+        uses: actions/checkout@v3
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Check formatting with Prettier
+        id: prettier
+        run: |
+          if ! npx prettier --check .; then
+            echo "PRETTIER_FAILED=true" >> $GITHUB_ENV
+          fi
+
+      - name: Run ESLint
+        id: eslint
+        run: |
+          if ! npx eslint .; then
+            echo "ESLINT_FAILED=true" >> $GITHUB_ENV
+          fi
+
+      - name: Comment lint or formatter failures
+        if: env.PRETTIER_FAILED == 'true' || env.ESLINT_FAILED == 'true'
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const messages = [];
+            if (process.env.PRETTIER_FAILED === 'true') {
+              messages.push("❌ Prettier check failed. Please format your code with `npm run format` before commiting!");
+            }
+            if (process.env.ESLINT_FAILED === 'true') {
+              messages.push("❌ ESLint check failed. Please fix lint issues with `npm run lint` before commiting!");
+            }
+            github.rest.issues.createComment({
+              issue_number: context.issue.number,
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              body: messages.join('\n')
+            });
+        env:
+          PRETTIER_FAILED: ${{ env.PRETTIER_FAILED }}
+          ESLINT_FAILED: ${{ env.ESLINT_FAILED }}
+
+      - name: Fail build if linting failed
+        if: env.PRETTIER_FAILED == 'true' || env.ESLINT_FAILED == 'true'
+        run: exit 1
+
+      - name: Build Docker image
+        run: docker build -t wizard-scoreboard:test .
+
+      - name: Run Docker container
+        run: docker run -d -p 8080:80 --name test-container wizard-scoreboard:test
+
+      - name: Wait for container
+        run: |
+          for i in {1..30}; do
+            curl -s http://localhost:8080 | grep -q '<title>Wizard Punkteblock</title>' && exit 0
+            echo "Waiting for container..."
+            sleep 2
+          done
+          echo "❌ Failed to verify running app. See logs below:"
+          docker logs test-container
+          exit 1
+
+      - name: Cleanup
+        if: always()
+        run: docker rm -f test-container || true
