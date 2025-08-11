@@ -58,7 +58,7 @@ const ConfigureGame: React.FC<ConfigureGameProps> = ({ onStart }) => {
 
   return (
     <div className="mt-8">
-      <div className="font-semibold">Bitte gib die Namen der Spieler ein:</div>
+      <div className="text-center flex max-w-md mx-auto font-semibold">Bitte gib die Namen der Spieler ein:</div>
       <div className="text-center flex flex-col gap-2 max-w-md mx-auto mt-8">
         {namesInput.map((name, i) => (
           <div key={name + i} className="flex items-center gap-2 mb-2">
