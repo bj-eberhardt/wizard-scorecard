@@ -23,5 +23,3 @@ docker build -t wizard-scoreboard .
 docker run -p 8080:80 wizard-scoreboard
 ```
 
-## License
-MIT
