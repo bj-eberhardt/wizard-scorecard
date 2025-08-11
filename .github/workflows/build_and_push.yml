@@ -39,6 +39,11 @@ jobs:
       - name: 🏗️ Build Vue project
         run: npm run build
 
+      - name: Debug git status
+        run: |
+          git status
+          git diff --name-only
+
       - name: Increase version for release
         run: |
           npm version patch -m "chore(release): bump to %s"
