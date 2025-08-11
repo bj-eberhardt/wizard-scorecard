@@ -88,7 +88,7 @@ export function ResultOverlay({ close }: { close: () => void }) {
               />
               {useAnniversaryRules && (
                 <label className="text-xs ml-2 self-center">
-                  <input
+                  <input tabIndex={-1}
                     type="checkbox"
                     checked={wolkeFlags[i]}
                     onChange={(e) => {
