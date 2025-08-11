@@ -83,7 +83,7 @@ export const useGameStore = create<GameState>((set, get) => {
     useAnniversaryRules: initialUseAnniversaryRules,
     overlay: initialOverlay,
     setPlayerNames: (names: string[]) => {
-      const players = names.map(name => ({
+      const players = names.map((name) => ({
         name,
         predictions: [],
         results: [],
@@ -120,8 +120,22 @@ export const useGameStore = create<GameState>((set, get) => {
       save();
     },
     resetGame: () => {
-      set({ players: [], currentRound: 1, totalRounds: 0, gameStarted: false, useAnniversaryRules: false, overlay: 'none' }, false);
-      try { localStorage.removeItem(STORAGE_KEY); } catch {}
+      set(
+        {
+          players: [],
+          currentRound: 1,
+          totalRounds: 0,
+          gameStarted: false,
+          useAnniversaryRules: false,
+          overlay: 'none',
+        },
+        false
+      );
+      try {
+        localStorage.removeItem(STORAGE_KEY);
+      } catch {
+        // ignore
+      }
     },
     setUseAnniversaryRules: (use) => {
       set({ useAnniversaryRules: use }, false);
