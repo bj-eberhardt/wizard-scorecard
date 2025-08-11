@@ -39,22 +39,19 @@ export default function App() {
     // Optional: Listen for fullscreen changes if needed
   }, []);
 
-  let wakeLock: any = null;
+  let wakeLock: WakeLockSentinel | null = null;
 
   async function activateWakeLock() {
     try {
-      wakeLock = await (navigator as any).wakeLock.request("screen");
-      console.log("Wake Lock aktiv");
-      wakeLock.addEventListener("release", () => {
-        console.log("Wake Lock freigegeben");
-      });
-    } catch (err: any) {
-      console.error(`${err.name}, ${err.message}`);
+      // eslint-disable-next-line
+      wakeLock = await (navigator as any).wakeLock.request('screen');
+    } catch {
+      // ignore
     }
   }
 
-  document.addEventListener("visibilitychange", async () => {
-    if (wakeLock !== null && document.visibilityState === "visible") {
+  document.addEventListener('visibilitychange', async () => {
+    if (wakeLock !== null && document.visibilityState === 'visible') {
       await activateWakeLock();
     }
   });
