@@ -44,7 +44,7 @@ jobs:
           script: |
             const messages = [];
             if (process.env.PRETTIER_FAILED === 'true') {
-              messages.push("❌ Prettier check failed. Please format your code with `npm run format` before commiting!");
+              messages.push("❌ Prettier check failed. Please format your code with `npm run prettier` before commiting!");
             }
             if (process.env.ESLINT_FAILED === 'true') {
               messages.push("❌ ESLint check failed. Please fix lint issues with `npm run lint` before commiting!");
