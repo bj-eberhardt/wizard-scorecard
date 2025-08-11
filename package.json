@@ -7,8 +7,7 @@
     "build": "vite build",
     "preview": "vite preview",
     "lint": "eslint src --ext .ts,.tsx,.js,.jsx",
-    "prettier": "prettier --write src/**/*.{ts,tsx,js,jsx}",
-    "prepare": "husky"
+    "prettier": "prettier --write src/**/*.{ts,tsx,js,jsx}"
   },
   "dependencies": {
     "clsx": "^2.1.0",
