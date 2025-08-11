@@ -35,7 +35,7 @@ export function PredictionOverlay({ close }: { close: () => void }) {
 
   return (
     <div className="fixed inset-0 bg-black bg-opacity-60 flex items-center justify-center z-20">
-      <div className="bg-white p-4 rounded shadow w-96">
+      <form className="bg-white p-4 rounded shadow w-96">
         <h2 className="text-lg font-bold mb-2">Stiche schätzen für Runde {currentRound}</h2>
         {players.map((p, i) => (
           <div key={i} className="flex flex-col xs:flex-row justify-between mb-2">
@@ -58,10 +58,10 @@ export function PredictionOverlay({ close }: { close: () => void }) {
           </div>
         ))}
         {error && <div className="bg-red-100 text-red-700 p-2 mb-2 rounded">{error}</div>}
-        <button onClick={submit} className="mt-2 bg-blue-500 text-white px-4 py-2 rounded w-full">
+        <button type={"submit"} onClick={submit} className="mt-2 bg-blue-500 text-white px-4 py-2 rounded w-full">
           Runde starten
         </button>
-      </div>
+      </form>
     </div>
   );
 }
