@@ -76,8 +76,11 @@ const ConfigureGame: React.FC<ConfigureGameProps> = ({ onStart }) => {
               className="border p-1 w-full"
             />
             {name && (
-              <button autoFocus={false} type="button" tabIndex={-1}
-                      onClick={() => removeName(i)}
+              <button
+                autoFocus={false}
+                type="button"
+                tabIndex={-1}
+                onClick={() => removeName(i)}
                 className="px-2 py-1 text-red-600"
                 aria-label={`Entferne Spieler ${i + 1}`}
               >
@@ -95,7 +98,11 @@ const ConfigureGame: React.FC<ConfigureGameProps> = ({ onStart }) => {
           Wizard Jubiläumsversion (mit Wolke)
         </label>
         {error && <div className="text-red-500">{error}</div>}
-        <button type={"submit"} onClick={handleStart} className="bg-blue-500 text-white px-4 py-2 rounded mt-4">
+        <button
+          type={'submit'}
+          onClick={handleStart}
+          className="bg-blue-500 text-white px-4 py-2 rounded mt-4"
+        >
           Spiel starten
         </button>
       </form>
