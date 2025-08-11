@@ -1,5 +1,5 @@
 import { useGameStore } from './store/gameStore';
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Scoreboard } from './components/Scoreboard';
 import { PredictionOverlay } from './components/PredictionOverlay';
 import { ResultOverlay } from './components/ResultOverlay';
@@ -7,6 +7,7 @@ import { WinnerView } from './components/WinnerView';
 import ConfigureGame from './components/ConfigureGame';
 import Header from './components/Header';
 import Footer from './components/Footer';
+import FullscreenButton from './components/FullscreenButton';
 
 export default function App() {
   const {
@@ -34,9 +35,37 @@ export default function App() {
     resetGame();
   };
 
+  useEffect(() => {
+    // Optional: Listen for fullscreen changes if needed
+  }, []);
+
+  let wakeLock: WakeLockSentinel | null = null;
+
+  async function activateWakeLock() {
+    try {
+      // eslint-disable-next-line
+      wakeLock = await (navigator as any).wakeLock.request('screen');
+    } catch {
+      // ignore
+    }
+  }
+
+  document.addEventListener('visibilitychange', async () => {
+    if (wakeLock !== null && document.visibilityState === 'visible') {
+      await activateWakeLock();
+    }
+  });
+
+  useEffect(() => {
+    if (window.matchMedia('(max-width: 768px)').matches && 'wakeLock' in navigator) {
+      activateWakeLock().then();
+    }
+  }, []);
+
   if (!gameStarted) {
     return (
-      <div className="p-4 space-y-2">
+      <div className="p-4 space-y-2 relative min-h-screen">
+        <FullscreenButton />
         <Header />
         <ConfigureGame onStart={handleStart} />
         <Footer />
@@ -45,7 +74,8 @@ export default function App() {
   }
 
   return (
-    <div className="p-4">
+    <div className="relative min-h-screen p-4">
+      <FullscreenButton />
       <Header />
       <Scoreboard />
       {!isGameOver && overlay === 'none' && (
