@@ -23,3 +23,5 @@ docker build -t wizard-scoreboard .
 docker run -p 8080:80 wizard-scoreboard
 ```
 
+It starts at `http://localhost:8080`.
+
