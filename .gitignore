@@ -30,3 +30,4 @@ Thumbs.db
 *.tsbuildinfo
 
 .husky/
+.husky/_/pre-commit
