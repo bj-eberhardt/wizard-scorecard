@@ -61,11 +61,10 @@ const ConfigureGame: React.FC<ConfigureGameProps> = ({ onStart }) => {
       <div className="text-center flex max-w-md mx-auto font-semibold">
         Bitte gib die Namen der Spieler ein:
       </div>
-      <div className="text-center flex flex-col gap-2 max-w-md mx-auto mt-8">
+      <form className="text-center flex flex-col gap-2 max-w-md mx-auto mt-8">
         {namesInput.map((name, i) => (
-          <div key={name + i} className="flex items-center gap-2 mb-2">
+          <div key={i} className="flex items-center gap-2 mb-2">
             <input
-              key={name + i}
               type="text"
               value={name}
               placeholder={`Spieler ${i + 1}`}
@@ -78,6 +77,9 @@ const ConfigureGame: React.FC<ConfigureGameProps> = ({ onStart }) => {
             />
             {name && (
               <button
+                autoFocus={false}
+                type="button"
+                tabIndex={-1}
                 onClick={() => removeName(i)}
                 className="px-2 py-1 text-red-600"
                 aria-label={`Entferne Spieler ${i + 1}`}
@@ -96,10 +98,14 @@ const ConfigureGame: React.FC<ConfigureGameProps> = ({ onStart }) => {
           Wizard Jubiläumsversion (mit Wolke)
         </label>
         {error && <div className="text-red-500">{error}</div>}
-        <button onClick={handleStart} className="bg-blue-500 text-white px-4 py-2 rounded mt-4">
+        <button
+          type={'button'}
+          onClick={handleStart}
+          className="bg-blue-500 text-white px-4 py-2 rounded mt-4"
+        >
           Spiel starten
         </button>
-      </div>
+      </form>
     </div>
   );
 };

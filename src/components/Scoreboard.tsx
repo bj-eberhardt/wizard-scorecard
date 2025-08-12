@@ -5,7 +5,6 @@ export function Scoreboard() {
   const { players, totalRounds } = useGameStore();
   const rounds = Array.from({ length: totalRounds }, (_, i) => i);
 
-  // Tooltip-Logik
   const [tooltip, setTooltip] = useState<{
     visible: boolean;
     x: number;
@@ -13,12 +12,10 @@ export function Scoreboard() {
     content: string;
   } | null>(null);
 
-  // Hilfsfunktion für Tooltip-Inhalt
   function getTooltipContent(p: Player, roundIndex: number) {
     return `Vorhersage: ${p.predictions[roundIndex] ?? '-'}\nErreichte Stiche: ${p.results?.[roundIndex] ?? '-'}\nPunkte: ${p.points[roundIndex] - (p.points[roundIndex - 1] ?? 0)}`;
   }
 
-  // Hilfsfunktion zur Messung der Tooltip-Breite
   function createTooltipMeasureDiv(content: string) {
     const temp = document.createElement('div');
     temp.style.position = 'absolute';
@@ -33,12 +30,13 @@ export function Scoreboard() {
     return width;
   }
 
-  // Hilfsfunktion zur Berechnung der Tooltip-Position und -Daten
   function getTooltipData(
     e: React.MouseEvent<HTMLElement> | React.TouchEvent<HTMLElement>,
     p: Player,
     roundIndex: number
   ) {
+    if (!p.points[roundIndex])
+      return null;
     const rect = e.currentTarget.getBoundingClientRect();
     const tooltipContent = getTooltipContent(p, roundIndex);
     const tooltipWidth = createTooltipMeasureDiv(tooltipContent);
@@ -57,10 +55,10 @@ export function Scoreboard() {
   return (
     <div className="text-center flex justify-center w-full">
       <div className="overflow-x-auto w-full">
-        <table className="min-w-max w-full border-collapse">
+        <table className="min-w-max w-full border-separate border-spacing-0">
           <thead>
             <tr>
-              <th className="sticky left-0  z-10 px-2 text-center border-2 border-black">Runde</th>
+              <th className="bg-white sticky left-0  z-10 px-2 text-center border-2 border-black">Runde</th>
               {players.map((p, i) => (
                 <th
                   key={i + 'name'}
@@ -75,7 +73,7 @@ export function Scoreboard() {
           <tbody>
             {rounds.map((_, roundIndex) => (
               <tr key={roundIndex}>
-                <td className="sticky left-0  z-10 border-2 border-black">{roundIndex + 1}</td>
+                <td className="bg-white sticky left-0  z-10 border-2 border-black">{roundIndex + 1}</td>
                 {players.map((p, i) => (
                   <React.Fragment key={i + 'player' + roundIndex}>
                     <td
@@ -103,7 +101,6 @@ export function Scoreboard() {
           </tbody>
         </table>
       </div>
-      {/* Tooltip-Element */}
       {tooltip?.visible && (
         <div
           style={{
