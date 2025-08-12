@@ -1,17 +1,70 @@
 import React from 'react';
 
+interface DocumentWithFullscreen extends Document {
+  mozFullscreenEnabled?: boolean;
+  webkitFullscreenEnabled?: boolean;
+  msFullscreenEnabled?: boolean;
+}
+interface DocumentElementWithFullscreen extends HTMLElement {
+  msRequestFullscreen?: () => Promise<void>;
+  mozRequestFullScreen?: () => Promise<void>;
+  webkitRequestFullscreen?: () => Promise<void>;
+}
+
+interface DocumentWithFullscreenControls extends Document {
+  mozFullScreenElement?: Element;
+  msFullscreenElement?: Element;
+  webkitFullscreenElement?: Element;
+  msExitFullscreen?: () => Promise<void>;
+  mozCancelFullScreen?: () => Promise<void>;
+  webkitExitFullscreen?: () => Promise<void>;
+}
+
 const isMobile = () => window.matchMedia('(max-width: 768px)').matches;
+const isFullscreenSupported = () =>
+  document.fullscreenEnabled ||
+  (document as DocumentWithFullscreen).mozFullscreenEnabled ||
+  (document as DocumentWithFullscreen).webkitFullscreenEnabled ||
+  (document as DocumentWithFullscreen).msFullscreenEnabled;
+
+const isDocumentFullscreen = (): boolean => {
+  const doc = document as DocumentWithFullscreenControls;
+  return !!(
+    doc.fullscreenElement ||
+    doc.mozFullScreenElement ||
+    doc.webkitFullscreenElement ||
+    doc.msFullscreenElement
+  );
+};
 
 async function toggleFullscreen() {
-  if (!document.fullscreenElement) {
-    await document.documentElement.requestFullscreen();
+  if (!isDocumentFullscreen()) {
+    const element = document.documentElement as DocumentElementWithFullscreen;
+    if (element.requestFullscreen) {
+      await element.requestFullscreen();
+    } else if (element.msRequestFullscreen) {
+      await element.msRequestFullscreen();
+    } else if (element.webkitRequestFullscreen) {
+      await element.webkitRequestFullscreen();
+    } else if (element.mozRequestFullScreen) {
+      await element.mozRequestFullScreen();
+    }
   } else {
-    await document.exitFullscreen();
+    const doc = document as DocumentWithFullscreenControls;
+    if (doc.exitFullscreen) {
+      await doc.exitFullscreen();
+    } else if (doc.msExitFullscreen) {
+      await doc.msExitFullscreen();
+    } else if (doc.webkitExitFullscreen) {
+      await doc.webkitExitFullscreen();
+    } else if (doc.mozCancelFullScreen) {
+      await doc.mozCancelFullScreen();
+    }
   }
 }
 
 const FullscreenButton: React.FC = () => {
-  if (!isMobile()) return null;
+  if (!isMobile() || !isFullscreenSupported()) return null;
   return (
     <button
       onClick={toggleFullscreen}

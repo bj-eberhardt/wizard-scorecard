@@ -47,10 +47,9 @@ export function ResultOverlay({ close }: { close: () => void }) {
     results.forEach((val, i) => {
       let actualResult = val;
       if (useAnniversaryRules && wolkeFlags[i]) {
-        // Wolke aktiviert → Schätzung wird angepasst
         const prediction = players[i].predictions[currentRound - 1];
         if (Math.abs(prediction - val) === 1) {
-          actualResult = prediction; // Korrigiert → zählt als richtig
+          actualResult = prediction;
         } else {
           actualResult = prediction + 1;
         }
@@ -75,6 +74,7 @@ export function ResultOverlay({ close }: { close: () => void }) {
             </div>
             <div>
               <input
+                autoFocus={i == 0}
                 type="number"
                 min={0}
                 max={currentRound}

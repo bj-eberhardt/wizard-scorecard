@@ -99,7 +99,7 @@ const ConfigureGame: React.FC<ConfigureGameProps> = ({ onStart }) => {
         </label>
         {error && <div className="text-red-500">{error}</div>}
         <button
-          type={'submit'}
+          type={'button'}
           onClick={handleStart}
           className="bg-blue-500 text-white px-4 py-2 rounded mt-4"
         >
