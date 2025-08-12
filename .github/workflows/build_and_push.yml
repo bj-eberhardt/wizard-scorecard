@@ -98,8 +98,9 @@ jobs:
 
       - name: Create zipped build artifact
         run: |
-          zip -r dist.zip dist    
-
+          cd dist
+          zip -r ../dist.zip
+    
 
       - name: Create GitHub Release
         uses: softprops/action-gh-release@v1
