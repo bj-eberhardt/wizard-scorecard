@@ -21,18 +21,19 @@ interface DocumentWithFullscreenControls extends Document {
 }
 
 const isMobile = () => window.matchMedia('(max-width: 768px)').matches;
-const isFullscreenSupported = () => document.fullscreenEnabled ||
-    (document as DocumentWithFullscreen).mozFullscreenEnabled ||
-    (document as DocumentWithFullscreen).webkitFullscreenEnabled ||
-    (document as DocumentWithFullscreen).msFullscreenEnabled
+const isFullscreenSupported = () =>
+  document.fullscreenEnabled ||
+  (document as DocumentWithFullscreen).mozFullscreenEnabled ||
+  (document as DocumentWithFullscreen).webkitFullscreenEnabled ||
+  (document as DocumentWithFullscreen).msFullscreenEnabled;
 
 const isDocumentFullscreen = (): boolean => {
   const doc = document as DocumentWithFullscreenControls;
   return !!(
-      doc.fullscreenElement ||
-      doc.mozFullScreenElement ||
-      doc.webkitFullscreenElement ||
-      doc.msFullscreenElement
+    doc.fullscreenElement ||
+    doc.mozFullScreenElement ||
+    doc.webkitFullscreenElement ||
+    doc.msFullscreenElement
   );
 };
 
@@ -49,7 +50,7 @@ async function toggleFullscreen() {
       await element.mozRequestFullScreen();
     }
   } else {
-    const doc = document as DocumentWithFullscreenControls
+    const doc = document as DocumentWithFullscreenControls;
     if (doc.exitFullscreen) {
       await doc.exitFullscreen();
     } else if (doc.msExitFullscreen) {

@@ -44,7 +44,7 @@ export function PredictionOverlay({ close }: { close: () => void }) {
               {p.points.at(-1) && <span className="italic">&nbsp;({p.points.at(-1)} Punkte)</span>}
             </div>
             <input
-                autoFocus={i == 0}
+              autoFocus={i == 0}
               type="number"
               min={0}
               max={currentRound}

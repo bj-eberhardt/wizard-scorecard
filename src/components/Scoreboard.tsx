@@ -35,8 +35,7 @@ export function Scoreboard() {
     p: Player,
     roundIndex: number
   ) {
-    if (!p.points[roundIndex])
-      return null;
+    if (!p.points[roundIndex]) return null;
     const rect = e.currentTarget.getBoundingClientRect();
     const tooltipContent = getTooltipContent(p, roundIndex);
     const tooltipWidth = createTooltipMeasureDiv(tooltipContent);
@@ -58,7 +57,9 @@ export function Scoreboard() {
         <table className="min-w-max w-full border-separate border-spacing-0">
           <thead>
             <tr>
-              <th className="bg-white sticky left-0  z-10 px-2 text-center border-2 border-black">Runde</th>
+              <th className="bg-white sticky left-0  z-10 px-2 text-center border-2 border-black">
+                Runde
+              </th>
               {players.map((p, i) => (
                 <th
                   key={i + 'name'}
@@ -73,7 +74,9 @@ export function Scoreboard() {
           <tbody>
             {rounds.map((_, roundIndex) => (
               <tr key={roundIndex}>
-                <td className="bg-white sticky left-0  z-10 border-2 border-black">{roundIndex + 1}</td>
+                <td className="bg-white sticky left-0  z-10 border-2 border-black">
+                  {roundIndex + 1}
+                </td>
                 {players.map((p, i) => (
                   <React.Fragment key={i + 'player' + roundIndex}>
                     <td

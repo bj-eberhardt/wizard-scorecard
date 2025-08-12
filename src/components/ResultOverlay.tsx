@@ -74,7 +74,7 @@ export function ResultOverlay({ close }: { close: () => void }) {
             </div>
             <div>
               <input
-                  autoFocus={i == 0}
+                autoFocus={i == 0}
                 type="number"
                 min={0}
                 max={currentRound}
