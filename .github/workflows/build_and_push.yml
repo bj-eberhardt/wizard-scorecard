@@ -96,11 +96,18 @@ jobs:
           docker tag wizard-scorecard:test ${{ secrets.DOCKERHUB_USERNAME }}/wizard-scorecard:${{ steps.get-version.outputs.version }}
           docker push ${{ secrets.DOCKERHUB_USERNAME }}/wizard-scorecard:${{ steps.get-version.outputs.version }}
 
+      - name: Create zipped build artifact
+        run: |
+          cd dist
+          zip -r ../dist.zip
+    
+
       - name: Create GitHub Release
-        uses: actions/create-release@v1
+        uses: softprops/action-gh-release@v1
         with:
+          files: dist.zip
           tag_name: ${{ steps.get-version.outputs.version }}
-          release_name: 'Release ${{ steps.get-version.outputs.version }}'
           body: ${{ steps.message.outputs.message }}
+          name: 'Release ${{ steps.get-version.outputs.version }}'
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
