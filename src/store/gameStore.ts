@@ -30,7 +30,7 @@ const STORAGE_KEY = 'wizard_state_v1';
 
 // helper to compute total rounds by player count
 function roundsForCount(n: number) {
-  if (n === 3) return 3; // TODO adjust 20;
+  if (n === 3) return 20;
   if (n === 4) return 15;
   if (n === 5) return 12;
   if (n >= 6) return 10;
