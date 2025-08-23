@@ -81,7 +81,7 @@ export default function App() {
       {!isGameOver && overlay === 'none' && (
         <button
           onClick={() => setOverlay('prediction')}
-          className="mt-4 bg-green-500 text-white px-4 py-2 rounded"
+          className="mt-4 bg-green-500 text-white px-4 py-2 rounded sticky bottom-2 z-[200]"
         >
           Nächste Runde starten
         </button>

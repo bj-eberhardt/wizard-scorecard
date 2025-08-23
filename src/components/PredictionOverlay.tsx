@@ -49,6 +49,7 @@ export function PredictionOverlay({ close }: { close: () => void }) {
               min={0}
               max={currentRound}
               value={predictions[i]}
+              onFocus={(e) => e.target.select()}
               onChange={(e) => {
                 const copy = [...predictions];
                 copy[i] = parseInt(e.target.value);
