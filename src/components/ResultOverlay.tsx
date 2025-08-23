@@ -79,6 +79,7 @@ export function ResultOverlay({ close }: { close: () => void }) {
                 min={0}
                 max={currentRound}
                 value={results[i]}
+                onFocus={e => e.target.select()}
                 onChange={(e) => {
                   const copy = [...results];
                   copy[i] = parseInt(e.target.value);
