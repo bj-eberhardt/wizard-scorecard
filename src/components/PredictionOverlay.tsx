@@ -34,7 +34,7 @@ export function PredictionOverlay({ close }: { close: () => void }) {
   };
 
   return (
-    <div className="fixed inset-0 bg-black bg-opacity-60 flex items-center justify-center z-20">
+    <div className="fixed inset-0 bg-black bg-opacity-60 flex xs:items-[normal] items-center justify-center z-20">
       <form className="bg-white p-4 rounded shadow w-96">
         <h2 className="text-lg font-bold mb-2">Stiche schätzen für Runde {currentRound}</h2>
         {players.map((p, i) => (
