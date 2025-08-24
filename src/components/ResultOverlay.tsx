@@ -110,7 +110,7 @@ export function ResultOverlay({ close }: { close: () => void }) {
         {error && <div className="bg-red-100 text-red-700 p-2 mb-2 rounded">{error}</div>}
         <button
           type={'submit'}
-          onClick={e => submit(e)}
+          onClick={(e) => submit(e)}
           className="mt-2 bg-green-500 text-white px-4 py-2 rounded w-full"
         >
           Runde beenden
