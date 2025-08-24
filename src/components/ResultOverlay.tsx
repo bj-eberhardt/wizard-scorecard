@@ -1,5 +1,5 @@
 import { useGameStore } from '../store/gameStore';
-import { useState } from 'react';
+import React, { useState } from 'react';
 
 export function ResultOverlay({ close }: { close: () => void }) {
   const { players, currentRound, setResult, advanceRound, useAnniversaryRules } = useGameStore();
@@ -7,7 +7,9 @@ export function ResultOverlay({ close }: { close: () => void }) {
   const [wolkeFlags, setWolkeFlags] = useState<boolean[]>(Array(players.length).fill(false));
   const [error, setError] = useState<string>('');
 
-  const submit = () => {
+  const submit = (e: React.MouseEvent<HTMLButtonElement>) => {
+    e.preventDefault();
+
     const tooSmallInputPlayerIndex = results
       .map((val, i) => (val < 0 ? i : -1))
       .filter((i) => i !== -1);
@@ -108,7 +110,7 @@ export function ResultOverlay({ close }: { close: () => void }) {
         {error && <div className="bg-red-100 text-red-700 p-2 mb-2 rounded">{error}</div>}
         <button
           type={'submit'}
-          onClick={submit}
+          onClick={e => submit(e)}
           className="mt-2 bg-green-500 text-white px-4 py-2 rounded w-full"
         >
           Runde beenden
