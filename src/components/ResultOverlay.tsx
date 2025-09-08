@@ -2,6 +2,7 @@ import { useGameStore } from '../store/gameStore';
 import React, { useState } from 'react';
 import { useTranslation } from 'react-i18next';
 
+
 export function ResultOverlay({ close }: { close: () => void }) {
   const { t } = useTranslation();
   const { players, currentRound, setResult, advanceRound, useAnniversaryRules } = useGameStore();
