@@ -52,8 +52,10 @@ export function PredictionOverlay({ close }: { close: () => void }) {
           {t('predictionOverlay.title', { round: currentRound })}
         </h2>
         {rotatedPlayers.map((p, i) => (
-          <div key={p.name} className="flex justify-between mb-2">
-            <span>{p.name}</span>
+          <div key={p.name} className="flex flex-col xs:flex-row justify-between mb-2">
+            <div><span>{p.name}</span>
+            {p.points.at(-1) && <span className="italic">&nbsp;({p.points.at(-1)} {t('labels.points')})</span>}
+            </div>
             <input
               autoFocus={i === 0}
               type="number"
@@ -73,11 +75,8 @@ export function PredictionOverlay({ close }: { close: () => void }) {
         {error && <div className="bg-red-100 text-red-700 p-2 mb-2 rounded">{error}</div>}
         <button
           type="submit"
-          onClick={(e) => {
-            e.preventDefault();
-            submit();
-          }}
-          className="mt-2 bg-green-500 text-white px-4 py-2 rounded w-full"
+          onClick={submit}
+          className="mt-2 bg-blue-500 text-white px-4 py-2 rounded w-full"
         >
           {t('predictionOverlay.startRound')}
         </button>
