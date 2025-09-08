@@ -37,8 +37,9 @@
     "announcement": "🎉 Winner: {{name}} with {{points}} points!"
   },
   "configureGame": {
-    "title": "New Game",
+    "title": "Please enter the names of the players:",
     "playerNamePlaceholder": "Player {{number}} name",
+    "removePlayerLabel": "Remove player {{number}}",
     "useAnniversaryRules": "Use anniversary rules (Cloud)",
     "startGame": "Start Game",
     "errors": {

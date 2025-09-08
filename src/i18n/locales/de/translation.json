@@ -37,8 +37,9 @@
     "announcement": "🎉 Gewinner: {{name}} mit {{points}} Punkten!"
   },
   "configureGame": {
-    "title": "Neues Spiel",
+    "title": "Bitte gib die Namen der Spieler ein:",
     "playerNamePlaceholder": "Name Spieler {{number}}",
+    "removePlayerLabel": "Entferne Spieler {{number}}",
     "useAnniversaryRules": "Jubiläumsregeln verwenden (Wolke)",
     "startGame": "Spiel starten",
     "errors": {
