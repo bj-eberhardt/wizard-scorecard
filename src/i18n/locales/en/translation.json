@@ -1,0 +1,51 @@
+{
+  "predictionOverlay": {
+    "title": "Predict tricks for round {{round}}",
+    "points": "({{points}} points)",
+    "startRound": "Start round"
+  },
+  "errors": {
+    "valueTooSmall": "The value is too small for player {{playerNames}}",
+    "valueTooLarge": "The value is too large for player {{playerNames}}",
+    "predictionSum": "The sum of predictions must not be {{sum}}",
+    "wolkeMinOne": "When using cloud, the value must be at least 1 for {{playerName}}",
+    "onlyOneWolke": "Only one cloud per round is allowed",
+    "predictionTooSmall": "Prediction too small for player {{playerNames}}",
+    "predictionTooLarge": "Prediction too large for player {{playerNames}}"
+  },
+  "buttons": {
+    "close": "Close",
+    "submit": "Submit"
+  },
+  "labels": {
+    "prediction": "Prediction",
+    "result": "Result",
+    "round": "Round",
+    "player": "Player",
+    "points": "Points"
+  },
+  "resultOverlay": {
+    "title": "Results Round {{round}}",
+    "tip": "(Prediction: {{tip}})",
+    "wolke": "Cloud",
+    "submitButton": "Submit"
+  },
+  "scoreboard": {
+    "tooltip": "Prediction: {{prediction}}\nTricks taken: {{tricks}}\nPoints: {{points}}"
+  },
+  "winnerView": {
+    "announcement": "🎉 Winner: {{name}} with {{points}} points!"
+  },
+  "configureGame": {
+    "title": "New Game",
+    "playerNamePlaceholder": "Player {{number}} name",
+    "useAnniversaryRules": "Use anniversary rules (Cloud)",
+    "startGame": "Start Game",
+    "errors": {
+      "gapInNames": "Player names must be entered consecutively from top to bottom.",
+      "minPlayers": "At least 3 players required.",
+      "maxPlayers": "Maximum {{max}} players allowed.",
+      "uniqueNames": "Each name must be unique."
+    }
+  }
+}

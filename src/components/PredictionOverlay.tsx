@@ -1,7 +1,9 @@
 import { useGameStore } from '../store/gameStore';
 import { useState } from 'react';
+import { useTranslation } from 'react-i18next';
 
 export function PredictionOverlay({ close }: { close: () => void }) {
+  const { t } = useTranslation();
   const { players, setPrediction, currentRound } = useGameStore();
   const [predictions, setPredictions] = useState<number[]>(Array(players.length).fill(0));
   const [error, setError] = useState<string>('');
@@ -13,7 +15,9 @@ export function PredictionOverlay({ close }: { close: () => void }) {
 
     if (tooSmallInputPlayerIndex.length > 0) {
       setError(
-        `Zu kleine Schätzung für Spieler ${tooSmallInputPlayerIndex.map((i) => players[i].name).join(', ')}`
+        t('errors.predictionTooSmall', {
+          playerNames: tooSmallInputPlayerIndex.map((i) => players[i].name).join(', ')
+        })
       );
       return;
     }
@@ -24,7 +28,9 @@ export function PredictionOverlay({ close }: { close: () => void }) {
 
     if (tooLargeInputPlayerIndex.length > 0) {
       setError(
-        `Zu große Schätzung für Spieler ${tooLargeInputPlayerIndex.map((i) => players[i].name).join(', ')}`
+        t('errors.predictionTooLarge', {
+          playerNames: tooLargeInputPlayerIndex.map((i) => players[i].name).join(', ')
+        })
       );
       return;
     }
@@ -36,12 +42,18 @@ export function PredictionOverlay({ close }: { close: () => void }) {
   return (
     <div className="fixed inset-0 bg-black bg-opacity-60 flex xs:items-[normal] items-center justify-center z-20">
       <form className="bg-white p-4 rounded shadow w-96">
-        <h2 className="text-lg font-bold mb-2">Stiche schätzen für Runde {currentRound}</h2>
+        <h2 className="text-lg font-bold mb-2">
+          {t('predictionOverlay.title', { round: currentRound })}
+        </h2>
         {players.map((p, i) => (
           <div key={i} className="flex flex-col xs:flex-row justify-between mb-2">
             <div>
               <span>{p.name}</span>
-              {p.points.at(-1) && <span className="italic">&nbsp;({p.points.at(-1)} Punkte)</span>}
+              {p.points.at(-1) && (
+                <span className="italic">
+                  &nbsp;{t('predictionOverlay.points', { points: p.points.at(-1) })}
+                </span>
+              )}
             </div>
             <input
               autoFocus={i == 0}
@@ -65,7 +77,7 @@ export function PredictionOverlay({ close }: { close: () => void }) {
           onClick={submit}
           className="mt-2 bg-blue-500 text-white px-4 py-2 rounded w-full"
         >
-          Runde starten
+          {t('predictionOverlay.startRound')}
         </button>
       </form>
     </div>

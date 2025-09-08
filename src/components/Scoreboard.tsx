@@ -1,7 +1,9 @@
 import React, { useState } from 'react';
 import { Player, useGameStore } from '../store/gameStore';
+import { useTranslation } from 'react-i18next';
 
 export function Scoreboard() {
+  const { t } = useTranslation();
   const { players, totalRounds } = useGameStore();
   const rounds = Array.from({ length: totalRounds }, (_, i) => i);
 
@@ -13,7 +15,11 @@ export function Scoreboard() {
   } | null>(null);
 
   function getTooltipContent(p: Player, roundIndex: number) {
-    return `Vorhersage: ${p.predictions[roundIndex] ?? '-'}\nErreichte Stiche: ${p.results?.[roundIndex] ?? '-'}\nPunkte: ${p.points[roundIndex] - (p.points[roundIndex - 1] ?? 0)}`;
+    return t('scoreboard.tooltip', {
+      prediction: p.predictions[roundIndex] ?? '-',
+      tricks: p.results?.[roundIndex] ?? '-',
+      points: p.points[roundIndex] - (p.points[roundIndex - 1] ?? 0)
+    });
   }
 
   function createTooltipMeasureDiv(content: string) {
@@ -57,8 +63,8 @@ export function Scoreboard() {
         <table className="min-w-max w-full border-separate border-spacing-0">
           <thead>
             <tr>
-              <th className="bg-white sticky left-0  z-10 px-2 text-center border-2 border-black">
-                Runde
+              <th className="bg-white sticky left-0 z-10 px-2 text-center border-2 border-black">
+                {t('labels.round')}
               </th>
               {players.map((p, i) => (
                 <th

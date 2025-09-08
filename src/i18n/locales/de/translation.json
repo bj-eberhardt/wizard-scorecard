@@ -1,0 +1,51 @@
+{
+  "predictionOverlay": {
+    "title": "Stiche schätzen für Runde {{round}}",
+    "points": "({{points}} Punkte)",
+    "startRound": "Runde starten"
+  },
+  "errors": {
+    "valueTooSmall": "Der Wert ist zu klein für Spieler {{playerNames}}",
+    "valueTooLarge": "Der Wert ist zu groß für Spieler {{playerNames}}",
+    "predictionSum": "Die Summe der Vorhersagen darf nicht {{sum}} sein",
+    "wolkeMinOne": "Bei Wolke muss der Wert mindestens 1 sein für {{playerName}}",
+    "onlyOneWolke": "Es kann nur eine Wolke pro Runde geben",
+    "predictionTooSmall": "Zu kleine Schätzung für Spieler {{playerNames}}",
+    "predictionTooLarge": "Zu große Schätzung für Spieler {{playerNames}}"
+  },
+  "buttons": {
+    "close": "Schließen",
+    "submit": "Bestätigen"
+  },
+  "labels": {
+    "prediction": "Vorhersage",
+    "result": "Ergebnis",
+    "round": "Runde",
+    "player": "Spieler",
+    "points": "Punkte"
+  },
+  "resultOverlay": {
+    "title": "Ergebnisse Runde {{round}}",
+    "tip": "(Tipp: {{tip}})",
+    "wolke": "Wolke",
+    "submitButton": "Bestätigen"
+  },
+  "scoreboard": {
+    "tooltip": "Vorhersage: {{prediction}}\nErreichte Stiche: {{tricks}}\nPunkte: {{points}}"
+  },
+  "winnerView": {
+    "announcement": "🎉 Gewinner: {{name}} mit {{points}} Punkten!"
+  },
+  "configureGame": {
+    "title": "Neues Spiel",
+    "playerNamePlaceholder": "Name Spieler {{number}}",
+    "useAnniversaryRules": "Jubiläumsregeln verwenden (Wolke)",
+    "startGame": "Spiel starten",
+    "errors": {
+      "gapInNames": "Spielernamen müssen von oben nach unten lückenlos eingegeben werden.",
+      "minPlayers": "Mindestens 3 Spieler erforderlich.",
+      "maxPlayers": "Maximal {{max}} Spieler erlaubt.",
+      "uniqueNames": "Jeder Name muss einzigartig sein."
+    }
+  }
+}

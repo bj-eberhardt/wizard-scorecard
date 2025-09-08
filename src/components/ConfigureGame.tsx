@@ -1,11 +1,13 @@
 import React, { useState } from 'react';
 import useSettingsStore from '../store/settingsStore';
+import { useTranslation } from 'react-i18next';
 
 interface ConfigureGameProps {
   onStart: (names: string[], useWolke: boolean) => void;
 }
 
 const ConfigureGame: React.FC<ConfigureGameProps> = ({ onStart }) => {
+  const { t } = useTranslation();
   const MAX_PLAYERS = 6;
   const playerNames = useSettingsStore((state) => state.playerNames);
   const setPlayerNames = useSettingsStore((state) => state.setPlayerNames);
@@ -33,79 +35,68 @@ const ConfigureGame: React.FC<ConfigureGameProps> = ({ onStart }) => {
       firstEmpty !== -1 ? trimmed.slice(firstEmpty + 1).some((n) => n !== '') : false;
 
     if (afterEmptyFilled) {
-      setError('Spielernamen müssen von oben nach unten lückenlos eingegeben werden.');
+      setError(t('configureGame.errors.gapInNames'));
       return;
     }
 
     const trimmedNames = namesInput.map((n) => n.trim()).filter((n) => n !== '');
     if (trimmedNames.length < 3) {
-      setError('Mindestens 3 Spieler erforderlich.');
+      setError(t('configureGame.errors.minPlayers'));
       return;
     }
     if (trimmedNames.length > MAX_PLAYERS) {
-      setError(`Maximal ${MAX_PLAYERS} Spieler erlaubt.`);
+      setError(t('configureGame.errors.maxPlayers', { max: MAX_PLAYERS }));
       return;
     }
     if (new Set(trimmedNames).size !== trimmedNames.length) {
-      setError('Jeder Name muss einzigartig sein.');
+      setError(t('configureGame.errors.uniqueNames'));
       return;
     }
+
     setPlayerNames(trimmedNames);
     setUseAnniversaryRules(useWolke);
-    setError(null);
     onStart(trimmedNames, useWolke);
   };
 
   return (
-    <div className="mt-8">
-      <div className="text-center flex max-w-md mx-auto font-semibold">
-        Bitte gib die Namen der Spieler ein:
-      </div>
-      <form className="text-center flex flex-col gap-2 max-w-md mx-auto mt-8">
+    <div className="container mx-auto p-4 max-w-md">
+      <h1 className="text-2xl font-bold mb-4">{t('configureGame.title')}</h1>
+      <div className="space-y-4">
         {namesInput.map((name, i) => (
-          <div key={i} className="flex items-center gap-2 mb-2">
+          <div key={i} className="flex items-center space-x-2">
             <input
               type="text"
               value={name}
-              placeholder={`Spieler ${i + 1}`}
               onChange={(e) => {
                 const copy = [...namesInput];
                 copy[i] = e.target.value;
                 setNamesInput(copy);
               }}
-              className="border p-1 w-full"
+              placeholder={t('configureGame.playerNamePlaceholder', { number: i + 1 })}
+              className="border p-2 rounded flex-grow"
             />
             {name && (
-              <button
-                autoFocus={false}
-                type="button"
-                tabIndex={-1}
-                onClick={() => removeName(i)}
-                className="px-2 py-1 text-red-600"
-                aria-label={`Entferne Spieler ${i + 1}`}
-              >
-                ×
+              <button onClick={() => removeName(i)} className="text-red-500">
+                ✕
               </button>
             )}
           </div>
         ))}
-        <label className="flex items-center gap-2 mt-4">
+        <div className="flex items-center">
           <input
             type="checkbox"
+            id="useWolke"
             checked={useWolke}
             onChange={(e) => setUseWolke(e.target.checked)}
+            className="mr-2"
           />
-          Wizard Jubiläumsversion (mit Wolke)
-        </label>
+          <label htmlFor="useWolke">{t('configureGame.useAnniversaryRules')}</label>
+        </div>
         {error && <div className="text-red-500">{error}</div>}
-        <button
-          type={'button'}
-          onClick={handleStart}
-          className="bg-blue-500 text-white px-4 py-2 rounded mt-4"
-        >
-          Spiel starten
+        <button onClick={handleStart} className="bg-blue-500 text-white p-2 rounded w-full">
+          {t('configureGame.startGame')}
         </button>
-      </form>
+      </div>
     </div>
   );
 };
