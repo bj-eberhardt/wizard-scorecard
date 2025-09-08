@@ -28,7 +28,7 @@
     "title": "Results Round {{round}}",
     "tip": "(Prediction: {{tip}})",
     "wolke": "Cloud",
-    "submitButton": "Submit"
+    "submitButton": "Finish round"
   },
   "scoreboard": {
     "tooltip": "Prediction: {{prediction}}\nTricks taken: {{tricks}}\nPoints: {{points}}"

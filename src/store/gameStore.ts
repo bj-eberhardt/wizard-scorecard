@@ -24,6 +24,7 @@ interface GameState {
   setUseAnniversaryRules: (use: boolean) => void;
   setOverlay: (o: OverlayState) => void;
   saveToStorage: () => void;
+  getCurrentStartPlayerIndex: () => number;
 }
 
 const STORAGE_KEY = 'wizard_state_v1';
@@ -35,6 +36,11 @@ function roundsForCount(n: number) {
   if (n === 5) return 12;
   if (n >= 6) return 10;
   return 0;
+}
+
+// helper to get the starting player index for the current round
+function getStartPlayerIndex(round: number, playerCount: number): number {
+  return ((round - 1) % playerCount);
 }
 
 function loadFromStorage(): Partial<GameState> | null {
@@ -146,5 +152,8 @@ export const useGameStore = create<GameState>((set, get) => {
       save();
     },
     saveToStorage: save,
+    getCurrentStartPlayerIndex: () => {
+      return getStartPlayerIndex(get().currentRound, get().players.length);
+    },
   };
 });

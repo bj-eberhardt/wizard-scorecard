@@ -25,10 +25,10 @@
     "points": "Punkte"
   },
   "resultOverlay": {
-    "title": "Ergebnisse Runde {{round}}",
+    "title": "Spiele Runde {{round}} und trage dann die Ergebnisse ein:",
     "tip": "(Tipp: {{tip}})",
     "wolke": "Wolke",
-    "submitButton": "Bestätigen"
+    "submitButton": "Runde beenden"
   },
   "scoreboard": {
     "tooltip": "Vorhersage: {{prediction}}\nErreichte Stiche: {{tricks}}\nPunkte: {{points}}"
