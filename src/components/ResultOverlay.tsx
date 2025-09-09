@@ -2,16 +2,25 @@ import { useGameStore } from '../store/gameStore';
 import React, { useState } from 'react';
 import { useTranslation } from 'react-i18next';
 
-
 export function ResultOverlay({ close }: { close: () => void }) {
   const { t } = useTranslation();
-  const { players, currentRound, setResult, advanceRound, useAnniversaryRules, getCurrentStartPlayerIndex } = useGameStore();
+  const {
+    players,
+    currentRound,
+    setResult,
+    advanceRound,
+    useAnniversaryRules,
+    getCurrentStartPlayerIndex,
+  } = useGameStore();
   const [results, setResults] = useState<number[]>(Array(players.length).fill(0));
   const [wolkeFlags, setWolkeFlags] = useState<boolean[]>(Array(players.length).fill(false));
   const [error, setError] = useState<string>('');
 
   const startPlayerIndex = getCurrentStartPlayerIndex();
-  const rotatedPlayers = [...players.slice(startPlayerIndex), ...players.slice(0, startPlayerIndex)];
+  const rotatedPlayers = [
+    ...players.slice(startPlayerIndex),
+    ...players.slice(0, startPlayerIndex),
+  ];
 
   const submit = (e: React.MouseEvent<HTMLButtonElement>) => {
     e.preventDefault();
@@ -23,7 +32,7 @@ export function ResultOverlay({ close }: { close: () => void }) {
     if (tooSmallInputPlayerIndex.length > 0) {
       setError(
         t('errors.valueTooSmall', {
-          playerNames: tooSmallInputPlayerIndex.map((i) => rotatedPlayers[i].name).join(', ')
+          playerNames: tooSmallInputPlayerIndex.map((i) => rotatedPlayers[i].name).join(', '),
         })
       );
       return;
@@ -36,7 +45,7 @@ export function ResultOverlay({ close }: { close: () => void }) {
     if (tooLargeInputPlayerIndex.length > 0) {
       setError(
         t('errors.valueTooLarge', {
-          playerNames: tooLargeInputPlayerIndex.map((i) => rotatedPlayers[i].name).join(', ')
+          playerNames: tooLargeInputPlayerIndex.map((i) => rotatedPlayers[i].name).join(', '),
         })
       );
       return;
@@ -44,9 +53,7 @@ export function ResultOverlay({ close }: { close: () => void }) {
 
     for (let i = 0; i < players.length; i++) {
       if (useAnniversaryRules && wolkeFlags[i] && results[i] < 1) {
-        setError(
-          t('errors.wolkeMinOne', { playerName: rotatedPlayers[i].name })
-        );
+        setError(t('errors.wolkeMinOne', { playerName: rotatedPlayers[i].name }));
         return;
       }
     }
@@ -83,7 +90,9 @@ export function ResultOverlay({ close }: { close: () => void }) {
           <div key={p.name} className="flex justify-between mb-2">
             <div>
               <span>{p.name}</span>
-              <span className="italic">&nbsp;{t('resultOverlay.tip', { tip: p.predictions[currentRound - 1] })}</span>
+              <span className="italic">
+                &nbsp;{t('resultOverlay.tip', { tip: p.predictions[currentRound - 1] })}
+              </span>
             </div>
             <div>
               <input

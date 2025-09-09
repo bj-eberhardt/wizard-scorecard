@@ -18,7 +18,7 @@ export function Scoreboard() {
     return t('scoreboard.tooltip', {
       prediction: p.predictions[roundIndex] ?? '-',
       tricks: p.results?.[roundIndex] ?? '-',
-      points: p.points[roundIndex] - (p.points[roundIndex - 1] ?? 0)
+      points: p.points[roundIndex] - (p.points[roundIndex - 1] ?? 0),
     });
   }
 

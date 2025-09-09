@@ -9,7 +9,10 @@ export function PredictionOverlay({ close }: { close: () => void }) {
   const [error, setError] = useState<string>('');
 
   const startPlayerIndex = getCurrentStartPlayerIndex();
-  const rotatedPlayers = [...players.slice(startPlayerIndex), ...players.slice(0, startPlayerIndex)];
+  const rotatedPlayers = [
+    ...players.slice(startPlayerIndex),
+    ...players.slice(0, startPlayerIndex),
+  ];
 
   const submit = () => {
     const tooSmallInputPlayerIndex = predictions
@@ -19,7 +22,7 @@ export function PredictionOverlay({ close }: { close: () => void }) {
     if (tooSmallInputPlayerIndex.length > 0) {
       setError(
         t('errors.predictionTooSmall', {
-          playerNames: tooSmallInputPlayerIndex.map((i) => rotatedPlayers[i].name).join(', ')
+          playerNames: tooSmallInputPlayerIndex.map((i) => rotatedPlayers[i].name).join(', '),
         })
       );
       return;
@@ -32,7 +35,7 @@ export function PredictionOverlay({ close }: { close: () => void }) {
     if (tooLargeInputPlayerIndex.length > 0) {
       setError(
         t('errors.predictionTooLarge', {
-          playerNames: tooLargeInputPlayerIndex.map((i) => rotatedPlayers[i].name).join(', ')
+          playerNames: tooLargeInputPlayerIndex.map((i) => rotatedPlayers[i].name).join(', '),
         })
       );
       return;
@@ -53,8 +56,13 @@ export function PredictionOverlay({ close }: { close: () => void }) {
         </h2>
         {rotatedPlayers.map((p, i) => (
           <div key={p.name} className="flex flex-col xs:flex-row justify-between mb-2">
-            <div><span>{p.name}</span>
-            {p.points.at(-1) && <span className="italic">&nbsp;({p.points.at(-1)} {t('labels.points')})</span>}
+            <div>
+              <span>{p.name}</span>
+              {p.points.at(-1) && (
+                <span className="italic">
+                  &nbsp;({p.points.at(-1)} {t('labels.points')})
+                </span>
+              )}
             </div>
             <input
               autoFocus={i === 0}

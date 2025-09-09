@@ -14,7 +14,7 @@ export function WinnerView() {
       <h2 className="text-xl font-bold">
         {t('winnerView.announcement', {
           name: winner.name,
-          points: winner.points[totalRounds - 1]
+          points: winner.points[totalRounds - 1],
         })}
       </h2>
     </div>

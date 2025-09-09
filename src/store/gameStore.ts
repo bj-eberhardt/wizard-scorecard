@@ -40,7 +40,7 @@ function roundsForCount(n: number) {
 
 // helper to get the starting player index for the current round
 function getStartPlayerIndex(round: number, playerCount: number): number {
-  return ((round - 1) % playerCount);
+  return (round - 1) % playerCount;
 }
 
 function loadFromStorage(): Partial<GameState> | null {
