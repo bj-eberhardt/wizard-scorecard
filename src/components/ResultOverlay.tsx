@@ -1,11 +1,26 @@
 import { useGameStore } from '../store/gameStore';
 import React, { useState } from 'react';
+import { useTranslation } from 'react-i18next';
 
 export function ResultOverlay({ close }: { close: () => void }) {
-  const { players, currentRound, setResult, advanceRound, useAnniversaryRules } = useGameStore();
+  const { t } = useTranslation();
+  const {
+    players,
+    currentRound,
+    setResult,
+    advanceRound,
+    useAnniversaryRules,
+    getCurrentStartPlayerIndex,
+  } = useGameStore();
   const [results, setResults] = useState<number[]>(Array(players.length).fill(0));
   const [wolkeFlags, setWolkeFlags] = useState<boolean[]>(Array(players.length).fill(false));
   const [error, setError] = useState<string>('');
+
+  const startPlayerIndex = getCurrentStartPlayerIndex();
+  const rotatedPlayers = [
+    ...players.slice(startPlayerIndex),
+    ...players.slice(0, startPlayerIndex),
+  ];
 
   const submit = (e: React.MouseEvent<HTMLButtonElement>) => {
     e.preventDefault();
@@ -16,7 +31,9 @@ export function ResultOverlay({ close }: { close: () => void }) {
 
     if (tooSmallInputPlayerIndex.length > 0) {
       setError(
-        `Der Wert ist zu klein für Spieler ${tooSmallInputPlayerIndex.map((i) => players[i].name).join(', ')}`
+        t('errors.valueTooSmall', {
+          playerNames: tooSmallInputPlayerIndex.map((i) => rotatedPlayers[i].name).join(', '),
+        })
       );
       return;
     }
@@ -27,36 +44,37 @@ export function ResultOverlay({ close }: { close: () => void }) {
 
     if (tooLargeInputPlayerIndex.length > 0) {
       setError(
-        `Der Wert ist zu groß für Spieler ${tooLargeInputPlayerIndex.map((i) => players[i].name).join(', ')}`
+        t('errors.valueTooLarge', {
+          playerNames: tooLargeInputPlayerIndex.map((i) => rotatedPlayers[i].name).join(', '),
+        })
       );
       return;
     }
 
     for (let i = 0; i < players.length; i++) {
       if (useAnniversaryRules && wolkeFlags[i] && results[i] < 1) {
-        setError(
-          `Spieler "${players[i].name}" hat die Wolke bekommen und muss mindestens 1 Stich haben.`
-        );
+        setError(t('errors.wolkeMinOne', { playerName: rotatedPlayers[i].name }));
         return;
       }
     }
 
     if (wolkeFlags.filter((i) => i).length > 1) {
-      setError(`Nur ein Spieler kann die Wolke in einer Runde als Stich bekommen.`);
+      setError(t('errors.onlyOneWolke'));
       return;
     }
 
     results.forEach((val, i) => {
+      const originalIndex = (i + startPlayerIndex) % players.length;
       let actualResult = val;
       if (useAnniversaryRules && wolkeFlags[i]) {
-        const prediction = players[i].predictions[currentRound - 1];
+        const prediction = players[originalIndex].predictions[currentRound - 1];
         if (Math.abs(prediction - val) === 1) {
           actualResult = prediction;
         } else {
           actualResult = prediction + 1;
         }
       }
-      setResult(i, actualResult);
+      setResult(originalIndex, actualResult);
     });
     advanceRound();
     close();
@@ -66,13 +84,15 @@ export function ResultOverlay({ close }: { close: () => void }) {
     <div className="fixed inset-0 bg-black bg-opacity-60 flex  xs:items-[normal] items-center justify-center z-20">
       <form className="bg-white p-4 rounded shadow w-96">
         <h2 className="text-lg font-bold mb-2">
-          Spiele Runde {currentRound} und trage dann die Ergebnisse ein:
+          {t('resultOverlay.title', { round: currentRound })}
         </h2>
-        {players.map((p, i) => (
-          <div key={i} className="flex justify-between mb-2">
+        {rotatedPlayers.map((p, i) => (
+          <div key={p.name} className="flex justify-between mb-2">
             <div>
               <span>{p.name}</span>
-              <span className="italic">&nbsp;(Tipp: {p.predictions[currentRound - 1]})</span>
+              <span className="italic">
+                &nbsp;{t('resultOverlay.tip', { tip: p.predictions[currentRound - 1] })}
+              </span>
             </div>
             <div>
               <input
@@ -101,7 +121,7 @@ export function ResultOverlay({ close }: { close: () => void }) {
                       setWolkeFlags(copy);
                     }}
                   />{' '}
-                  &nbsp;Wolke
+                  &nbsp;{t('resultOverlay.wolke')}
                 </label>
               )}
             </div>
@@ -113,7 +133,7 @@ export function ResultOverlay({ close }: { close: () => void }) {
           onClick={(e) => submit(e)}
           className="mt-2 bg-green-500 text-white px-4 py-2 rounded w-full"
         >
-          Runde beenden
+          {t('resultOverlay.submitButton')}
         </button>
       </form>
     </div>

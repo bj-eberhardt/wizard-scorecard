@@ -1,6 +1,8 @@
 import { useGameStore } from '../store/gameStore';
+import { useTranslation } from 'react-i18next';
 
 export function WinnerView() {
+  const { t } = useTranslation();
   const { players, totalRounds } = useGameStore();
 
   const winner = players.reduce((best, p) =>
@@ -10,7 +12,10 @@ export function WinnerView() {
   return (
     <div className="mt-4 p-4 bg-yellow-100 border border-yellow-400 rounded">
       <h2 className="text-xl font-bold">
-        🎉 Gewinner: {winner.name} mit {winner.points[totalRounds - 1]} Punkten!
+        {t('winnerView.announcement', {
+          name: winner.name,
+          points: winner.points[totalRounds - 1],
+        })}
       </h2>
     </div>
   );

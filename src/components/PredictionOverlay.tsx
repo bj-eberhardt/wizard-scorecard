@@ -1,10 +1,18 @@
 import { useGameStore } from '../store/gameStore';
 import { useState } from 'react';
+import { useTranslation } from 'react-i18next';
 
 export function PredictionOverlay({ close }: { close: () => void }) {
-  const { players, setPrediction, currentRound } = useGameStore();
+  const { t } = useTranslation();
+  const { players, setPrediction, currentRound, getCurrentStartPlayerIndex } = useGameStore();
   const [predictions, setPredictions] = useState<number[]>(Array(players.length).fill(0));
   const [error, setError] = useState<string>('');
+
+  const startPlayerIndex = getCurrentStartPlayerIndex();
+  const rotatedPlayers = [
+    ...players.slice(startPlayerIndex),
+    ...players.slice(0, startPlayerIndex),
+  ];
 
   const submit = () => {
     const tooSmallInputPlayerIndex = predictions
@@ -13,7 +21,9 @@ export function PredictionOverlay({ close }: { close: () => void }) {
 
     if (tooSmallInputPlayerIndex.length > 0) {
       setError(
-        `Zu kleine Schätzung für Spieler ${tooSmallInputPlayerIndex.map((i) => players[i].name).join(', ')}`
+        t('errors.predictionTooSmall', {
+          playerNames: tooSmallInputPlayerIndex.map((i) => rotatedPlayers[i].name).join(', '),
+        })
       );
       return;
     }
@@ -24,27 +34,38 @@ export function PredictionOverlay({ close }: { close: () => void }) {
 
     if (tooLargeInputPlayerIndex.length > 0) {
       setError(
-        `Zu große Schätzung für Spieler ${tooLargeInputPlayerIndex.map((i) => players[i].name).join(', ')}`
+        t('errors.predictionTooLarge', {
+          playerNames: tooLargeInputPlayerIndex.map((i) => rotatedPlayers[i].name).join(', '),
+        })
       );
       return;
     }
 
-    predictions.forEach((val, i) => setPrediction(i, val));
+    predictions.forEach((val, i) => {
+      const originalIndex = (i + startPlayerIndex) % players.length;
+      setPrediction(originalIndex, val);
+    });
     close();
   };
 
   return (
     <div className="fixed inset-0 bg-black bg-opacity-60 flex xs:items-[normal] items-center justify-center z-20">
       <form className="bg-white p-4 rounded shadow w-96">
-        <h2 className="text-lg font-bold mb-2">Stiche schätzen für Runde {currentRound}</h2>
-        {players.map((p, i) => (
-          <div key={i} className="flex flex-col xs:flex-row justify-between mb-2">
+        <h2 className="text-lg font-bold mb-2">
+          {t('predictionOverlay.title', { round: currentRound })}
+        </h2>
+        {rotatedPlayers.map((p, i) => (
+          <div key={p.name} className="flex flex-col xs:flex-row justify-between mb-2">
             <div>
               <span>{p.name}</span>
-              {p.points.at(-1) && <span className="italic">&nbsp;({p.points.at(-1)} Punkte)</span>}
+              {p.points.at(-1) && (
+                <span className="italic">
+                  &nbsp;({p.points.at(-1)} {t('labels.points')})
+                </span>
+              )}
             </div>
             <input
-              autoFocus={i == 0}
+              autoFocus={i === 0}
               type="number"
               min={0}
               max={currentRound}
@@ -52,7 +73,7 @@ export function PredictionOverlay({ close }: { close: () => void }) {
               onFocus={(e) => e.target.select()}
               onChange={(e) => {
                 const copy = [...predictions];
-                copy[i] = parseInt(e.target.value);
+                copy[i] = parseInt(e.target.value) || 0;
                 setPredictions(copy);
               }}
               className="border w-16 p-1"
@@ -61,11 +82,11 @@ export function PredictionOverlay({ close }: { close: () => void }) {
         ))}
         {error && <div className="bg-red-100 text-red-700 p-2 mb-2 rounded">{error}</div>}
         <button
-          type={'submit'}
+          type="submit"
           onClick={submit}
           className="mt-2 bg-blue-500 text-white px-4 py-2 rounded w-full"
         >
-          Runde starten
+          {t('predictionOverlay.startRound')}
         </button>
       </form>
     </div>
