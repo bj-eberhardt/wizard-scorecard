@@ -5,23 +5,21 @@ export function WinnerView() {
   const { t } = useTranslation();
   const { players, totalRounds } = useGameStore();
 
-  // Finde den höchsten Punktestand
-  const maxPoints = Math.max(...players.map((p) => p.points[totalRounds - 1] ?? 0));
+  const maxReachedPoints = Math.max(...players.map((p) => p.points[totalRounds - 1] ?? 0));
 
-  // Finde alle Spieler mit diesem Punktestand
-  const winners = players.filter((p) => (p.points[totalRounds - 1] ?? 0) === maxPoints);
+  const winners = players.filter((p) => (p.points[totalRounds - 1] ?? 0) === maxReachedPoints);
 
   const getWinnerText = () => {
     if (winners.length === 1) {
       return t('winnerView.announcement_single', {
         name: winners[0].name,
-        points: maxPoints,
+        points: maxReachedPoints,
       });
     } else if (winners.length === 2) {
       return t('winnerView.announcement_two', {
         name1: winners[0].name,
         name2: winners[1].name,
-        points: maxPoints,
+        points: maxReachedPoints,
       });
     } else {
       const allButLast = winners
@@ -31,7 +29,7 @@ export function WinnerView() {
       return t('winnerView.announcement_multiple', {
         names: allButLast,
         lastName: winners[winners.length - 1].name,
-        points: maxPoints,
+        points: maxReachedPoints,
       });
     }
   };
