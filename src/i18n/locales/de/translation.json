@@ -34,7 +34,9 @@
     "tooltip": "Vorhersage: {{prediction}}\nErreichte Stiche: {{tricks}}\nPunkte: {{points}}"
   },
   "winnerView": {
-    "announcement": "🎉 Gewinner: {{name}} mit {{points}} Punkten!"
+    "announcement_single": "🎉 Gewinner: {{name}} mit {{points}} Punkten!",
+    "announcement_two": "🎉 Gewinner: {{name1}} und {{name2}} mit {{points}} Punkten!",
+    "announcement_multiple": "🎉 Gewinner: {{names}} und {{lastName}} mit {{points}} Punkten!"
   },
   "configureGame": {
     "title": "Bitte gib die Namen der Spieler ein:",

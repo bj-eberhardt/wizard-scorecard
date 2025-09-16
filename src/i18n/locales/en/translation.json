@@ -34,7 +34,9 @@
     "tooltip": "Prediction: {{prediction}}\nTricks taken: {{tricks}}\nPoints: {{points}}"
   },
   "winnerView": {
-    "announcement": "🎉 Winner: {{name}} with {{points}} points!"
+    "announcement_single": "🎉 Winner: {{name}} with {{points}} points!",
+    "announcement_two": "🎉 Winners: {{name1}} and {{name2}} with {{points}} points!",
+    "announcement_multiple": "🎉 Winners: {{names}} and {{lastName}} with {{points}} points!"
   },
   "configureGame": {
     "title": "Please enter the names of the players:",
