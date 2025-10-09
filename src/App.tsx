@@ -114,7 +114,10 @@ export default function App() {
                 <div className="bg-white p-6 rounded shadow-lg text-center">
                   <p>Möchtest du das aktuelle Spiel wirklich beenden?</p>
                   <div className="mt-4 flex justify-center gap-4">
-                    <button onClick={handleNewGame} className="bg-red-600 text-white px-4 py-2 rounded">
+                    <button
+                      onClick={handleNewGame}
+                      className="bg-red-600 text-white px-4 py-2 rounded"
+                    >
                       Ja, beenden
                     </button>
                     <button
