@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react';
 import logoPng from '../assets/logo.png';
+import logoWebp from '../assets/logo.webp';
 
 export const LoadingScreen = () => {
   const [isVisible, setIsVisible] = useState(true);
@@ -22,7 +23,7 @@ export const LoadingScreen = () => {
     >
       <div className="w-48 h-48 sm:w-64 sm:h-64 md:w-128 md:h-128 relative">
         <picture>
-          <source srcSet="/src/assets/logo.webp" type="image/webp" />
+          <source srcSet={logoWebp} type="image/webp" />
           <img
             src={logoPng}
             alt=""
