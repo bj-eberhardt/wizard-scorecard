@@ -65,15 +65,15 @@ export default function App() {
 
   if (!gameStarted) {
     return (
-        <>
-          <LoadingScreen />
-          <div className="p-4 space-y-2 relative min-h-screen">
-            <FullscreenButton />
-            <Header />
-            <ConfigureGame onStart={handleStart} />
-            <Footer />
-          </div>
-        </>
+      <>
+        <LoadingScreen />
+        <div className="p-4 space-y-2 relative min-h-screen">
+          <FullscreenButton />
+          <Header />
+          <ConfigureGame onStart={handleStart} />
+          <Footer />
+        </div>
+      </>
     );
   }
 
