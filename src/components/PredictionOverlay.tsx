@@ -10,8 +10,6 @@ export function PredictionOverlay({ close }: { close: () => void }) {
 
   const startPlayerIndex = getCurrentStartPlayerIndex();
 
-  // Lade bereits gespeicherte Vorhersagen für die aktuelle Runde aus dem Store
-  // und ordne sie in der Reihenfolge der rotierten Spieler (startPlayerIndex)
   useEffect(() => {
     const r = currentRound - 1;
     const rotated = [...players.slice(startPlayerIndex), ...players.slice(0, startPlayerIndex)];
