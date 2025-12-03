@@ -1,5 +1,6 @@
 import { useGameStore } from './store/gameStore';
 import { useState, useEffect } from 'react';
+import { useTranslation } from 'react-i18next';
 import { Scoreboard } from './components/Scoreboard';
 import { PredictionOverlay } from './components/PredictionOverlay';
 import { ResultOverlay } from './components/ResultOverlay';
@@ -11,8 +12,10 @@ import FullscreenButton from './components/FullscreenButton';
 import { LoadingScreen } from './components/LoadingScreen';
 
 export default function App() {
+  const { t } = useTranslation();
   const {
     setPlayerNames,
+    setTotalRounds,
     gameStarted,
     currentRound,
     totalRounds,
@@ -23,8 +26,11 @@ export default function App() {
   } = useGameStore();
   const [showConfirm, setShowConfirm] = useState(false);
 
-  const handleStart = (names: string[], useWolke: boolean) => {
+  const handleStart = (names: string[], useWolke: boolean, rounds?: number) => {
     setPlayerNames(names);
+    if (typeof rounds === 'number' && rounds > 0) {
+      setTotalRounds(rounds);
+    }
     setUseAnniversaryRules(useWolke);
     setOverlay('prediction');
   };
@@ -79,7 +85,6 @@ export default function App() {
 
   return (
     <>
-      <LoadingScreen />
       <div className="relative min-h-screen p-4">
         <FullscreenButton />
         <Header />
@@ -96,7 +101,7 @@ export default function App() {
                 onClick={() => setOverlay('prediction')}
                 className="mt-4 bg-green-500 text-white px-4 py-2 rounded sticky bottom-2 z-[200]"
               >
-                Nächste Runde starten
+                {t('buttons.startNextRound')}
               </button>
             )}
             {/* Button für neues Spiel, nur wenn Spiel läuft */}
@@ -106,7 +111,7 @@ export default function App() {
                   onClick={() => setShowConfirm(true)}
                   className="bg-red-500 text-white px-4 py-2 rounded"
                 >
-                  Neues Spiel starten
+                  {t('buttons.newGame')}
                 </button>
               </div>
             )}
@@ -115,19 +120,19 @@ export default function App() {
             {showConfirm && (
               <div className="fixed inset-0 flex items-center justify-center bg-black bg-opacity-50 z-50">
                 <div className="bg-white p-6 rounded shadow-lg text-center">
-                  <p>Möchtest du das aktuelle Spiel wirklich beenden?</p>
+                  <p>{t('confirmDialog.title')}</p>
                   <div className="mt-4 flex justify-center gap-4">
                     <button
                       onClick={handleNewGame}
                       className="bg-red-600 text-white px-4 py-2 rounded"
                     >
-                      Ja, beenden
+                      {t('confirmDialog.yes')}
                     </button>
                     <button
                       onClick={() => setShowConfirm(false)}
                       className="bg-gray-300 px-4 py-2 rounded"
                     >
-                      Abbrechen
+                      {t('confirmDialog.cancel')}
                     </button>
                   </div>
                 </div>
@@ -142,7 +147,7 @@ export default function App() {
                   onClick={() => handleNewGame()}
                   className="bg-red-500 text-white px-4 py-2 rounded"
                 >
-                  Neues Spiel starten
+                  {t('buttons.newGame')}
                 </button>
               </div>
             )}

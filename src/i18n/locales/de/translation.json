@@ -15,7 +15,10 @@
   },
   "buttons": {
     "close": "Schließen",
-    "submit": "Bestätigen"
+    "submit": "Bestätigen",
+    "startNextRound": "Nächste Runde starten",
+    "newGame": "Neues Spiel starten",
+    "toggleFullscreen": "Vollbild umschalten"
   },
   "labels": {
     "prediction": "Vorhersage",
@@ -38,17 +41,33 @@
     "announcement_two": "🎉 Gewinner: {{name1}} und {{name2}} mit {{points}} Punkten!",
     "announcement_multiple": "🎉 Gewinner: {{names}} und {{lastName}} mit {{points}} Punkten!"
   },
+  "confirmDialog": {
+    "title": "Möchtest du das aktuelle Spiel wirklich beenden?",
+    "yes": "Ja, beenden",
+    "cancel": "Abbrechen"
+  },
+  "header": {
+    "title": "Punkteblock",
+    "logoAlt": "Logo"
+  },
+  "footer": {
+    "copy": "© {{year}} - Version: {{version}}"
+  },
   "configureGame": {
     "title": "Bitte gib die Namen der Spieler ein:",
     "playerNamePlaceholder": "Name Spieler {{number}}",
     "removePlayerLabel": "Entferne Spieler {{number}}",
     "useAnniversaryRules": "Jubiläumsregeln verwenden (Wolke)",
     "startGame": "Spiel starten",
+    "roundsLabel": "Anzahl Runden",
+    "roundsHelp": "Standard: {{default}}",
     "errors": {
       "gapInNames": "Spielernamen müssen von oben nach unten lückenlos eingegeben werden.",
       "minPlayers": "Mindestens 3 Spieler erforderlich.",
       "maxPlayers": "Maximal {{max}} Spieler erlaubt.",
-      "uniqueNames": "Jeder Name muss einzigartig sein."
+      "uniqueNames": "Jeder Name muss einzigartig sein.",
+      "roundsTooSmall": "Mindestens {{min}} Runden erforderlich.",
+      "roundsTooLarge": "Maximal {{max}} Runden erlaubt."
     }
   }
 }

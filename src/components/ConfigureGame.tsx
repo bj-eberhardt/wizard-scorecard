@@ -1,9 +1,10 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import useSettingsStore from '../store/settingsStore';
 import { useTranslation } from 'react-i18next';
+import { roundsForCount } from '../store/gameStore';
 
 interface ConfigureGameProps {
-  onStart: (names: string[], useWolke: boolean) => void;
+  onStart: (names: string[], useWolke: boolean, rounds?: number) => void;
 }
 
 const ConfigureGame: React.FC<ConfigureGameProps> = ({ onStart }) => {
@@ -21,6 +22,31 @@ const ConfigureGame: React.FC<ConfigureGameProps> = ({ onStart }) => {
   const [namesInput, setNamesInput] = useState<string[]>(initialNames);
   const [useWolke, setUseWolke] = useState(useAnniversaryRules);
   const [error, setError] = useState<string | null>(null);
+
+  // rounds state and manual override flag
+  const nonEmptyCount = namesInput.map((n) => n.trim()).filter((n) => n !== '').length;
+  const defaultRounds = roundsForCount(nonEmptyCount);
+  const [rounds, setRounds] = useState<number>(defaultRounds);
+  const [manualRounds, setManualRounds] = useState(false);
+
+  // allowed bounds for input: at least 5, at most double the default for current player count
+  const minAllowedRounds = 5;
+  // make maxAllowedRounds stateful so it updates reliably when player count changes
+  const [maxAllowedRounds, setMaxAllowedRounds] = useState<number>(
+    defaultRounds > 0 ? defaultRounds * 2 : minAllowedRounds * 2
+  );
+
+  useEffect(() => {
+    // when player count changes, recompute default and allowed max
+    const newDefault = roundsForCount(nonEmptyCount);
+    const newMax = newDefault > 0 ? newDefault * 2 : minAllowedRounds * 2;
+    setMaxAllowedRounds(newMax);
+
+    // if the user didn't override rounds manually, update rounds to the new default
+    if (!manualRounds) {
+      setRounds(newDefault);
+    }
+  }, [nonEmptyCount]);
 
   const removeName = (idx: number) => {
     const copy = [...namesInput];
@@ -53,10 +79,26 @@ const ConfigureGame: React.FC<ConfigureGameProps> = ({ onStart }) => {
       return;
     }
 
+    // validate rounds: at least 5 and at most double the default for this player count
+    const defaultForCount = roundsForCount(trimmedNames.length);
+    const minRounds = 5;
+    const maxRounds = defaultForCount > 0 ? defaultForCount * 2 : minRounds * 2;
+    const chosenRounds = Number.isNaN(rounds) ? 0 : rounds;
+
+    if (chosenRounds < minRounds) {
+      setError(t('configureGame.errors.roundsTooSmall', { min: minRounds }));
+      return;
+    }
+    if (chosenRounds > maxRounds) {
+      setError(t('configureGame.errors.roundsTooLarge', { max: maxRounds }));
+      return;
+    }
+
     setPlayerNames(trimmedNames);
     setUseAnniversaryRules(useWolke);
     setError(null);
-    onStart(trimmedNames, useWolke);
+    // pass rounds if set (>0) otherwise undefined for backward compatibility
+    onStart(trimmedNames, useWolke, rounds && rounds > 0 ? rounds : undefined);
   };
 
   return (
@@ -92,6 +134,28 @@ const ConfigureGame: React.FC<ConfigureGameProps> = ({ onStart }) => {
             )}
           </div>
         ))}
+
+        {/* rounds setting */}
+        <label className="flex flex-col items-start gap-1 mt-4 w-full">
+          <span className="text-sm">{t('configureGame.roundsLabel')}</span>
+          <input
+            type="number"
+            min={minAllowedRounds}
+            max={maxAllowedRounds}
+            value={rounds}
+            onChange={(e) => {
+              const v = parseInt(e.target.value || '0', 10);
+              setManualRounds(true);
+              setRounds(Number.isNaN(v) ? 0 : v);
+            }}
+            className="border p-1 w-full"
+            aria-label={t('configureGame.roundsLabel')}
+          />
+          <span className="text-xs text-gray-500">
+            {t('configureGame.roundsHelp', { default: defaultRounds })}
+          </span>
+        </label>
+
         <label className="flex items-center gap-2 mt-4">
           <input
             type="checkbox"
@@ -100,7 +164,7 @@ const ConfigureGame: React.FC<ConfigureGameProps> = ({ onStart }) => {
           />
           {t('configureGame.useAnniversaryRules')}
         </label>
-        {error && <div className="text-red-500">{error}</div>}
+        {error && <div className="bg-red-100 text-red-700 p-2 mb-2 rounded">{error}</div>}
         <button
           type={'button'}
           onClick={handleStart}
