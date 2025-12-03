@@ -15,6 +15,7 @@ export default function App() {
   const { t } = useTranslation();
   const {
     setPlayerNames,
+    setTotalRounds,
     gameStarted,
     currentRound,
     totalRounds,
@@ -26,7 +27,10 @@ export default function App() {
   const [showConfirm, setShowConfirm] = useState(false);
 
   const handleStart = (names: string[], useWolke: boolean, rounds?: number) => {
-    setPlayerNames(names, rounds);
+    setPlayerNames(names);
+    if (typeof rounds === 'number' && rounds > 0) {
+      setTotalRounds(rounds);
+    }
     setUseAnniversaryRules(useWolke);
     setOverlay('prediction');
   };

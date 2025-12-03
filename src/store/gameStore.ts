@@ -16,7 +16,8 @@ interface GameState {
   gameStarted: boolean;
   useAnniversaryRules: boolean;
   overlay: OverlayState;
-  setPlayerNames: (names: string[], totalRounds?: number) => void;
+  setPlayerNames: (names: string[]) => void;
+  setTotalRounds: (rounds: number) => void;
   setPrediction: (playerIndex: number, value: number) => void;
   setResult: (playerIndex: number, value: number) => void;
   advanceRound: () => void;
@@ -90,18 +91,20 @@ export const useGameStore = create<GameState>((set, get) => {
     gameStarted: initialGameStarted,
     useAnniversaryRules: initialUseAnniversaryRules,
     overlay: initialOverlay,
-    setPlayerNames: (names: string[], totalRounds?: number) => {
+    setPlayerNames: (names: string[]) => {
       const players = names.map((name) => ({
         name,
         predictions: [],
         results: [],
         points: [],
       }));
-      const rounds =
-        typeof totalRounds === 'number' && totalRounds > 0
-          ? totalRounds
-          : roundsForCount(players.length);
+      const rounds = roundsForCount(players.length);
       set({ players, totalRounds: rounds, gameStarted: true, currentRound: 1 }, false);
+      save();
+    },
+    setTotalRounds: (r) => {
+      const rounds = typeof r === 'number' && r > 0 ? r : get().totalRounds;
+      set({ totalRounds: rounds }, false);
       save();
     },
     setPrediction: (i, value) => {
