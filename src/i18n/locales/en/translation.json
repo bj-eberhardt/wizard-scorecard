@@ -15,7 +15,10 @@
   },
   "buttons": {
     "close": "Close",
-    "submit": "Submit"
+    "submit": "Submit",
+    "startNextRound": "Start next round",
+    "newGame": "Start new game",
+    "toggleFullscreen": "Toggle fullscreen"
   },
   "labels": {
     "prediction": "Prediction",
@@ -44,11 +47,27 @@
     "removePlayerLabel": "Remove player {{number}}",
     "useAnniversaryRules": "Use anniversary rules (Cloud)",
     "startGame": "Start Game",
+    "roundsLabel": "Number of rounds",
+    "roundsHelp": "Default: {{default}}",
     "errors": {
       "gapInNames": "Player names must be entered consecutively from top to bottom.",
       "minPlayers": "At least 3 players required.",
       "maxPlayers": "Maximum {{max}} players allowed.",
-      "uniqueNames": "Each name must be unique."
+      "uniqueNames": "Each name must be unique.",
+      "roundsTooSmall": "At least {{min}} rounds required.",
+      "roundsTooLarge": "At most {{max}} rounds allowed."
     }
+  },
+  "confirmDialog": {
+    "title": "Do you really want to end the current game?",
+    "yes": "Yes, end",
+    "cancel": "Cancel"
+  },
+  "header": {
+    "title": "Scorepad",
+    "logoAlt": "Logo"
+  },
+  "footer": {
+    "copy": "© {{year}} - Version: {{version}}"
   }
 }

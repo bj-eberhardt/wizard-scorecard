@@ -16,7 +16,7 @@ interface GameState {
   gameStarted: boolean;
   useAnniversaryRules: boolean;
   overlay: OverlayState;
-  setPlayerNames: (names: string[]) => void;
+  setPlayerNames: (names: string[], totalRounds?: number) => void;
   setPrediction: (playerIndex: number, value: number) => void;
   setResult: (playerIndex: number, value: number) => void;
   advanceRound: () => void;
@@ -30,7 +30,7 @@ interface GameState {
 const STORAGE_KEY = 'wizard_state_v1';
 
 // helper to compute total rounds by player count
-function roundsForCount(n: number) {
+export function roundsForCount(n: number) {
   if (n === 3) return 20;
   if (n === 4) return 15;
   if (n === 5) return 12;
@@ -60,7 +60,9 @@ export const useGameStore = create<GameState>((set, get) => {
 
   const initialPlayers: Player[] = saved?.players ?? [];
   const initialCurrentRound: number = saved?.currentRound ?? 1;
-  const initialTotalRounds: number = saved?.totalRounds ?? 0;
+  // backward compatible: if saved.totalRounds is missing or 0, compute from player count
+  const initialTotalRounds: number =
+    saved?.totalRounds ?? (initialPlayers.length ? roundsForCount(initialPlayers.length) : 0);
   const initialGameStarted: boolean = saved?.gameStarted ?? false;
   const initialUseAnniversaryRules: boolean = saved?.useAnniversaryRules ?? false;
   const initialOverlay: OverlayState = saved?.overlay ?? 'none';
@@ -88,15 +90,18 @@ export const useGameStore = create<GameState>((set, get) => {
     gameStarted: initialGameStarted,
     useAnniversaryRules: initialUseAnniversaryRules,
     overlay: initialOverlay,
-    setPlayerNames: (names: string[]) => {
+    setPlayerNames: (names: string[], totalRounds?: number) => {
       const players = names.map((name) => ({
         name,
         predictions: [],
         results: [],
         points: [],
       }));
-      const totalRounds = roundsForCount(players.length);
-      set({ players, totalRounds, gameStarted: true, currentRound: 1 }, false);
+      const rounds =
+        typeof totalRounds === 'number' && totalRounds > 0
+          ? totalRounds
+          : roundsForCount(players.length);
+      set({ players, totalRounds: rounds, gameStarted: true, currentRound: 1 }, false);
       save();
     },
     setPrediction: (i, value) => {

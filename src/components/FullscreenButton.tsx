@@ -1,4 +1,5 @@
 import React from 'react';
+import { useTranslation } from 'react-i18next';
 
 const isMobile = () => window.matchMedia('(max-width: 768px)').matches;
 const isFullscreenSupported = () => document.fullscreenEnabled || false;
@@ -12,12 +13,13 @@ async function toggleFullscreen() {
 }
 
 const FullscreenButton: React.FC = () => {
+  const { t } = useTranslation();
   if (!isMobile() || !isFullscreenSupported()) return null;
   return (
     <button
       onClick={toggleFullscreen}
       className="absolute top-2 right-2 z-50 p-2 bg-white rounded-full shadow-md"
-      aria-label="Vollbild umschalten"
+      aria-label={t('buttons.toggleFullscreen')}
     >
       <svg
         width="24"
