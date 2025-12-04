@@ -11,6 +11,7 @@ export function ResultOverlay({ close }: { close: () => void }) {
     advanceRound,
     useAnniversaryRules,
     getCurrentStartPlayerIndex,
+    setOverlay,
   } = useGameStore();
   const [results, setResults] = useState<number[]>(Array(players.length).fill(0));
   const [wolkeFlags, setWolkeFlags] = useState<boolean[]>(Array(players.length).fill(false));
@@ -128,13 +129,24 @@ export function ResultOverlay({ close }: { close: () => void }) {
           </div>
         ))}
         {error && <div className="bg-red-100 text-red-700 p-2 mb-2 rounded">{error}</div>}
-        <button
-          type={'submit'}
-          onClick={(e) => submit(e)}
-          className="mt-2 bg-green-500 text-white px-4 py-2 rounded w-full"
-        >
-          {t('resultOverlay.submitButton')}
-        </button>
+        <div className="mt-2 flex gap-2">
+          <button
+            type="button"
+            tabIndex={-1}
+            onClick={() => setOverlay('prediction')}
+            className="flex-0 bg-gray-200 text-gray-800 px-3 py-2 rounded"
+            title={t('resultOverlay.revertButton')}
+          >
+            ↶
+          </button>
+          <button
+            type={'submit'}
+            onClick={(e) => submit(e)}
+            className="flex-1 bg-green-500 text-white px-4 py-2 rounded"
+          >
+            {t('resultOverlay.submitButton')}
+          </button>
+        </div>
       </form>
     </div>
   );

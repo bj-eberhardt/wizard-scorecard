@@ -1,5 +1,5 @@
 import { useGameStore } from '../store/gameStore';
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useTranslation } from 'react-i18next';
 
 export function PredictionOverlay({ close }: { close: () => void }) {
@@ -9,6 +9,14 @@ export function PredictionOverlay({ close }: { close: () => void }) {
   const [error, setError] = useState<string>('');
 
   const startPlayerIndex = getCurrentStartPlayerIndex();
+
+  useEffect(() => {
+    const r = currentRound - 1;
+    const rotated = [...players.slice(startPlayerIndex), ...players.slice(0, startPlayerIndex)];
+    const existing = rotated.map((p) => p.predictions?.[r] ?? 0);
+    setPredictions(existing);
+  }, [players, currentRound, startPlayerIndex]);
+
   const rotatedPlayers = [
     ...players.slice(startPlayerIndex),
     ...players.slice(0, startPlayerIndex),
