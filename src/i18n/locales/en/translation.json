@@ -31,7 +31,9 @@
     "title": "Results Round {{round}}",
     "tip": "(Prediction: {{tip}})",
     "wolke": "Cloud",
-    "submitButton": "Finish round"
+    "submitButton": "Finish round",
+    "submitButtonDisabled": "Finish round",
+    "confirmAllZero": "All results are 0. Click again to confirm."
   },
   "scoreboard": {
     "tooltip": "Prediction: {{prediction}}\nTricks taken: {{tricks}}\nPoints: {{points}}"
