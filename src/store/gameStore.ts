@@ -24,7 +24,11 @@ interface GameState {
   setTotalRounds: (rounds: number) => void;
   setPrediction: (playerIndex: number, value: number) => void;
   // value is the actual result (after applying wolke logic), meta optionally contains wolkeUsed and originalPrediction
-  setResult: (playerIndex: number, value: number, meta?: { wolkeUsed?: boolean; receivedTricks?: number }) => void;
+  setResult: (
+    playerIndex: number,
+    value: number,
+    meta?: { wolkeUsed?: boolean; receivedTricks?: number }
+  ) => void;
   advanceRound: () => void;
   resetGame: () => void;
   setUseAnniversaryRules: (use: boolean) => void;

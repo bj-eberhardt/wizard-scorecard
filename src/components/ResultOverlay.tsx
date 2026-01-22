@@ -168,11 +168,15 @@ export function ResultOverlay({ close }: { close: () => void }) {
         ))}
         {error && <div className="bg-red-100 text-red-700 p-2 mb-2 rounded">{error}</div>}
         {confirmZero && (
-          <div className="bg-orange-100 text-orange-800 p-2 mb-2 rounded">{t('resultOverlay.confirmAllZero')}</div>
+          <div className="bg-orange-100 text-orange-800 p-2 mb-2 rounded">
+            {t('resultOverlay.confirmAllZero')}
+          </div>
         )}
         {/* single info line above the buttons, shown once if any wolke is selected */}
         {anyWolkeSelected && (
-          <div className="text-sm text-gray-700 bg-gray-50 p-2 rounded mb-2">{t('resultOverlay.wolkeInfo')}</div>
+          <div className="text-sm text-gray-700 bg-gray-50 p-2 rounded mb-2">
+            {t('resultOverlay.wolkeInfo')}
+          </div>
         )}
         <div className="mt-2 flex gap-2">
           <button
@@ -196,7 +200,9 @@ export function ResultOverlay({ close }: { close: () => void }) {
             aria-busy={submitDisabled}
             className={`flex-1 px-4 py-2 rounded ${submitDisabled ? 'bg-gray-300 text-gray-600 cursor-not-allowed' : 'bg-green-500 text-white'}`}
           >
-            {submitDisabled ? t('resultOverlay.submitButtonDisabled') : t('resultOverlay.submitButton')}
+            {submitDisabled
+              ? t('resultOverlay.submitButtonDisabled')
+              : t('resultOverlay.submitButton')}
           </button>
         </div>
       </form>

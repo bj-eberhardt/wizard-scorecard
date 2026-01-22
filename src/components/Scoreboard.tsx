@@ -14,7 +14,10 @@ export function Scoreboard() {
   const pulseTimerRef = useRef<number | null>(null);
   useEffect(() => {
     // Do not persist animation state; show pulse when currentRound > 1 (also after F5).
-    const prefersReduced = typeof window !== 'undefined' && window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+    const prefersReduced =
+      typeof window !== 'undefined' &&
+      window.matchMedia &&
+      window.matchMedia('(prefers-reduced-motion: reduce)').matches;
     if (prefersReduced) {
       // respect user preference and don't animate
       return;
@@ -51,7 +54,7 @@ export function Scoreboard() {
   function getTooltipContent(p: Player, roundIndex: number) {
     const base = t('scoreboard.tooltip', {
       prediction: p.predictions[roundIndex] ?? '-',
-      tricks: p.receivedResults?.[roundIndex] ??  p.results?.[roundIndex] ?? '-',
+      tricks: p.receivedResults?.[roundIndex] ?? p.results?.[roundIndex] ?? '-',
       points: p.points[roundIndex] - (p.points[roundIndex - 1] ?? 0),
     });
     const extras: string[] = [];
@@ -90,7 +93,8 @@ export function Scoreboard() {
     if (!p.points[roundIndex]) return null;
     const rect = e.currentTarget.getBoundingClientRect();
     const content = getTooltipContent(p, roundIndex);
-    const combinedText = content.base + (content.extras.length ? '\n' + content.extras.join('\n') : '');
+    const combinedText =
+      content.base + (content.extras.length ? '\n' + content.extras.join('\n') : '');
     const tooltipWidth = createTooltipMeasureDiv(combinedText);
     let x = rect.right + window.scrollX + 8;
     if (x + tooltipWidth > window.innerWidth) {
@@ -108,7 +112,12 @@ export function Scoreboard() {
     };
   }
 
-  const handleMouseEnter = (e: React.MouseEvent<HTMLElement>, p: Player, roundIndex: number, playerIndex: number) => {
+  const handleMouseEnter = (
+    e: React.MouseEvent<HTMLElement>,
+    p: Player,
+    roundIndex: number,
+    playerIndex: number
+  ) => {
     // cancel any touch timer
     if (touchTimerRef.current) {
       window.clearTimeout(touchTimerRef.current);
@@ -126,12 +135,17 @@ export function Scoreboard() {
     setTooltip(null);
   };
 
-  const handleTouchStart = (e: React.TouchEvent<HTMLElement>, p: Player, roundIndex: number, playerIndex: number) => {
+  const handleTouchStart = (
+    e: React.TouchEvent<HTMLElement>,
+    p: Player,
+    roundIndex: number,
+    playerIndex: number
+  ) => {
     // start a long-press timer (500ms) to open the tooltip
     if (touchTimerRef.current) window.clearTimeout(touchTimerRef.current);
     // store the touch event's currentTarget bounding rect when firing
     touchTimerRef.current = window.setTimeout(() => {
-      setTooltip(getTooltipData(e as any, p, roundIndex, playerIndex));
+      setTooltip(getTooltipData(e, p, roundIndex, playerIndex));
       touchTimerRef.current = null;
     }, 500);
   };
@@ -195,8 +209,8 @@ export function Scoreboard() {
                     >
                       <span
                         className={`w-full inline-block text-left transition ease-out duration-150 hover:bg-gray-100 hover:shadow-sm rounded px-1 py-0.5 ${showPulse && roundIndex === lastPlayedIndex ? 'animate-pulse bg-yellow-100 ring-4 ring-yellow-300 shadow-md transform scale-105' : ''}`}
-                        onMouseEnter={(e) => handleMouseEnter(e as any, p, roundIndex, i)}
-                        onTouchStart={(e) => handleTouchStart(e as any, p, roundIndex, i)}
+                        onMouseEnter={(e) => handleMouseEnter(e, p, roundIndex, i)}
+                        onTouchStart={(e) => handleTouchStart(e, p, roundIndex, i)}
                       >
                         {p.predictions[roundIndex] ?? '-'}
                       </span>
@@ -233,7 +247,9 @@ export function Scoreboard() {
                 // mark the cloud icon part as decorative but provide accessible label via aria-label
                 <div key={idx}>
                   {l.startsWith('\u2601') ? (
-                    <span role="img" aria-label={t('scoreboard.wolkeNote')}>{l.replace('\u2601 ', '\u2601\u00A0')}</span>
+                    <span role="img" aria-label={t('scoreboard.wolkeNote')}>
+                      {l.replace('\u2601 ', '\u2601\u00A0')}
+                    </span>
                   ) : (
                     <span>{l}</span>
                   )}
