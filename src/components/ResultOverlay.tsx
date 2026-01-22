@@ -99,15 +99,18 @@ export function ResultOverlay({ close }: { close: () => void }) {
     results.forEach((val, i) => {
       const originalIndex = (i + startPlayerIndex) % players.length;
       let actualResult = val;
+      const prediction = players[originalIndex].predictions[currentRound - 1];
+      let wolkeApplied = false;
       if (useAnniversaryRules && wolkeFlags[i]) {
-        const prediction = players[originalIndex].predictions[currentRound - 1];
+        wolkeApplied = true;
         if (Math.abs(prediction - val) === 1) {
           actualResult = prediction;
         } else {
           actualResult = prediction + 1;
         }
       }
-      setResult(originalIndex, actualResult);
+      // pass the raw entered value (received tricks) so it can be shown in the tooltip
+      setResult(originalIndex, actualResult, { wolkeUsed: wolkeApplied, receivedTricks: val });
     });
     // clear confirm state and proceed
     setConfirmZero(false);

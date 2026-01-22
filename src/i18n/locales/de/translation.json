@@ -36,7 +36,10 @@
     "confirmAllZero": "Alle Ergebnisse sind 0. Noch einmal klicken, um dies zu bestätigen."
   },
   "scoreboard": {
-    "tooltip": "Vorhersage: {{prediction}}\nErreichte Stiche: {{tricks}}\nPunkte: {{points}}"
+    "tooltip": "Vorhersage: {{prediction}}\nErreichte Stiche: {{tricks}}\nPunkte: {{points}}",
+    "wolkeNote": "Wolke angewendet",
+    "originalPredictionLabel": "Originale Vorhersage: {{original}}",
+    "receivedTricksLabel": "Eingetragene Stiche: {{received}}"
   },
   "winnerView": {
     "announcement_single": "🎉 Gewinner: {{name}} mit {{points}} Punkten!",

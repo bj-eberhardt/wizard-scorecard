@@ -36,7 +36,10 @@
     "confirmAllZero": "All results are 0. Click again to confirm."
   },
   "scoreboard": {
-    "tooltip": "Prediction: {{prediction}}\nTricks taken: {{tricks}}\nPoints: {{points}}"
+    "tooltip": "Prediction: {{prediction}}\nTricks taken: {{tricks}}\nPoints: {{points}}",
+    "wolkeNote": "Cloud applied",
+    "originalPredictionLabel": "Original prediction: {{original}}",
+    "receivedTricksLabel": "Entered tricks: {{received}}"
   },
   "winnerView": {
     "announcement_single": "🎉 Winner: {{name}} with {{points}} points!",

@@ -5,6 +5,10 @@ export interface Player {
   predictions: number[];
   results: number[];
   points: number[];
+  // per-round flag whether 'Wolke' (anniversary rule) was applied
+  wolkeUsed?: boolean[];
+  // store the original prediction at the time of result (for display/history)
+  receivedResults?: number[];
 }
 
 type OverlayState = 'prediction' | 'result' | 'none';
@@ -19,7 +23,8 @@ interface GameState {
   setPlayerNames: (names: string[]) => void;
   setTotalRounds: (rounds: number) => void;
   setPrediction: (playerIndex: number, value: number) => void;
-  setResult: (playerIndex: number, value: number) => void;
+  // value is the actual result (after applying wolke logic), meta optionally contains wolkeUsed and originalPrediction
+  setResult: (playerIndex: number, value: number, meta?: { wolkeUsed?: boolean; receivedTricks?: number }) => void;
   advanceRound: () => void;
   resetGame: () => void;
   setUseAnniversaryRules: (use: boolean) => void;
@@ -97,13 +102,15 @@ export const useGameStore = create<GameState>((set, get) => {
         predictions: [],
         results: [],
         points: [],
+        wolkeUsed: [],
+        receivedResults: [],
       }));
       const rounds = roundsForCount(players.length);
       set({ players, totalRounds: rounds, gameStarted: true, currentRound: 1 }, false);
       save();
     },
     setTotalRounds: (r) => {
-      const rounds = typeof r === 'number' && r > 0 ? r : get().totalRounds;
+      const rounds = r > 0 ? r : get().totalRounds;
       set({ totalRounds: rounds }, false);
       save();
     },
@@ -115,7 +122,7 @@ export const useGameStore = create<GameState>((set, get) => {
       set({ players }, false);
       save();
     },
-    setResult: (i, value) => {
+    setResult: (i, value, meta) => {
       const players = JSON.parse(JSON.stringify(get().players));
       const r = get().currentRound - 1;
       const prediction = players[i].predictions?.[r] ?? 0;
@@ -124,7 +131,13 @@ export const useGameStore = create<GameState>((set, get) => {
       const points = correct ? 20 + value * 10 : -Math.abs(prediction - value) * 10;
       if (!players[i].results) players[i].results = [];
       if (!players[i].points) players[i].points = [];
+      if (!players[i].wolkeUsed) players[i].wolkeUsed = [];
+      if (!players[i].receivedResults) players[i].receivedResults = [];
       players[i].results[r] = value;
+      // store wolke flag and original prediction for this round
+      players[i].wolkeUsed[r] = meta?.wolkeUsed ?? false;
+      // store the raw entered tricks (received) so we can display what was typed
+      players[i].receivedResults[r] = meta?.receivedTricks ?? value;
       players[i].points[r] = lastPoints + points;
       set({ players }, false);
       save();
