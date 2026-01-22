@@ -33,7 +33,9 @@
     "wolke": "Cloud",
     "submitButton": "Finish round",
     "submitButtonDisabled": "Finish round",
-    "confirmAllZero": "All results are 0. Click again to confirm."
+    "confirmAllZero": "All results are 0. Click again to confirm.",
+    "wolkeInfo": "Enter the received tricks and mark the cloud for this user — we'll do the calculation.",
+    "revertButton": "Revert"
   },
   "scoreboard": {
     "tooltip": "Prediction: {{prediction}}\nTricks taken: {{tricks}}\nPoints: {{points}}",

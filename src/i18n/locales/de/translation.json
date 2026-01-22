@@ -33,7 +33,9 @@
     "wolke": "Wolke",
     "submitButton": "Runde beenden",
     "submitButtonDisabled": "Runde beenden",
-    "confirmAllZero": "Alle Ergebnisse sind 0. Noch einmal klicken, um dies zu bestätigen."
+    "confirmAllZero": "Alle Ergebnisse sind 0. Noch einmal klicken, um dies zu bestätigen.",
+    "wolkeInfo": "Trage die erhaltenen Stiche ein und markiere die Wolke für diesen Spieler – die Berechnung übernehmen wir.",
+    "revertButton": "Zurück"
   },
   "scoreboard": {
     "tooltip": "Vorhersage: {{prediction}}\nErreichte Stiche: {{tricks}}\nPunkte: {{points}}",

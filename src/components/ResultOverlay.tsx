@@ -46,6 +46,7 @@ export function ResultOverlay({ close }: { close: () => void }) {
     ...players.slice(startPlayerIndex),
     ...players.slice(0, startPlayerIndex),
   ];
+  const anyWolkeSelected = useAnniversaryRules && wolkeFlags.some((v) => v);
 
   const submit = (e?: React.SyntheticEvent) => {
     e?.preventDefault();
@@ -120,7 +121,7 @@ export function ResultOverlay({ close }: { close: () => void }) {
 
   return (
     <div className="fixed inset-0 bg-black bg-opacity-60 flex  xs:items-[normal] items-center justify-center z-20">
-      <form className="bg-white p-4 rounded shadow w-96" onSubmit={(e) => submit(e)}>
+      <form className="relative bg-white p-4 rounded shadow w-96" onSubmit={(e) => submit(e)}>
         <h2 className="text-lg font-bold mb-2">
           {t('resultOverlay.title', { round: currentRound })}
         </h2>
@@ -168,6 +169,10 @@ export function ResultOverlay({ close }: { close: () => void }) {
         {error && <div className="bg-red-100 text-red-700 p-2 mb-2 rounded">{error}</div>}
         {confirmZero && (
           <div className="bg-orange-100 text-orange-800 p-2 mb-2 rounded">{t('resultOverlay.confirmAllZero')}</div>
+        )}
+        {/* single info line above the buttons, shown once if any wolke is selected */}
+        {anyWolkeSelected && (
+          <div className="text-sm text-gray-700 bg-gray-50 p-2 rounded mb-2">{t('resultOverlay.wolkeInfo')}</div>
         )}
         <div className="mt-2 flex gap-2">
           <button
