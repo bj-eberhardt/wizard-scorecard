@@ -31,10 +31,17 @@
     "title": "Spiele Runde {{round}} und trage dann die Ergebnisse ein:",
     "tip": "(Tipp: {{tip}})",
     "wolke": "Wolke",
-    "submitButton": "Runde beenden"
+    "submitButton": "Runde beenden",
+    "submitButtonDisabled": "Runde beenden",
+    "confirmAllZero": "Alle Ergebnisse sind 0. Noch einmal klicken, um dies zu bestätigen.",
+    "wolkeInfo": "Trage die erhaltenen Stiche ein und markiere die Wolke für diesen Spieler – die Berechnung übernehmen wir.",
+    "revertButton": "Zurück"
   },
   "scoreboard": {
-    "tooltip": "Vorhersage: {{prediction}}\nErreichte Stiche: {{tricks}}\nPunkte: {{points}}"
+    "tooltip": "Vorhersage: {{prediction}}\nErreichte Stiche: {{tricks}}\nPunkte: {{points}}",
+    "wolkeNote": "Wolke angewendet",
+    "originalPredictionLabel": "Originale Vorhersage: {{original}}",
+    "receivedTricksLabel": "Eingetragene Stiche: {{received}}"
   },
   "winnerView": {
     "announcement_single": "🎉 Gewinner: {{name}} mit {{points}} Punkten!",

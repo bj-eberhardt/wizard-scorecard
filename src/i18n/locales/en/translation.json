@@ -31,10 +31,17 @@
     "title": "Results Round {{round}}",
     "tip": "(Prediction: {{tip}})",
     "wolke": "Cloud",
-    "submitButton": "Finish round"
+    "submitButton": "Finish round",
+    "submitButtonDisabled": "Finish round",
+    "confirmAllZero": "All results are 0. Click again to confirm.",
+    "wolkeInfo": "Enter the received tricks and mark the cloud for this user — we'll do the calculation.",
+    "revertButton": "Revert"
   },
   "scoreboard": {
-    "tooltip": "Prediction: {{prediction}}\nTricks taken: {{tricks}}\nPoints: {{points}}"
+    "tooltip": "Prediction: {{prediction}}\nTricks taken: {{tricks}}\nPoints: {{points}}",
+    "wolkeNote": "Cloud applied",
+    "originalPredictionLabel": "Original prediction: {{original}}",
+    "receivedTricksLabel": "Entered tricks: {{received}}"
   },
   "winnerView": {
     "announcement_single": "🎉 Winner: {{name}} with {{points}} points!",
