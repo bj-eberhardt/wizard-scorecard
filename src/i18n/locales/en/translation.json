@@ -11,7 +11,8 @@
     "wolkeMinOne": "When using cloud, the value must be at least 1 for {{playerName}}",
     "onlyOneWolke": "Only one cloud per round is allowed",
     "predictionTooSmall": "Prediction too small for player {{playerNames}}",
-    "predictionTooLarge": "Prediction too large for player {{playerNames}}"
+    "predictionTooLarge": "Prediction too large for player {{playerNames}}",
+    "predictionNotEqualLast": "The sum of all predictions would equal {{round}}. The last player to predict ({{playerName}}) must not choose that value — please adjust the input."
   },
   "buttons": {
     "close": "Close",
@@ -53,6 +54,11 @@
     "playerNamePlaceholder": "Player {{number}} name",
     "removePlayerLabel": "Remove player {{number}}",
     "useAnniversaryRules": "Use anniversary rules (Cloud)",
+    "wolkeInfoTitle": "About Cloud (Anniversary)",
+    "wolkeInfo": "This rule belongs to the anniversary edition and can only be used if the game set includes special cards such as Cloud, Juggler, Dragon, Fairy and Bomb. If a player receives the Cloud, their prediction will be adjusted by +1 or -1 at the end of the round; the calculation is done automatically. Important: When entering results you must indicate which player received the Cloud.",
+    "useNotEqual": "Use 'Not Equal' rule",
+    "notEqualInfoTitle": "What does 'Not Equal' mean?",
+    "notEqualInfo": "The sum of all players' predictions must not equal the number of tricks available in that round. Example: In round 5 there are 5 tricks — the sum of all predictions must therefore not be 5. If the total would otherwise match the number of tricks, the last player to announce a prediction must adjust theirs so the overall sum differs.",
     "startGame": "Start Game",
     "roundsLabel": "Number of rounds",
     "roundsHelp": "Default: {{default}}",

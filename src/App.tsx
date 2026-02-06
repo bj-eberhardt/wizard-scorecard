@@ -22,16 +22,18 @@ export default function App() {
     overlay,
     setOverlay,
     setUseAnniversaryRules,
+    setUseNotEqual,
     resetGame,
   } = useGameStore();
   const [showConfirm, setShowConfirm] = useState(false);
 
-  const handleStart = (names: string[], useWolke: boolean, rounds?: number) => {
+  const handleStart = (names: string[], useWolke: boolean, useNotEqualFlag: boolean, rounds?: number) => {
     setPlayerNames(names);
     if (typeof rounds === 'number' && rounds > 0) {
       setTotalRounds(rounds);
     }
     setUseAnniversaryRules(useWolke);
+    setUseNotEqual(useNotEqualFlag);
     setOverlay('prediction');
   };
 

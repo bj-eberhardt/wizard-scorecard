@@ -11,7 +11,8 @@
     "wolkeMinOne": "Bei Wolke muss der Wert mindestens 1 sein für {{playerName}}",
     "onlyOneWolke": "Es kann nur eine Wolke pro Runde geben",
     "predictionTooSmall": "Zu kleine Schätzung für Spieler {{playerNames}}",
-    "predictionTooLarge": "Zu große Schätzung für Spieler {{playerNames}}"
+    "predictionTooLarge": "Zu große Schätzung für Spieler {{playerNames}}",
+    "predictionNotEqualLast": "Die Summe aller Vorhersagen würde {{round}} ergeben. Der zuletzt vorhersagende Spieler ({{playerName}}) darf diese Schätzung nicht abgeben — bitte passe die Eingabe an."
   },
   "buttons": {
     "close": "Schließen",
@@ -65,6 +66,11 @@
     "playerNamePlaceholder": "Name Spieler {{number}}",
     "removePlayerLabel": "Entferne Spieler {{number}}",
     "useAnniversaryRules": "Jubiläumsregeln verwenden (Wolke)",
+    "wolkeInfoTitle": "Zur Wolke (Jubiläum)?",
+    "wolkeInfo": "Diese Regel gehört zur Jubiläumsausgabe und kann nur verwendet werden, wenn das Spielset spezielle Karten wie Wolke, Jongleur, Drache, Fee und Bombe enthält. Wenn ein Spieler die Wolke erhält, wird seine Vorhersage am Ende der Runde automatisch um +1 oder −1 angepasst; die Berechnung erfolgt automatisch. Wichtig: Beim Eintragen der Ergebnisse muss angegeben werden, welcher Spieler die Wolke erhalten hat.",
+    "useNotEqual": "'Nicht Gleich' Regel verwenden",
+    "notEqualInfoTitle": "Was bedeutet 'Nicht Gleich'?,",
+    "notEqualInfo": "Die Summe aller Spieler‑Vorhersagen darf nicht gleich der Anzahl der in dieser Runde verfügbaren Stiche sein. Beispiel: In Runde 5 sind 5 Stiche zu vergeben — die Summe aller Vorhersagen darf daher nicht 5 sein. Sollte die Summe sonst gleich werden, muss der zuletzt vorhersagende Spieler seine Angabe so anpassen, dass die Gesamtsumme davon abweicht.",
     "startGame": "Spiel starten",
     "roundsLabel": "Anzahl Runden",
     "roundsHelp": "Standard: {{default}}",

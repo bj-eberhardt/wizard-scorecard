@@ -4,7 +4,7 @@ import { useTranslation } from 'react-i18next';
 
 export function PredictionOverlay({ close }: { close: () => void }) {
   const { t } = useTranslation();
-  const { players, setPrediction, currentRound, getCurrentStartPlayerIndex } = useGameStore();
+  const { players, setPrediction, currentRound, getCurrentStartPlayerIndex, useNotEqual } = useGameStore();
   const [predictions, setPredictions] = useState<number[]>(Array(players.length).fill(0));
   const [error, setError] = useState<string>('');
 
@@ -49,6 +49,21 @@ export function PredictionOverlay({ close }: { close: () => void }) {
       return;
     }
 
+    // if NotEqual rule is enabled, ensure the sum of all predictions is NOT equal to the current round number
+    if (useNotEqual) {
+      const sum = predictions.reduce((a, b) => a + b, 0);
+      if (sum === currentRound) {
+        const lastPlayer = rotatedPlayers[rotatedPlayers.length - 1];
+        setError(
+          t('errors.predictionNotEqualLast', {
+            playerName: lastPlayer?.name ?? '',
+            round: currentRound,
+          })
+        );
+        return;
+      }
+    }
+
     predictions.forEach((val, i) => {
       const originalIndex = (i + startPlayerIndex) % players.length;
       setPrediction(originalIndex, val);
@@ -58,7 +73,13 @@ export function PredictionOverlay({ close }: { close: () => void }) {
 
   return (
     <div className="fixed inset-0 bg-black bg-opacity-60 flex xs:items-[normal] items-center justify-center z-20">
-      <form className="bg-white p-4 rounded shadow w-96">
+      <form
+        onSubmit={(e) => {
+          e.preventDefault();
+          submit();
+        }}
+        className="bg-white p-4 rounded shadow w-96"
+      >
         <h2 className="text-lg font-bold mb-2">
           {t('predictionOverlay.title', { round: currentRound })}
         </h2>
@@ -91,7 +112,6 @@ export function PredictionOverlay({ close }: { close: () => void }) {
         {error && <div className="bg-red-100 text-red-700 p-2 mb-2 rounded">{error}</div>}
         <button
           type="submit"
-          onClick={submit}
           className="mt-2 bg-blue-500 text-white px-4 py-2 rounded w-full"
         >
           {t('predictionOverlay.startRound')}
