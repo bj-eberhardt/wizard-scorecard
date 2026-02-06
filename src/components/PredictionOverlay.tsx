@@ -66,7 +66,7 @@ export function PredictionOverlay({ close }: { close: () => void }) {
           <div key={p.name} className="flex flex-col xs:flex-row justify-between mb-2">
             <div>
               <span>{p.name}</span>
-              {p.points.at(-1) && (
+              {p.points.at(-1) != null && (
                 <span className="italic">
                   &nbsp;({p.points.at(-1)} {t('labels.points')})
                 </span>
