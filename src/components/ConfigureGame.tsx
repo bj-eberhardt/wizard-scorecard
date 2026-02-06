@@ -2,9 +2,10 @@ import React, { useState, useEffect } from 'react';
 import useSettingsStore from '../store/settingsStore';
 import { useTranslation } from 'react-i18next';
 import { roundsForCount } from '../store/gameStore';
+import InfoTooltip from './InfoTooltip';
 
 interface ConfigureGameProps {
-  onStart: (names: string[], useWolke: boolean, rounds?: number) => void;
+  onStart: (names: string[], useWolke: boolean, useNotEqual: boolean, rounds?: number) => void;
 }
 
 const ConfigureGame: React.FC<ConfigureGameProps> = ({ onStart }) => {
@@ -14,6 +15,8 @@ const ConfigureGame: React.FC<ConfigureGameProps> = ({ onStart }) => {
   const setPlayerNames = useSettingsStore((state) => state.setPlayerNames);
   const useAnniversaryRules = useSettingsStore((state) => state.useAnniversaryRules);
   const setUseAnniversaryRules = useSettingsStore((state) => state.setUseAnniversaryRules);
+  const useNotEqualSetting = useSettingsStore((state) => state.useNotEqual);
+  const setUseNotEqualSetting = useSettingsStore((state) => state.setUseNotEqual);
 
   const initialNames = [...playerNames, ...Array(MAX_PLAYERS - playerNames.length).fill('')].slice(
     0,
@@ -21,6 +24,7 @@ const ConfigureGame: React.FC<ConfigureGameProps> = ({ onStart }) => {
   );
   const [namesInput, setNamesInput] = useState<string[]>(initialNames);
   const [useWolke, setUseWolke] = useState(useAnniversaryRules);
+  const [useNotEqual, setUseNotEqual] = useState(useNotEqualSetting);
   const [error, setError] = useState<string | null>(null);
 
   // rounds state and manual override flag
@@ -96,9 +100,10 @@ const ConfigureGame: React.FC<ConfigureGameProps> = ({ onStart }) => {
 
     setPlayerNames(trimmedNames);
     setUseAnniversaryRules(useWolke);
+    setUseNotEqualSetting(useNotEqual);
     setError(null);
     // pass rounds if set (>0) otherwise undefined for backward compatibility
-    onStart(trimmedNames, useWolke, rounds && rounds > 0 ? rounds : undefined);
+    onStart(trimmedNames, useWolke, useNotEqual, rounds && rounds > 0 ? rounds : undefined);
   };
 
   return (
@@ -156,14 +161,38 @@ const ConfigureGame: React.FC<ConfigureGameProps> = ({ onStart }) => {
           </span>
         </label>
 
-        <label className="flex items-center gap-2 mt-4">
-          <input
-            type="checkbox"
-            checked={useWolke}
-            onChange={(e) => setUseWolke(e.target.checked)}
+        <div className="relative w-full flex items-center gap-2 mt-4">
+          <label className="flex items-center gap-2">
+            <input
+              type="checkbox"
+              checked={useWolke}
+              onChange={(e) => setUseWolke(e.target.checked)}
+            />
+            {t('configureGame.useAnniversaryRules')}
+          </label>
+          <InfoTooltip
+            title={t('configureGame.wolkeInfoTitle') as string}
+            content={t('configureGame.wolkeInfo') as string}
+            className="ml-1"
           />
-          {t('configureGame.useAnniversaryRules')}
-        </label>
+        </div>
+
+        <div className="relative w-full flex items-center gap-2 mt-2">
+          <label className="flex items-center gap-2">
+            <input
+              type="checkbox"
+              checked={useNotEqual}
+              onChange={(e) => setUseNotEqual(e.target.checked)}
+            />
+            {t('configureGame.useNotEqual')}
+          </label>
+          <InfoTooltip
+            title={t('configureGame.notEqualInfoTitle') as string}
+            content={t('configureGame.notEqualInfo') as string}
+            className="ml-1"
+          />
+        </div>
+
         {error && <div className="bg-red-100 text-red-700 p-2 mb-2 rounded">{error}</div>}
         <button
           type={'button'}

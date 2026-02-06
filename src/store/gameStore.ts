@@ -19,6 +19,7 @@ interface GameState {
   totalRounds: number;
   gameStarted: boolean;
   useAnniversaryRules: boolean;
+  useNotEqual: boolean;
   overlay: OverlayState;
   setPlayerNames: (names: string[]) => void;
   setTotalRounds: (rounds: number) => void;
@@ -32,6 +33,7 @@ interface GameState {
   advanceRound: () => void;
   resetGame: () => void;
   setUseAnniversaryRules: (use: boolean) => void;
+  setUseNotEqual: (use: boolean) => void;
   setOverlay: (o: OverlayState) => void;
   saveToStorage: () => void;
   getCurrentStartPlayerIndex: () => number;
@@ -75,6 +77,7 @@ export const useGameStore = create<GameState>((set, get) => {
     saved?.totalRounds ?? (initialPlayers.length ? roundsForCount(initialPlayers.length) : 0);
   const initialGameStarted: boolean = saved?.gameStarted ?? false;
   const initialUseAnniversaryRules: boolean = saved?.useAnniversaryRules ?? false;
+  const initialUseNotEqual: boolean = saved?.useNotEqual ?? false;
   const initialOverlay: OverlayState = saved?.overlay ?? 'none';
 
   const save = () => {
@@ -85,6 +88,7 @@ export const useGameStore = create<GameState>((set, get) => {
         totalRounds: get().totalRounds,
         gameStarted: get().gameStarted,
         useAnniversaryRules: get().useAnniversaryRules,
+        useNotEqual: get().useNotEqual,
         overlay: get().overlay,
       };
       localStorage.setItem(STORAGE_KEY, JSON.stringify(s));
@@ -99,6 +103,7 @@ export const useGameStore = create<GameState>((set, get) => {
     totalRounds: initialTotalRounds,
     gameStarted: initialGameStarted,
     useAnniversaryRules: initialUseAnniversaryRules,
+    useNotEqual: initialUseNotEqual,
     overlay: initialOverlay,
     setPlayerNames: (names: string[]) => {
       const players = names.map((name) => ({
@@ -158,6 +163,7 @@ export const useGameStore = create<GameState>((set, get) => {
           totalRounds: 0,
           gameStarted: false,
           useAnniversaryRules: false,
+          useNotEqual: false,
           overlay: 'none',
         },
         false
@@ -170,6 +176,10 @@ export const useGameStore = create<GameState>((set, get) => {
     },
     setUseAnniversaryRules: (use) => {
       set({ useAnniversaryRules: use }, false);
+      save();
+    },
+    setUseNotEqual: (use) => {
+      set({ useNotEqual: use }, false);
       save();
     },
     setOverlay: (o) => {
