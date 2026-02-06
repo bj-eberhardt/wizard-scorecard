@@ -4,7 +4,8 @@ import { useTranslation } from 'react-i18next';
 
 export function PredictionOverlay({ close }: { close: () => void }) {
   const { t } = useTranslation();
-  const { players, setPrediction, currentRound, getCurrentStartPlayerIndex, useNotEqual } = useGameStore();
+  const { players, setPrediction, currentRound, getCurrentStartPlayerIndex, useNotEqual } =
+    useGameStore();
   const [predictions, setPredictions] = useState<number[]>(Array(players.length).fill(0));
   const [error, setError] = useState<string>('');
 
@@ -110,10 +111,7 @@ export function PredictionOverlay({ close }: { close: () => void }) {
           </div>
         ))}
         {error && <div className="bg-red-100 text-red-700 p-2 mb-2 rounded">{error}</div>}
-        <button
-          type="submit"
-          className="mt-2 bg-blue-500 text-white px-4 py-2 rounded w-full"
-        >
+        <button type="submit" className="mt-2 bg-blue-500 text-white px-4 py-2 rounded w-full">
           {t('predictionOverlay.startRound')}
         </button>
       </form>

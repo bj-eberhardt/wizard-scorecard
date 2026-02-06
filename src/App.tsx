@@ -27,7 +27,12 @@ export default function App() {
   } = useGameStore();
   const [showConfirm, setShowConfirm] = useState(false);
 
-  const handleStart = (names: string[], useWolke: boolean, useNotEqualFlag: boolean, rounds?: number) => {
+  const handleStart = (
+    names: string[],
+    useWolke: boolean,
+    useNotEqualFlag: boolean,
+    rounds?: number
+  ) => {
     setPlayerNames(names);
     if (typeof rounds === 'number' && rounds > 0) {
       setTotalRounds(rounds);

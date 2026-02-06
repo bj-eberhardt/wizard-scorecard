@@ -30,11 +30,20 @@ export default function InfoTooltip({ title, content, className }: InfoTooltipPr
         aria-pressed={open}
         onClick={() => setOpen((s) => !s)}
         className={`ml-1 inline-flex items-center justify-center w-5 h-5 rounded-full focus:outline-none focus:ring-2 focus:ring-blue-300 transition-colors ${
-          open ? 'bg-white text-blue-700 border border-blue-600' : 'bg-blue-600 text-white hover:bg-blue-700'
+          open
+            ? 'bg-white text-blue-700 border border-blue-600'
+            : 'bg-blue-600 text-white hover:bg-blue-700'
         }`}
         title={title}
       >
-        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="0.9em" height="0.9em" className="inline-block" aria-hidden>
+        <svg
+          xmlns="http://www.w3.org/2000/svg"
+          viewBox="0 0 24 24"
+          width="0.9em"
+          height="0.9em"
+          className="inline-block"
+          aria-hidden
+        >
           <path d="M11.5 6h1v7h-1z" fill="currentColor" />
           <circle cx="12" cy="17" r="1" fill="currentColor" />
         </svg>
