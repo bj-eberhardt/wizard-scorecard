@@ -2,7 +2,20 @@
 
 A digital scoreboard for the card game Wizard, built with Vite, React, and TypeScript.
 
-You can see a live demo [here](https://wizard.app.familie-bark.de/).
+![](docs/gh-logo.png)
+
+<table>
+  <tr>
+    <td><img src="docs/1.png" width="200"></td>
+    <td><img src="docs/2.png" width="200"></td>
+  </tr>
+  <tr>
+    <td><img src="docs/3.png" width="200"></td>
+    <td><img src="docs/4.png" width="200"></td>
+  </tr>
+</table>
+
+You can see a live demo [here](https://bj-eberhardt.github.io/wizard-scorecard/).
 
 ## Features
 
@@ -29,6 +42,9 @@ docker run -p 8080:80 wizard-scoreboard
 ```
 
 It starts at `http://localhost:8080`.
+
+You can get the image also via docker-hub via:
+https://hub.docker.com/repository/docker/beberhardt/wizard-scorecard
 
 ### Webassets folder
 
