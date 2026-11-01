@@ -26,7 +26,7 @@ jobs:
       - name: Check formatting with Prettier
         id: prettier
         run: |
-          if ! npx prettier --check 'src/**/*.{ts,tsx,js,jsx}'; then
+          if ! npm run prettier:check; then
             echo "PRETTIER_FAILED=true" >> $GITHUB_ENV
           fi
 
@@ -36,6 +36,9 @@ jobs:
           if ! npm run lint; then
             echo "ESLINT_FAILED=true" >> $GITHUB_ENV
           fi
+
+      - name: Run TypeScript type check
+        run: npm run typecheck
 
       - name: Comment lint or formatter failures
         if: env.PRETTIER_FAILED == 'true' || env.ESLINT_FAILED == 'true'

@@ -1,4 +1,12 @@
-import { test, expect, openApp, startGame, submitPredictions, seedGameState, expectError } from './fixtures';
+import {
+  test,
+  expect,
+  openApp,
+  startGame,
+  submitPredictions,
+  seedGameState,
+  expectError,
+} from './fixtures';
 import { T } from '../src/test-ids';
 
 /**
@@ -91,7 +99,11 @@ test.describe('Enter tricks (prediction)', () => {
 });
 
 /** Helper: submit predictions expecting an error instead of the result overlay. */
-async function submitPredictionsExpectError(game: import('@playwright/test').Page, values: number[], errorKey: string) {
+async function submitPredictionsExpectError(
+  game: import('@playwright/test').Page,
+  values: number[],
+  errorKey: string
+) {
   for (let i = 0; i < values.length; i++) {
     await game.getByTestId(T.prediction.input(i)).fill(String(values[i]));
   }

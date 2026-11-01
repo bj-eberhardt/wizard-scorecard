@@ -7,10 +7,7 @@ import { T } from '../src/test-ids';
  * read from data-* attributes.
  */
 
-async function seedFinished(
-  game: import('@playwright/test').Page,
-  finalPoints: number[]
-) {
+async function seedFinished(game: import('@playwright/test').Page, finalPoints: number[]) {
   await seedGameState(game, {
     gameStarted: true,
     currentRound: 4, // > totalRounds -> game over

@@ -38,5 +38,6 @@ Thumbs.db
 /ux-shots/
 /ux-screens.mjs
 
-.husky/
-.husky/_/pre-commit
+# Husky: ignore generated internals, but keep the actual hooks tracked so the
+team/CI get the pre-commit gate via `npm run prepare`.
+.husky/_/

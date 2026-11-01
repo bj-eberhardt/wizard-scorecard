@@ -77,10 +77,10 @@ export async function openApp(
  */
 export async function seedGameState(page: Page, state: SeedState) {
   await page.addInitScript(
-    ([key, data]) => {
-      localStorage.setItem(key, JSON.stringify(data));
+    (payload) => {
+      localStorage.setItem(payload.key, JSON.stringify(payload.data));
     },
-    [STATE_KEY, state]
+    { key: STATE_KEY, data: state }
   );
 }
 
