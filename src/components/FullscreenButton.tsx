@@ -1,5 +1,6 @@
 import React from 'react';
 import { useTranslation } from 'react-i18next';
+import { T } from '../test-ids';
 
 const isMobile = () => window.matchMedia('(max-width: 768px)').matches;
 const isFullscreenSupported = () => document.fullscreenEnabled || false;
@@ -18,6 +19,7 @@ const FullscreenButton: React.FC = () => {
   return (
     <button
       onClick={toggleFullscreen}
+      data-testid={T.header.fullscreen}
       className="absolute top-2 right-2 z-50 p-2 bg-white rounded-full shadow-md"
       aria-label={t('buttons.toggleFullscreen')}
     >

@@ -1,6 +1,7 @@
 import { useGameStore } from '../store/gameStore';
 import { useState, useEffect } from 'react';
 import { useTranslation } from 'react-i18next';
+import { T } from '../test-ids';
 
 export function PredictionOverlay({ close }: { close: () => void }) {
   const { t } = useTranslation();
@@ -8,6 +9,13 @@ export function PredictionOverlay({ close }: { close: () => void }) {
     useGameStore();
   const [predictions, setPredictions] = useState<number[]>(Array(players.length).fill(0));
   const [error, setError] = useState<string>('');
+  // raw i18n key of the current error, exposed via data-error-key for E2E
+  const [errorKey, setErrorKey] = useState<string>('');
+
+  const showError = (key: string, options?: Record<string, unknown>) => {
+    setError(t(key, options));
+    setErrorKey(key);
+  };
 
   const startPlayerIndex = getCurrentStartPlayerIndex();
 
@@ -29,11 +37,9 @@ export function PredictionOverlay({ close }: { close: () => void }) {
       .filter((i) => i !== -1);
 
     if (tooSmallInputPlayerIndex.length > 0) {
-      setError(
-        t('errors.predictionTooSmall', {
-          playerNames: tooSmallInputPlayerIndex.map((i) => rotatedPlayers[i].name).join(', '),
-        })
-      );
+      showError('errors.predictionTooSmall', {
+        playerNames: tooSmallInputPlayerIndex.map((i) => rotatedPlayers[i].name).join(', '),
+      });
       return;
     }
 
@@ -42,11 +48,9 @@ export function PredictionOverlay({ close }: { close: () => void }) {
       .filter((i) => i !== -1);
 
     if (tooLargeInputPlayerIndex.length > 0) {
-      setError(
-        t('errors.predictionTooLarge', {
-          playerNames: tooLargeInputPlayerIndex.map((i) => rotatedPlayers[i].name).join(', '),
-        })
-      );
+      showError('errors.predictionTooLarge', {
+        playerNames: tooLargeInputPlayerIndex.map((i) => rotatedPlayers[i].name).join(', '),
+      });
       return;
     }
 
@@ -55,12 +59,10 @@ export function PredictionOverlay({ close }: { close: () => void }) {
       const sum = predictions.reduce((a, b) => a + b, 0);
       if (sum === currentRound) {
         const lastPlayer = rotatedPlayers[rotatedPlayers.length - 1];
-        setError(
-          t('errors.predictionNotEqualLast', {
-            playerName: lastPlayer?.name ?? '',
-            round: currentRound,
-          })
-        );
+        showError('errors.predictionNotEqualLast', {
+          playerName: lastPlayer?.name ?? '',
+          round: currentRound,
+        });
         return;
       }
     }
@@ -73,8 +75,12 @@ export function PredictionOverlay({ close }: { close: () => void }) {
   };
 
   return (
-    <div className="fixed inset-0 bg-black bg-opacity-60 flex xs:items-[normal] items-center justify-center z-20">
+    <div
+      className="fixed inset-0 bg-black bg-opacity-60 flex xs:items-[normal] items-center justify-center z-20"
+      data-testid={T.prediction.overlay}
+    >
       <form
+        noValidate
         onSubmit={(e) => {
           e.preventDefault();
           submit();
@@ -85,7 +91,12 @@ export function PredictionOverlay({ close }: { close: () => void }) {
           {t('predictionOverlay.title', { round: currentRound })}
         </h2>
         {rotatedPlayers.map((p, i) => (
-          <div key={p.name} className="flex flex-col xs:flex-row justify-between mb-2">
+          <div
+            key={p.name}
+            data-testid={T.prediction.playerRow(i)}
+            data-start-player={i === 0 ? 'true' : 'false'}
+            className="flex flex-col xs:flex-row justify-between mb-2"
+          >
             <div>
               <span>{p.name}</span>
               {p.points.at(-1) != null && (
@@ -100,6 +111,7 @@ export function PredictionOverlay({ close }: { close: () => void }) {
               min={0}
               max={currentRound}
               value={predictions[i]}
+              data-testid={T.prediction.input(i)}
               onFocus={(e) => e.target.select()}
               onChange={(e) => {
                 const copy = [...predictions];
@@ -110,8 +122,20 @@ export function PredictionOverlay({ close }: { close: () => void }) {
             />
           </div>
         ))}
-        {error && <div className="bg-red-100 text-red-700 p-2 mb-2 rounded">{error}</div>}
-        <button type="submit" className="mt-2 bg-blue-500 text-white px-4 py-2 rounded w-full">
+        {error && (
+          <div
+            className="bg-red-100 text-red-700 p-2 mb-2 rounded"
+            data-testid={T.prediction.error}
+            data-error-key={errorKey}
+          >
+            {error}
+          </div>
+        )}
+        <button
+          type="submit"
+          data-testid={T.prediction.submit}
+          className="mt-2 bg-blue-500 text-white px-4 py-2 rounded w-full"
+        >
           {t('predictionOverlay.startRound')}
         </button>
       </form>

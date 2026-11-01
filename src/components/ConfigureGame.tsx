@@ -3,6 +3,7 @@ import useSettingsStore from '../store/settingsStore';
 import { useTranslation } from 'react-i18next';
 import { roundsForCount } from '../store/gameStore';
 import InfoTooltip from './InfoTooltip';
+import { T } from '../test-ids';
 
 interface ConfigureGameProps {
   onStart: (names: string[], useWolke: boolean, useNotEqual: boolean, rounds?: number) => void;
@@ -26,6 +27,20 @@ const ConfigureGame: React.FC<ConfigureGameProps> = ({ onStart }) => {
   const [useWolke, setUseWolke] = useState(useAnniversaryRules);
   const [useNotEqual, setUseNotEqual] = useState(useNotEqualSetting);
   const [error, setError] = useState<string | null>(null);
+  // localized error text is shown to users; the raw i18n key is exposed as a
+  // data-error-key attribute so E2E tests can assert on it without depending on
+  // the active language.
+  const [errorKey, setErrorKey] = useState<string | null>(null);
+
+  const showError = (key: string, options?: Record<string, unknown>) => {
+    setError(t(key, options));
+    setErrorKey(key);
+  };
+
+  const clearError = () => {
+    setError(null);
+    setErrorKey(null);
+  };
 
   // rounds state and manual override flag
   const nonEmptyCount = namesInput.map((n) => n.trim()).filter((n) => n !== '').length;
@@ -65,21 +80,21 @@ const ConfigureGame: React.FC<ConfigureGameProps> = ({ onStart }) => {
       firstEmpty !== -1 ? trimmed.slice(firstEmpty + 1).some((n) => n !== '') : false;
 
     if (afterEmptyFilled) {
-      setError(t('configureGame.errors.gapInNames'));
+      showError('configureGame.errors.gapInNames');
       return;
     }
 
     const trimmedNames = namesInput.map((n) => n.trim()).filter((n) => n !== '');
     if (trimmedNames.length < 3) {
-      setError(t('configureGame.errors.minPlayers'));
+      showError('configureGame.errors.minPlayers');
       return;
     }
     if (trimmedNames.length > MAX_PLAYERS) {
-      setError(t('configureGame.errors.maxPlayers', { max: MAX_PLAYERS }));
+      showError('configureGame.errors.maxPlayers', { max: MAX_PLAYERS });
       return;
     }
     if (new Set(trimmedNames).size !== trimmedNames.length) {
-      setError(t('configureGame.errors.uniqueNames'));
+      showError('configureGame.errors.uniqueNames');
       return;
     }
 
@@ -90,24 +105,24 @@ const ConfigureGame: React.FC<ConfigureGameProps> = ({ onStart }) => {
     const chosenRounds = Number.isNaN(rounds) ? 0 : rounds;
 
     if (chosenRounds < minRounds) {
-      setError(t('configureGame.errors.roundsTooSmall', { min: minRounds }));
+      showError('configureGame.errors.roundsTooSmall', { min: minRounds });
       return;
     }
     if (chosenRounds > maxRounds) {
-      setError(t('configureGame.errors.roundsTooLarge', { max: maxRounds }));
+      showError('configureGame.errors.roundsTooLarge', { max: maxRounds });
       return;
     }
 
     setPlayerNames(trimmedNames);
     setUseAnniversaryRules(useWolke);
     setUseNotEqualSetting(useNotEqual);
-    setError(null);
+    clearError();
     // pass rounds if set (>0) otherwise undefined for backward compatibility
     onStart(trimmedNames, useWolke, useNotEqual, rounds && rounds > 0 ? rounds : undefined);
   };
 
   return (
-    <div className="mt-8">
+    <div className="mt-8" data-testid={T.config.root}>
       <div className="text-center flex max-w-md mx-auto font-semibold">
         {t('configureGame.title')}
       </div>
@@ -117,6 +132,7 @@ const ConfigureGame: React.FC<ConfigureGameProps> = ({ onStart }) => {
             <input
               type="text"
               value={name}
+              data-testid={T.config.playerName(i)}
               placeholder={t('configureGame.playerNamePlaceholder', { number: i + 1 })}
               onChange={(e) => {
                 const copy = [...namesInput];
@@ -131,6 +147,7 @@ const ConfigureGame: React.FC<ConfigureGameProps> = ({ onStart }) => {
                 type="button"
                 tabIndex={-1}
                 onClick={() => removeName(i)}
+                data-testid={T.config.removePlayer(i)}
                 className="px-2 py-1 text-red-600"
                 aria-label={t('configureGame.removePlayerLabel', { number: i + 1 })}
               >
@@ -148,6 +165,7 @@ const ConfigureGame: React.FC<ConfigureGameProps> = ({ onStart }) => {
             min={minAllowedRounds}
             max={maxAllowedRounds}
             value={rounds}
+            data-testid={T.config.rounds}
             onChange={(e) => {
               const v = parseInt(e.target.value || '0', 10);
               setManualRounds(true);
@@ -166,6 +184,7 @@ const ConfigureGame: React.FC<ConfigureGameProps> = ({ onStart }) => {
             <input
               type="checkbox"
               checked={useWolke}
+              data-testid={T.config.anniversary}
               onChange={(e) => setUseWolke(e.target.checked)}
             />
             {t('configureGame.useAnniversaryRules')}
@@ -173,6 +192,7 @@ const ConfigureGame: React.FC<ConfigureGameProps> = ({ onStart }) => {
           <InfoTooltip
             title={t('configureGame.wolkeInfoTitle') as string}
             content={t('configureGame.wolkeInfo') as string}
+            testId={T.config.infoWolke}
             className="ml-1"
           />
         </div>
@@ -182,6 +202,7 @@ const ConfigureGame: React.FC<ConfigureGameProps> = ({ onStart }) => {
             <input
               type="checkbox"
               checked={useNotEqual}
+              data-testid={T.config.notEqual}
               onChange={(e) => setUseNotEqual(e.target.checked)}
             />
             {t('configureGame.useNotEqual')}
@@ -189,14 +210,24 @@ const ConfigureGame: React.FC<ConfigureGameProps> = ({ onStart }) => {
           <InfoTooltip
             title={t('configureGame.notEqualInfoTitle') as string}
             content={t('configureGame.notEqualInfo') as string}
+            testId={T.config.infoNotEqual}
             className="ml-1"
           />
         </div>
 
-        {error && <div className="bg-red-100 text-red-700 p-2 mb-2 rounded">{error}</div>}
+        {error && (
+          <div
+            className="bg-red-100 text-red-700 p-2 mb-2 rounded"
+            data-testid={T.config.error}
+            data-error-key={errorKey ?? ''}
+          >
+            {error}
+          </div>
+        )}
         <button
           type={'button'}
           onClick={handleStart}
+          data-testid={T.config.startButton}
           className="bg-blue-500 text-white px-4 py-2 rounded mt-4"
         >
           {t('configureGame.startGame')}

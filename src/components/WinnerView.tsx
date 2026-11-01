@@ -1,5 +1,6 @@
 import { useGameStore } from '../store/gameStore';
 import { useTranslation } from 'react-i18next';
+import { T } from '../test-ids';
 
 export function WinnerView() {
   const { t } = useTranslation();
@@ -35,7 +36,13 @@ export function WinnerView() {
   };
 
   return (
-    <div className="mt-4 p-4 bg-yellow-100 border border-yellow-400 rounded">
+    <div
+      className="mt-4 p-4 bg-yellow-100 border border-yellow-400 rounded"
+      data-testid={T.winner.container}
+      data-winner-count={winners.length}
+      data-points={maxReachedPoints}
+      data-winner-names={winners.map((w) => w.name).join('|')}
+    >
       <h2 className="text-xl font-bold">{getWinnerText()}</h2>
     </div>
   );

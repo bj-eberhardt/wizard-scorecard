@@ -1,16 +1,20 @@
-import React, { useEffect, useRef, useState } from 'react';
+import React, { useEffect, useId, useRef, useState } from 'react';
 import { useTranslation } from 'react-i18next';
+import { T } from '../test-ids';
 
 interface InfoTooltipProps {
   title?: string;
   content: string;
   className?: string;
+  testId?: string;
 }
 
-export default function InfoTooltip({ title, content, className }: InfoTooltipProps) {
+export default function InfoTooltip({ title, content, className, testId }: InfoTooltipProps) {
   const { t } = useTranslation();
   const [open, setOpen] = useState(false);
   const ref = useRef<HTMLButtonElement | null>(null);
+  // unique id per instance (fixes the previous duplicated hard-coded id)
+  const titleId = useId();
 
   useEffect(() => {
     function onKey(e: KeyboardEvent) {
@@ -29,6 +33,7 @@ export default function InfoTooltip({ title, content, className }: InfoTooltipPr
         aria-expanded={open}
         aria-pressed={open}
         onClick={() => setOpen((s) => !s)}
+        data-testid={testId}
         className={`ml-1 inline-flex items-center justify-center w-5 h-5 rounded-full focus:outline-none focus:ring-2 focus:ring-blue-300 transition-colors ${
           open
             ? 'bg-white text-blue-700 border border-blue-600'
@@ -53,6 +58,8 @@ export default function InfoTooltip({ title, content, className }: InfoTooltipPr
         <div
           role="dialog"
           aria-modal="true"
+          aria-labelledby={title ? titleId : undefined}
+          data-testid={T.infoModal.dialog}
           className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50 p-4"
           onClick={() => setOpen(false)}
         >
@@ -61,7 +68,7 @@ export default function InfoTooltip({ title, content, className }: InfoTooltipPr
             onClick={(e) => e.stopPropagation()}
           >
             {title && (
-              <div className="font-semibold text-base mb-2" id="info-modal-title">
+              <div className="font-semibold text-base mb-2" id={titleId}>
                 {title}
               </div>
             )}
@@ -70,6 +77,7 @@ export default function InfoTooltip({ title, content, className }: InfoTooltipPr
               <button
                 type="button"
                 onClick={() => setOpen(false)}
+                data-testid={T.infoModal.close}
                 className="px-3 py-1 bg-blue-600 text-white rounded hover:bg-blue-700"
               >
                 {t('buttons.close')}

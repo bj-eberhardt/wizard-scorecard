@@ -1,6 +1,7 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { Player, useGameStore } from '../store/gameStore';
 import { useTranslation } from 'react-i18next';
+import { T } from '../test-ids';
 
 export function Scoreboard() {
   const { t } = useTranslation();
@@ -47,6 +48,11 @@ export function Scoreboard() {
     playerIndex: number;
     roundIndex: number;
     tooltipId: string;
+    // raw numeric/boolean values exposed as data-* attributes for E2E assertions
+    prediction: number;
+    tricks: number;
+    roundPoints: number;
+    wolke: boolean;
   } | null>(null);
 
   const touchTimerRef = useRef<number | null>(null);
@@ -109,6 +115,10 @@ export function Scoreboard() {
       playerIndex,
       roundIndex,
       tooltipId: `scoreboard-tooltip-${playerIndex}-${roundIndex}`,
+      prediction: p.predictions[roundIndex] ?? 0,
+      tricks: p.receivedResults?.[roundIndex] ?? p.results?.[roundIndex] ?? 0,
+      roundPoints: (p.points[roundIndex] ?? 0) - (p.points[roundIndex - 1] ?? 0),
+      wolke: !!p.wolkeUsed?.[roundIndex],
     };
   }
 
@@ -171,7 +181,10 @@ export function Scoreboard() {
   return (
     <div className="text-center flex justify-center w-full">
       <div className="overflow-x-auto w-full">
-        <table className="min-w-max w-full border-separate border-spacing-0">
+        <table
+          className="min-w-max w-full border-separate border-spacing-0"
+          data-testid={T.scoreboard.table}
+        >
           <thead>
             <tr>
               <th className="bg-white sticky left-0 z-10 px-2 text-center border-2 border-black">
@@ -197,11 +210,15 @@ export function Scoreboard() {
                 {players.map((p, i) => (
                   <React.Fragment key={i + 'player' + roundIndex}>
                     <td
+                      data-testid={T.scoreboard.cell(i, roundIndex, 'points')}
+                      data-points={p.points[roundIndex] ?? ''}
                       className={`border border-black text-sm font-bold px-2 ${i === 0 ? '' : 'border-l-4'} whitespace-nowrap`}
                     >
                       {p.points[roundIndex] ?? '-'}
                     </td>
                     <td
+                      data-testid={T.scoreboard.cell(i, roundIndex, 'prediction')}
+                      data-prediction={p.predictions[roundIndex] ?? ''}
                       className={`cursor-pointer border border-black px-2 ${i === players.length - 1 ? 'border-r-4' : ''} whitespace-nowrap`}
                       onMouseLeave={() => handleMouseLeave()}
                       onTouchMove={() => handleTouchMove()}
@@ -227,6 +244,11 @@ export function Scoreboard() {
           id={tooltip.tooltipId}
           role="tooltip"
           aria-live="polite"
+          data-testid={T.scoreboard.tooltip}
+          data-prediction={tooltip.prediction}
+          data-tricks={tooltip.tricks}
+          data-points={tooltip.roundPoints}
+          data-wolke={tooltip.wolke ? 'true' : 'false'}
           style={{
             position: 'absolute',
             left: tooltip.x,

@@ -10,6 +10,7 @@ import Header from './components/Header';
 import Footer from './components/Footer';
 import FullscreenButton from './components/FullscreenButton';
 import { LoadingScreen } from './components/LoadingScreen';
+import { T } from './test-ids';
 
 export default function App() {
   const { t } = useTranslation();
@@ -106,6 +107,7 @@ export default function App() {
             {!isGameOver && overlay === 'none' && (
               <button
                 onClick={() => setOverlay('prediction')}
+                data-testid={T.app.nextRound}
                 className="mt-4 bg-green-500 text-white px-4 py-2 rounded sticky bottom-2 z-[200]"
               >
                 {t('buttons.startNextRound')}
@@ -116,6 +118,7 @@ export default function App() {
               <div className="mt-2">
                 <button
                   onClick={() => setShowConfirm(true)}
+                  data-testid={T.app.newGame}
                   className="bg-red-500 text-white px-4 py-2 rounded"
                 >
                   {t('buttons.newGame')}
@@ -125,18 +128,23 @@ export default function App() {
 
             {/* Confirm Dialog */}
             {showConfirm && (
-              <div className="fixed inset-0 flex items-center justify-center bg-black bg-opacity-50 z-50">
+              <div
+                className="fixed inset-0 flex items-center justify-center bg-black bg-opacity-50 z-50"
+                data-testid={T.app.confirmDialog}
+              >
                 <div className="bg-white p-6 rounded shadow-lg text-center">
                   <p>{t('confirmDialog.title')}</p>
                   <div className="mt-4 flex justify-center gap-4">
                     <button
                       onClick={handleNewGame}
+                      data-testid={T.app.confirmYes}
                       className="bg-red-600 text-white px-4 py-2 rounded"
                     >
                       {t('confirmDialog.yes')}
                     </button>
                     <button
                       onClick={() => setShowConfirm(false)}
+                      data-testid={T.app.confirmCancel}
                       className="bg-gray-300 px-4 py-2 rounded"
                     >
                       {t('confirmDialog.cancel')}
@@ -152,6 +160,7 @@ export default function App() {
               <div className="mt-2">
                 <button
                   onClick={() => handleNewGame()}
+                  data-testid={T.app.newGame}
                   className="bg-red-500 text-white px-4 py-2 rounded"
                 >
                   {t('buttons.newGame')}

@@ -29,5 +29,14 @@ Thumbs.db
 # TypeScript
 *.tsbuildinfo
 
+# Playwright artifacts
+/playwright-report/
+/test-results/
+/blob-report/
+
+# UX analysis screenshots (generated locally)
+/ux-shots/
+/ux-screens.mjs
+
 .husky/
 .husky/_/pre-commit
