@@ -36,6 +36,10 @@
     "player": "Player",
     "points": "Points"
   },
+  "scoreboard": {
+    "compact": "Compact view",
+    "full": "Full view"
+  },
   "resultOverlay": {
     "title": "Results Round {{round}}",
     "tip": "(Prediction: {{tip}})",

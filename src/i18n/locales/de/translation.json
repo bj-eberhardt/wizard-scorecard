@@ -36,6 +36,10 @@
     "player": "Spieler",
     "points": "Punkte"
   },
+  "scoreboard": {
+    "compact": "Kompakte Ansicht",
+    "full": "Vollständige Ansicht"
+  },
   "resultOverlay": {
     "title": "Spiele Runde {{round}} und trage dann die Ergebnisse ein:",
     "tip": "(Tipp: {{tip}})",

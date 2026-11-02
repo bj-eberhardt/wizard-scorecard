@@ -8,15 +8,24 @@ import { T } from '../test-ids';
  * Every value is mirrored into a `data-*` attribute so the E2E suite can assert the whole
  * cell matrix without touching localized text. A Wolke round shows `entered → evaluated`
  * plus the cloud marker, because the anniversary rule rewrites the value that counts.
+ *
+ * `compact`: on the narrow phone screen the per-player points column is the
+ * furthest-right and hardest to reach, so it is hidden and the current total is shown under
+ * the player name instead. The name cell then spans two columns, not three. `App` owns the
+ * flag (it also forces it off at game over); the column is genuinely not rendered, so the
+ * fixed layout stays balanced without a CSS-only hide.
  */
-export function Scoreboard() {
+export function Scoreboard({ compact = false }: { compact?: boolean }) {
   const { t } = useTranslation();
   const { players, totalRounds } = useGameStore();
   const rounds = Array.from({ length: totalRounds }, (_, i) => i);
 
   // The table is auto-layout, so `w-12` is what keeps the three sub-columns of a player group
   // equally wide; `px-0.5` makes the longest cell content (`4→2☁`) still fit into those 48 px.
-  const cellClass = 'border border-black w-12 px-0.5 py-0.5 text-xs text-center';
+  // Numbers are right-aligned with `tabular-nums`: equal digit widths plus a shared right edge
+  // line the same decimal places up across rows (the `1` of `1` sits under the `0` of `30`) —
+  // centring would instead float a short number to the middle and break that place alignment.
+  const cellClass = 'border border-black w-12 px-0.5 py-0.5 text-xs text-right tabular-nums';
   // Backgrounds are set per cell, never here, so no element carries two conflicting ones.
   const headerLabelClass =
     'w-12 px-0.5 py-0.5 text-xs font-normal text-gray-500 border-2 border-black text-center';
@@ -38,6 +47,11 @@ export function Scoreboard() {
     return typeof value === 'number' ? value : '';
   }
 
+  /** Cumulative total after the last played round, undefined before round 1 is scored. */
+  function totalPoints(p: Player): number | undefined {
+    return p.points.length > 0 ? p.points[p.points.length - 1] : undefined;
+  }
+
   return (
     <div className="text-center flex justify-center w-full">
       {/* `max-w-full` instead of `w-full`: the scroll container shrinks to the table, so the
@@ -49,6 +63,7 @@ export function Scoreboard() {
         <table
           className="min-w-max border-separate border-spacing-0"
           data-testid={T.scoreboard.table}
+          data-compact={compact ? 'true' : 'false'}
         >
           <thead>
             <tr>
@@ -72,18 +87,30 @@ export function Scoreboard() {
                   {t('labels.round')}
                 </span>
               </th>
-              {players.map((p, i) => (
-                <th
-                  key={`${i}-name`}
-                  colSpan={3}
-                  data-testid={T.scoreboard.headerPlayer(i)}
-                  className={`px-2 py-1 text-center border-2 border-black ${
-                    i > 0 ? 'border-l-4' : ''
-                  }`}
-                >
-                  {p.name}
-                </th>
-              ))}
+              {players.map((p, i) => {
+                const total = totalPoints(p);
+                return (
+                  <th
+                    key={`${i}-name`}
+                    colSpan={compact ? 2 : 3}
+                    data-testid={T.scoreboard.headerPlayer(i)}
+                    className={`px-2 py-1 text-center border-2 border-black ${
+                      i > 0 ? 'border-l-4' : ''
+                    }`}
+                  >
+                    {p.name}
+                    {compact && typeof total === 'number' && (
+                      <span
+                        data-testid={T.scoreboard.headerPoints(i)}
+                        data-points={total}
+                        className="block text-xs font-normal text-gray-600"
+                      >
+                        ({total})
+                      </span>
+                    )}
+                  </th>
+                );
+              })}
             </tr>
             <tr>
               {players.map((_, i) => (
@@ -96,18 +123,22 @@ export function Scoreboard() {
                   </th>
                   <th
                     data-testid={T.scoreboard.headerLabel(i, 'tricks')}
-                    className={`bg-white ${headerLabelClass}`}
+                    className={`bg-white ${headerLabelClass} ${
+                      compact && i === players.length - 1 ? 'border-r-4' : ''
+                    }`}
                   >
                     {t('labels.tricks')}
                   </th>
-                  <th
-                    data-testid={T.scoreboard.headerLabel(i, 'points')}
-                    className={`bg-gray-50 ${headerLabelClass} ${
-                      i === players.length - 1 ? 'border-r-4' : ''
-                    }`}
-                  >
-                    {t('labels.points')}
-                  </th>
+                  {!compact && (
+                    <th
+                      data-testid={T.scoreboard.headerLabel(i, 'points')}
+                      className={`bg-gray-50 ${headerLabelClass} ${
+                        i === players.length - 1 ? 'border-r-4' : ''
+                      }`}
+                    >
+                      {t('labels.points')}
+                    </th>
+                  )}
                 </React.Fragment>
               ))}
             </tr>
@@ -130,7 +161,7 @@ export function Scoreboard() {
                         data-prediction={attr(prediction)}
                         className={`${cellClass} ${i > 0 ? 'border-l-4' : ''}`}
                       >
-                        <span className="w-full inline-block text-left rounded px-1 py-0.5">
+                        <span className="w-full inline-block text-right rounded px-1 py-0.5">
                           {prediction ?? '-'}
                         </span>
                       </td>
@@ -139,19 +170,23 @@ export function Scoreboard() {
                         data-tricks={attr(evaluated)}
                         data-received-tricks={attr(entered)}
                         data-wolke={wolke ? 'true' : 'false'}
-                        className={cellClass}
+                        className={`${cellClass} ${
+                          compact && i === players.length - 1 ? 'border-r-4' : ''
+                        }`}
                       >
                         {tricksText(p, roundIndex)}
                       </td>
-                      <td
-                        data-testid={T.scoreboard.cell(i, roundIndex, 'points')}
-                        data-points={attr(p.points[roundIndex])}
-                        className={`${cellClass} bg-gray-50 font-bold ${
-                          i === players.length - 1 ? 'border-r-4' : ''
-                        }`}
-                      >
-                        {p.points[roundIndex] ?? '-'}
-                      </td>
+                      {!compact && (
+                        <td
+                          data-testid={T.scoreboard.cell(i, roundIndex, 'points')}
+                          data-points={attr(p.points[roundIndex])}
+                          className={`${cellClass} bg-gray-50 font-bold ${
+                            i === players.length - 1 ? 'border-r-4' : ''
+                          }`}
+                        >
+                          {p.points[roundIndex] ?? '-'}
+                        </td>
+                      )}
                     </React.Fragment>
                   );
                 })}

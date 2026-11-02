@@ -302,4 +302,106 @@ test.describe('Scoreboard', () => {
       expect(width).toBeGreaterThanOrEqual(cellBox?.width ?? Infinity);
     });
   });
+
+  test('Compact view hides the points column and shows the total under each name @mobile', async ({
+    game,
+  }) => {
+    /** Cumulative total after the last played round for a player's seeded rounds. */
+    const totalOf = (rounds: RoundData[]) => cumulative(rounds)[PLAYED_ROUNDS - 1];
+
+    await test.step('Seed a played game (mobile viewport defaults to compact)', async () => {
+      await seedPlayedGame(game);
+      await openApp(game);
+      await expect(game.getByTestId(T.scoreboard.table)).toBeVisible();
+      await expect(game.getByTestId(T.scoreboard.table)).toHaveAttribute('data-compact', 'true');
+    });
+
+    await test.step('The points column is not rendered at all', async () => {
+      for (let player = 0; player < 3; player++) {
+        await expect(game.getByTestId(T.scoreboard.headerLabel(player, 'points'))).toHaveCount(0);
+        for (let round = 0; round < TOTAL_ROUNDS; round++) {
+          await expect(game.getByTestId(T.scoreboard.cell(player, round, 'points'))).toHaveCount(0);
+        }
+      }
+    });
+
+    await test.step('Each name spans two columns and carries its total', async () => {
+      const roundsByPlayer = [GAME.P0, GAME.P1, GAME.P2];
+      for (let player = 0; player < 3; player++) {
+        const nameCell = game.getByTestId(T.scoreboard.headerPlayer(player));
+        await expect(nameCell).toHaveAttribute('colspan', '2');
+        const points = game.getByTestId(T.scoreboard.headerPoints(player));
+        await expect(points).toBeVisible();
+        await expect(points).toHaveAttribute(
+          'data-points',
+          String(totalOf(roundsByPlayer[player]))
+        );
+      }
+    });
+
+    await test.step('Toggling compact off restores the full three-column board', async () => {
+      await game.getByTestId(T.scoreboard.compactToggle).click();
+      await expect(game.getByTestId(T.scoreboard.table)).toHaveAttribute('data-compact', 'false');
+      for (let player = 0; player < 3; player++) {
+        await expect(game.getByTestId(T.scoreboard.headerPlayer(player))).toHaveAttribute(
+          'colspan',
+          '3'
+        );
+        await expect(game.getByTestId(T.scoreboard.headerLabel(player, 'points'))).toBeVisible();
+        await expect(game.getByTestId(T.scoreboard.headerPoints(player))).toHaveCount(0);
+      }
+    });
+  });
+
+  test('Compact view shows no total before the first round is scored @mobile', async ({ game }) => {
+    await test.step('Seed a freshly started game (no round played yet)', async () => {
+      await seedGameState(game, {
+        gameStarted: true,
+        currentRound: 1,
+        totalRounds: TOTAL_ROUNDS,
+        overlay: 'none',
+        players: [
+          { name: 'P0', predictions: [], points: [] },
+          { name: 'P1', predictions: [], points: [] },
+          { name: 'P2', predictions: [], points: [] },
+        ],
+      });
+      await openApp(game);
+      await expect(game.getByTestId(T.scoreboard.table)).toHaveAttribute('data-compact', 'true');
+    });
+    await test.step('No header total is rendered while nothing is scored', async () => {
+      for (let player = 0; player < 3; player++) {
+        await expect(game.getByTestId(T.scoreboard.headerPoints(player))).toHaveCount(0);
+      }
+    });
+  });
+
+  test('Game over forces the full board on mobile and hides the toggle @mobile', async ({
+    game,
+  }) => {
+    await test.step('Seed a finished game', async () => {
+      await seedGameState(game, {
+        gameStarted: true,
+        currentRound: PLAYED_ROUNDS + 1,
+        totalRounds: PLAYED_ROUNDS,
+        overlay: 'none',
+        useAnniversaryRules: true,
+        players: [seedPlayer('P0', GAME.P0), seedPlayer('P1', GAME.P1), seedPlayer('P2', GAME.P2)],
+      });
+      await openApp(game);
+      await expect(game.getByTestId(T.winner.container)).toBeVisible();
+    });
+    await test.step('The scoreboard still shows every column, toggle hidden', async () => {
+      // App forces compact off at game over even though the viewport would default to it
+      await expect(game.getByTestId(T.scoreboard.table)).toHaveAttribute('data-compact', 'false');
+      await expect(game.getByTestId(T.scoreboard.compactToggle)).toHaveCount(0);
+      for (let player = 0; player < 3; player++) {
+        await expect(game.getByTestId(T.scoreboard.headerPlayer(player))).toHaveAttribute(
+          'colspan',
+          '3'
+        );
+        await expect(game.getByTestId(T.scoreboard.headerPoints(player))).toHaveCount(0);
+      }
+    });
+  });
 });

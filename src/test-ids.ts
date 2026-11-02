@@ -61,6 +61,9 @@ export const T = {
     headerLabel: (player: number, kind: CellKind) => `scoreboard-header-label-${kind}-${player}`,
     cell: (player: number, round: number, kind: CellKind) =>
       `scoreboard-cell-${kind}-${player}-${round}`,
+    // compact mode: the cumulative total shown under the player name (mobile default)
+    headerPoints: (player: number) => `scoreboard-header-points-${player}`,
+    compactToggle: 'scoreboard-compact-toggle',
   },
   winner: {
     container: 'winner-container',

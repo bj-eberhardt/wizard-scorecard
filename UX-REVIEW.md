@@ -50,7 +50,7 @@ Das Produkt richtet sich an eine klare Kernsituation: **Wizard-Runde am Tisch, e
 | F18 | `visibilitychange`-Listener wird in jedem Render neu angelegt (Wake-Lock leak) | Code/Robustheit | 🟡 Gering |
 | F19 | Wolke-Historie zeigt im Tooltip die korrigierten statt der eingetragenen Stiche (Label sagt "Eingetragene Stiche") | Korrektheit | 🟡 Gering |
 | F20 | 2 s Lade-Splash bei jedem Start, auch bei Fortsetzen eines gespeicherten Spiels | UX | 🟡 Gering |
-| F21 | Mobile-Breite: Gesamt-Punkte ausblenden, dafür eine "Punkte"-Zeile am Tabellenende | UX/Design | 🟠 Mittel |
+| F21 | Mobile: Kompakt-Ansicht blendet Punkte-Spalte aus, Summe in Klammern im Header | UX/Design | 🟠 Mittel · ✅ |
 | F22 | Spieler-Reihenfolge in der Konfiguration nicht anpassbar (kein Drag & Drop) | UX | 🟠 Mittel |
 | F24 | Gemischte Ausrichtung auf Desktop: Brett linksbündig, Primäraktion links, Ghost-Link mittig, Winner-Balken vollbreit | Design | 🟡 Gering · ✅ |
 | F25 | Spielerstatistik expandable (Trefferquote, beste/schlechteste Runde, Rückstand, Wolke) | UX | 🟡 Gering · ✅ |
@@ -603,20 +603,42 @@ Interaktion mit `resetGame`, History-Tests brauchen Seeding.
 
 ---
 
-### F21 · Mobile-Breite: Punkte-Spalte ausblenden, "Punkte"-Zeile ans Tabellenende 🟠
+### F21 · Mobile-Breite: Kompakt-Ansicht blendet Punkte-Spalte aus, Summe im Header 🟠 ✅ umgesetzt
+
+> **Status:** umgesetzt — aber anders als unten skizziert. Es kommt **keine** "Punkte-Zeile am
+> Tabellenende" und **kein** Sticky/tfoot-Mechanismus. Stattdessen ein **nutzersteuerbarer
+> Kompakt-Modus**: Die Punkte-Spalte wird ausgeblendet und der kumulierte Gesamtstand erscheint
+> **in Klammern unter dem Spielernamen** im Header (Zeile 1) — oben, wo das Auge landet, statt
+> ganz rechts in einer scrollenden Tabelle. Der Name-`colSpan` wechselt dafür per State auf 2
+> (kein CSS-Media-Query kann `colSpan` ändern). Default folgt dem Viewport einmal beim Mount
+> (`matchMedia('(max-width: 768px)')`: Mobile kompakt, Desktop voll); ein Toggle unter dem Brett
+> überschreibt ihn. Bei **Spielende** erzwingt `App` die volle Ansicht und blendet den Toggle aus.
+> Kein Resize-Listener (sonst würde Handy-Drehen eine manuelle Wahl still überschreiben), kein
+> neuer localStorage-Key.
 
 **Beobachtung:** F2 hat die Dichte pro Spieler von zwei auf drei Spalten erhöht. Auf dem 390-px-Screen passt damit gut eine Spielergruppe sichtbar nebeneinander; der Rest liegt im Horizontal-Scroll (`overflow-x-auto`). Die kumulierten Punkte sind pro Spieler die **letzte** Spalte einer Gruppe und damit diejenige, die am weitesten rechts (also am ehesten außerhalb des sichtbaren Bereichs) liegt.
 
 **Warum das stört:** Die häufigste Frage am Tisch ist "wer führt?". Genau die Antwort steht auf Mobile am rechten Rand einer scrollenden Tabelle.
 
-**Änderung im Detail (Option, bewusst noch nicht gebaut):**
+**Umsetzung:**
 
-- Auf Mobile (`< md`) die **Punkte-Zellen ausblenden** (`hidden md:table-cell`) und stattdessen ganz unten in der Tabelle eine eigene **"Punkte"-Zeile** rendern, die pro Spieler den aktuellen Stand zeigt. Damit ist die Summe ohne Horizontal-Scroll erreichbar, weil sie am Zeilenende steht, nicht am Spaltenende.
-- Die Runden-Spalte bleibt sticky links; die Punkte-Zeile würde entsprechend sticky unterhalb des Tabellenkörpers laufen (oder als feste Action-Bar über dem Rand, siehe F3).
-- Kombination mit F3 (Sticky-Action-Bar) und F9 (weniger Felder) denken: beide wollen denselben unteren Screenrand.
-- Kostenpflichtig: `data-testid`-Struktur bleibt pro Zelle erhalten, aber die Punkte-Zelle wäre auf Mobile doppelten Ursprungs (Zelle ausgeblendet, Zeile sichtbar) → die E2E-Matrix müsste pro Viewport unterscheiden.
+- **`App.tsx`:** `compact`-State (`useState` mit Lazy-Initial-State aus `matchMedia`), Prop runter
+  an `Scoreboard`; wirksamer Wert `compact && !isGameOver`. Zentrierter Toggle-Button unter dem
+  Brett (`aria-pressed`, `data-compact`, `T.scoreboard.compactToggle`, Label `t('scoreboard.compact')`),
+  nur solange das Spiel läuft.
+- **`Scoreboard.tsx`:** `compact`-Prop. Im Kompaktmodus wird die Punkte-Spalte **nicht gerendert**
+  (Header-Label und Zellen), der Name-`colSpan` ist 2, und der Gesamtstand (letzter Eintrag von
+  `p.points`) steht in Klammern unter dem Namen — solange schon eine Runde gewertet
+  ist (vor der ersten gewerteten Runde erscheint keine Klammer). `data-compact` am `<table>` trägt den Zustand.
+- **i18n:** neuer Key `scoreboard.compact` in de ("Kompakt") und en ("Compact").
+- **E2E (`e2e/scoreboard.spec.ts`, `@mobile`):** Punkte-Spalte nicht vorhanden + Header-Summe je
+  Spieler (Attribut, nicht Text); Toggle zurück auf drei Spalten; keine Klammer vor Runde 1;
+  Spielende zeigt volles Brett und verbirgt den Toggle. Der Desktop-Project bleibt bei der
+  unveränderten Drei-Spalten-Matrix (Default nicht-kompakt).
 
-**Aufwand:** M (~2–3 h inkl. Sticky-Verhalten auf iOS Safari). **Risiko:** mittel — doppelter Anzeigenort für dieselbe Zahl, Scroll-/Sticky-Interaktionen.
+**Aufwand:** M. **Risiko:** gering–mittel — `colSpan`-Umschaltung und `compact`-Props-Fluss; der in
+F5 entfernte `matchMedia`-Zugriff kommt als **Layout-Default** (einmal Mount) zurück, nicht als
+Timer/Effekt. Bestehende Breiten- und Zell-Matrix-Tests behalten unter Desktop ihre Gültigkeit.
 
 ---
 
@@ -746,7 +768,7 @@ F11 und die Spaltenbreiten-Assertion aus F2 bleiben grün.
 9. F5 — Pulse entfernen (S) ✅ umgesetzt (vollständig entfernt statt entschärft)
 10. F8 — Startspieler-Kennzeichnung (S) ✅ umgesetzt (nur Schätz-Overlay, als Info-Zeilen inkl. Geber)
 11. F11 — Destruktiven Button aus der Hauptaktion nehmen (S) ✅ umgesetzt (Ghost-Link oben statt ⋮-Menü, Primäraktion bleibt Inhaltsbreite)
-12. F21 — Mobile: Punkte-Zeile am Tabellenende statt rechtspunktiger Punkte-Spalte (M)
+12. F21 — Mobile: Kompakt-Ansicht (Punkte-Spalte aus, Summe im Header) statt rechtspunktiger Punkte-Spalte (M) ✅ umgesetzt
 
 **P2 — Politur & Identität:**
 
@@ -801,6 +823,11 @@ F11 und die Spaltenbreiten-Assertion aus F2 bleiben grün.
     (`overflow-x-auto max-w-full` im `flex justify-center`-Wrapper), [`App.tsx`](./src/App.tsx)
     (Wrapper um die Primäraktion, `sticky` bleibt), [`WinnerView.tsx`](./src/components/WinnerView.tsx)
     (`mx-auto max-w-md text-center`); Beweise in `ux-shots/capture-centre.mjs`
+  - Kompakt-Ansicht (F21, ✅ umgesetzt): [`App.tsx`](./src/App.tsx) (`compact`-State aus
+    `matchMedia`, Toggle unter dem Brett, `!isGameOver`-Override) und
+    [`Scoreboard.tsx`](./src/components/Scoreboard.tsx) (`compact`-Prop — Punkte-Spalte
+    ungerendert, `colSpan` 2, Summe als Klammer im Namen); Key `scoreboard.compact` in
+    [`de`](./src/i18n/locales/de/translation.json)/[`en`](./src/i18n/locales/en/translation.json)
   - Winner-View / Revanche (F16, ✅ umgesetzt): [`WinnerView.tsx`](./src/components/WinnerView.tsx)
     (Rangliste, Confetti, Aktionen), [`gameStore.ts`](./src/store/gameStore.ts) (`rematch()`),
     [`index.css`](./src/index.css) (`.confetti-container` Keyframes)

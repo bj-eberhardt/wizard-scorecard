@@ -33,6 +33,12 @@ export default function App() {
     resetGame,
   } = useGameStore();
   const [showConfirm, setShowConfirm] = useState(false);
+  // Compact view: the default follows the viewport once at mount (narrow screen =
+  // compact); the user can then override it with the toggle. No resize listener on purpose —
+  // rotating the phone must not silently discard a manual choice.
+  const [compact, setCompact] = useState<boolean>(
+    () => window.matchMedia('(max-width: 768px)').matches
+  );
   const confirmTitleId = useId();
   const confirmRef = useRef<HTMLDivElement>(null);
   useDialogA11y({
@@ -120,7 +126,20 @@ export default function App() {
           </button>
         </div>
       )}
-      <Scoreboard />
+      <Scoreboard compact={compact && !isGameOver} />
+      {!isGameOver && (
+        <div className="mt-2 flex justify-center">
+          <button
+            type="button"
+            onClick={() => setCompact((v) => !v)}
+            data-compact={compact ? 'true' : 'false'}
+            data-testid={T.scoreboard.compactToggle}
+            className={`cursor-pointer inline-flex min-h-11 items-center rounded px-2 text-sm text-gray-500 underline-offset-4 hover:text-gray-800 hover:underline ${focusRing}`}
+          >
+            {compact ? t('scoreboard.full') : t('scoreboard.compact')}
+          </button>
+        </div>
+      )}
       {!isGameOver && overlay === 'none' && (
         <div className="mt-4 flex justify-center sticky bottom-2 md:bottom-24 z-[200]">
           <button
