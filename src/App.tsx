@@ -69,32 +69,48 @@ export default function App() {
     resetGame();
   };
 
+  // The wake-lock sentinel must survive renders, so it lives in a ref, not a
+  // render-local variable. The whole effect (request + visibilitychange listener)
+  // runs only while a game is in progress: it re-runs when the game starts or ends,
+  // and its cleanup releases the lock and removes the listener. Registering the
+  // listener in the render body would attach a new closure on every render.
+  const wakeLockRef = useRef<WakeLockSentinel | null>(null);
   useEffect(() => {
-    // Optional: Listen for fullscreen changes if needed
-  }, []);
+    if (!gameStarted || isGameOver) return;
 
-  let wakeLock: WakeLockSentinel | null = null;
-
-  async function activateWakeLock() {
-    try {
-      // eslint-disable-next-line
-      wakeLock = await (navigator as any).wakeLock.request('screen');
-    } catch {
-      // ignore
+    async function requestWakeLock() {
+      try {
+        // eslint-disable-next-line
+        wakeLockRef.current = await (navigator as any).wakeLock.request('screen');
+      } catch {
+        // ignore (denied or unsupported)
+      }
     }
-  }
 
-  document.addEventListener('visibilitychange', async () => {
-    if (wakeLock !== null && document.visibilityState === 'visible') {
-      await activateWakeLock();
-    }
-  });
-
-  useEffect(() => {
+    // Feature detection stays runtime-guarded; desktop deliberately never locks.
     if (window.matchMedia('(max-width: 768px)').matches && 'wakeLock' in navigator) {
-      activateWakeLock().then();
+      void requestWakeLock();
     }
-  }, []);
+
+    // The browser releases the sentinel when the tab is hidden; reactivate on return
+    // only if a lock had been held (ref non-null), never after the game ended.
+    const onVisibility = async () => {
+      if (document.visibilityState === 'visible' && wakeLockRef.current !== null) {
+        await requestWakeLock();
+      }
+    };
+    document.addEventListener('visibilitychange', onVisibility);
+
+    return () => {
+      document.removeEventListener('visibilitychange', onVisibility);
+      const lock = wakeLockRef.current;
+      // Null the ref before releasing so a late 'release' event of the old sentinel
+      // can never overwrite a value acquired by a subsequent effect run.
+      wakeLockRef.current = null;
+      // Already released (tab hidden) → the promise rejects; that is expected.
+      void lock?.release().catch(() => {});
+    };
+  }, [gameStarted, isGameOver]);
 
   if (!gameStarted) {
     return (
