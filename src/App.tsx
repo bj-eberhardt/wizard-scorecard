@@ -167,17 +167,6 @@ export default function App() {
       {overlay === 'prediction' && <PredictionOverlay close={() => setOverlay('result')} />}
       {overlay === 'result' && <ResultOverlay close={() => setOverlay('none')} />}
       {isGameOver && <WinnerView />}
-      {isGameOver && (
-        <div className="mt-2 flex justify-center">
-          <button
-            onClick={() => handleNewGame()}
-            data-testid={T.app.newGame}
-            className="bg-green-500 text-white px-5 py-2 rounded min-h-11 cursor-pointer hover:bg-green-600"
-          >
-            {t('buttons.newGame')}
-          </button>
-        </div>
-      )}
       <Footer />
     </div>
   );

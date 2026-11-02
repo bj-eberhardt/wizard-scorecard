@@ -32,6 +32,7 @@ interface GameState {
   ) => void;
   advanceRound: () => void;
   resetGame: () => void;
+  rematch: () => void;
   setUseAnniversaryRules: (use: boolean) => void;
   setUseNotEqual: (use: boolean) => void;
   setOverlay: (o: OverlayState) => void;
@@ -186,6 +187,23 @@ export const useGameStore = create<GameState>((set, get) => {
       } catch {
         // ignore
       }
+    },
+    rematch: () => {
+      const oldPlayers = get().players;
+      if (oldPlayers.length < 2) return;
+      // Rotate: last becomes first, everyone else shifts down
+      const rotated = [oldPlayers[oldPlayers.length - 1], ...oldPlayers.slice(0, -1)];
+      // Clear round data, keep name
+      const fresh: Player[] = rotated.map((p) => ({
+        name: p.name,
+        predictions: [],
+        results: [],
+        points: [],
+        wolkeUsed: [],
+        receivedResults: [],
+      }));
+      set({ players: fresh, currentRound: 1, gameStarted: true, overlay: 'prediction' }, false);
+      save();
     },
     setUseAnniversaryRules: (use) => {
       set({ useAnniversaryRules: use }, false);

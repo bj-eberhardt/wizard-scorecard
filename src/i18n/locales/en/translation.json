@@ -22,7 +22,10 @@
     "submit": "Submit",
     "startNextRound": "Start next round",
     "newGame": "Start new game",
-    "toggleFullscreen": "Toggle fullscreen"
+    "toggleFullscreen": "Toggle fullscreen",
+    "rematch": "Rematch",
+    "saveImage": "Save result",
+    "copyText": "Copy as text"
   },
   "labels": {
     "prediction": "Bid",
@@ -45,7 +48,18 @@
   "winnerView": {
     "announcement_single": "🎉 Winner: {{name}} with {{points}} points!",
     "announcement_two": "🎉 Winners: {{name1}} and {{name2}} with {{points}} points!",
-    "announcement_multiple": "🎉 Winners: {{names}} and {{lastName}} with {{points}} points!"
+    "announcement_multiple": "🎉 Winners: {{names}} and {{lastName}} with {{points}} points!",
+    "statsToggle": "Show statistics",
+    "statsHide": "Hide statistics",
+    "hitRateLabel": "Hit rate",
+    "hitRateColumn": "Rate",
+    "statHitCorrect": "Correct bids: {{correct}}/{{total}}",
+    "statBestRound": "Best round: +{{delta}}",
+    "statWorstRound": "Worst round: {{delta}}",
+    "statGap": "Gap to leader: −{{gap}}",
+    "statWolkeSaved_one": "Saved: {{count}} bid rescued",
+    "statWolkeSaved_other": "Saved: {{count}} bids rescued",
+    "statWolkeNoEffect": "Outcome: Cloud {{count}}× without effect"
   },
   "configureGame": {
     "title": "Please enter the names of the players:",
@@ -87,7 +101,6 @@
   "footer": {
     "copy": "© {{year}} - Version: {{version}}",
     "langGroup": "Language",
-    "langSwitch": "Switch language",
     "langDe": "German",
     "langEn": "English"
   }

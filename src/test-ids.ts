@@ -60,6 +60,14 @@ export const T = {
   },
   winner: {
     container: 'winner-container',
+    rankRow: (index: number) => `winner-rank-row-${index}`,
+    statsToggle: 'winner-stats-toggle',
+    statRow: (index: number) => `winner-stat-row-${index}`,
+    confetti: 'winner-confetti',
+    rematch: 'winner-rematch',
+    saveImage: 'winner-save-image',
+    copyText: 'winner-copy-text',
+    newGame: 'winner-new-game',
   },
   app: {
     nextRound: 'app-next-round',
@@ -73,10 +81,8 @@ export const T = {
   },
   footer: {
     root: 'footer',
-    // desktop: one flag button per supported language, indexed by the i18n code
+    // one flag button per supported language, indexed by the i18n code
     langButton: (lng: 'de' | 'en') => `footer-lang-${lng}`,
-    // mobile: one compact chip that cycles between the two supported languages
-    langToggle: 'footer-lang-toggle',
     copyright: 'footer-copyright',
   },
   infoModal: {

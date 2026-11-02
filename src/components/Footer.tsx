@@ -29,9 +29,7 @@ export default function Footer() {
       className="mt-8 px-4 pb-2 text-center text-gray-500 text-sm md:fixed md:inset-x-0 md:bottom-0 md:z-30 md:mt-0 md:border-t md:border-gray-200 md:bg-white/95 md:pt-1 md:backdrop-blur"
     >
       <LanguageSwitcher />
-      {/* Copyright is desktop-only: it would only add height to the mobile footer,
-          so the mobile footer is just the chip. */}
-      <span data-testid={T.footer.copyright} className="hidden md:block">
+      <span data-testid={T.footer.copyright}>
         {t('footer.copy', { year, version: __APP_VERSION__ })}
       </span>
     </footer>

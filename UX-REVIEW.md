@@ -45,7 +45,7 @@ Das Produkt richtet sich an eine klare Kernsituation: **Wizard-Runde am Tisch, e
 | F13 | `lang="de"` fix im HTML, aber Sprache wird per Browser-Detector gewählt → gemischte Sprachen | i18n | 🟡 Gering · ✅ |
 | F14 | Kein Sprachumschalter im UI, obwohl EN vorhanden | i18n | 🟡 Gering · ✅ |
 | F15 | Design ohne eigene Sprache: weißer Hintergrund, harte schwarze Rahmen, Standard-Tailwind-Farben | Design | 🟡 Gering |
-| F16 | Winner-View ist ein gelber Textkasten – kein Abschluss-Moment, keine Rangliste | Design | 🟡 Gering |
+| F16 | Winner-View ist ein gelber Textkasten – kein Abschluss-Moment, keine Rangliste | Design | 🟡 Gering · ✅ |
 | F17 | Info-Icon zeigt "!" obwohl Titel eine Frage ist; doppelte `id` im Modal | A11y/Design | 🟡 Gering · ✅ |
 | F18 | `visibilitychange`-Listener wird in jedem Render neu angelegt (Wake-Lock leak) | Code/Robustheit | 🟡 Gering |
 | F19 | Wolke-Historie zeigt im Tooltip die korrigierten statt der eingetragenen Stiche (Label sagt "Eingetragene Stiche") | Korrektheit | 🟡 Gering |
@@ -53,6 +53,9 @@ Das Produkt richtet sich an eine klare Kernsituation: **Wizard-Runde am Tisch, e
 | F21 | Mobile-Breite: Gesamt-Punkte ausblenden, dafür eine "Punkte"-Zeile am Tabellenende | UX/Design | 🟠 Mittel |
 | F22 | Spieler-Reihenfolge in der Konfiguration nicht anpassbar (kein Drag & Drop) | UX | 🟠 Mittel |
 | F24 | Gemischte Ausrichtung auf Desktop: Brett linksbündig, Primäraktion links, Ghost-Link mittig, Winner-Balken vollbreit | Design | 🟡 Gering · ✅ |
+| F25 | Spielerstatistik expandable (Trefferquote, beste/schlechteste Runde, Rückstand, Wolke) | UX | 🟡 Gering · ✅ |
+| F26 | Ergebnis-Export als PNG-Bild und als Text in die Zwischenablage | UX | 🟡 Gering · ✅ |
+| F27 | Spielübergreifende Statistik und Siegesserien (eigene Persistenz nötig) | UX | 🟡 Gering · zurückgestellt |
 
 ---
 
@@ -448,15 +451,20 @@ Das Produkt richtet sich an eine klare Kernsituation: **Wizard-Runde am Tisch, e
 > Ohne explizite Wahl entscheidet wie bisher der Detector (fallback `de`).
 > F13: `document.documentElement.lang` wird nach `init` und bei jedem `languageChanged`
 > auf die aktive Sprache gesetzt — `index.html` bleibt nur der Startwert.
-> **Nachschub (Sichtbarkeit):** Der Footer ist jetzt eine **immer sichtbare, fixierte Leiste**
-> (`fixed bottom-0 z-30`, über den Runden-Overlays, unter Modal/Splash), damit die Sprache auch
-> mitten in einer Runde erreichbar ist. **Mobil** (unterhalb des `md`-Breaks) ist er bewusst
-> reduziert: Flaggen-Zeile und Copyright entfallen, stattdessen **ein einziger kompakter Chip**
-> (lucide `Globe` + aktueller Code), der per Antippen direkt `de`↔`en` umschaltet — so nimmt die
-> Leiste kaum Höhe von der Runden-Tabelle weg (reservierte Höhe pro Breakpoint: `pb-16 md:pb-28`,
-> Sticky-Button `bottom-16 md:bottom-24`). Das mobile Layout ersetzt die früheren Mobil-Screenshots
+> **Nachschub (Sichtbarkeit):** Der Footer ist **responsive platziert**. Auf dem **Desktop**
+> (`md:`) ist er eine **immer sichtbare, fixierte Leiste** (`md:fixed md:bottom-0 md:z-30`, über
+> den Runden-Overlays, unter Modal/Splash), damit die Sprache auch mitten in einer Runde erreichbar
+> ist. Auf **Mobil** ist er **nicht** angeheftet: er steht als normaler Fluss-Block (`mt-8`)
+> **unterhalb des Inhalts** (nach der Runden-Tabelle) und scrollt mit — eine dauerhaft fixierte
+> Leiste würde der Tabelle für ein nur gelegentlich genutztes Steuer ständig Höhe wegnehmen.
+> **Mobil** (unterhalb des `md`-Breaks) ist er zudem bewusst reduziert: Flaggen-Zeile und Copyright
+> entfallen, stattdessen **ein einziger kompakter Chip** (lucide `Globe` + aktueller Code), der per
+> Antippen direkt `de`↔`en` umschaltet. Nur wo der Footer fixiert ist (Desktop), reservieren die
+> Container seine Höhe: `App.tsx`-Wrapper und Overlays `md:pb-28` (mobil keine Bottom-Reserve),
+> Sticky-Button `bottom-2 md:bottom-24`. Das mobile Layout ersetzt die früheren Mobil-Screenshots
 > [22]; das Verhalten deckt der `@mobile`-Test in `e2e/i18n.spec.ts` ab (Chip sichtbar, Flaggen +
-> Copyright versteckt, Leiste < 70 px, ein Tap kippt die Sprache).
+> Copyright versteckt, `position: static`, Höhe < 70 px, ein Tap kippt die Sprache); ein
+> Desktop-Schritt desselben Tests sichert `position: fixed`.
 > Belege: `e2e/i18n.spec.ts` (Umschalten, Persistenz über Reload, Override gegen den
 > Detector, `lang`-Attribut) und `ux-shots/capture-lang.mjs` →
 > [20](./ux-shots/20-lang-footer-desktop-de.png) (de, persistiert gegen einen en-US-Browser),
@@ -492,7 +500,32 @@ Das Produkt richtet sich an eine klare Kernsituation: **Wizard-Runde am Tisch, e
 
 ---
 
-### F16 · Winner-View ohne Abschluss-Moment 🟡
+### F16 · Winner-View ohne Abschluss-Moment 🟡 ✅ umgesetzt
+
+> **Status:** umgesetzt. Rangliste mit Wettbewerbs-Rängen (Gleichstand teilt sich den Rang, nächste
+> Position skippt), Siegerzeile gold mit `Trophy`-Icon, CSS-Confetti (respektiert
+> `prefers-reduced-motion`), expandierbares Statistik-Panel (→ F25), Ergebnis-Export als PNG
+> (→ F26) und als Text, sowie Revanche-Button mit Roster-Rotation.
+>
+> **Revanche-Rotation:** `rematch()` in `gameStore.ts` rotiert das Roster so, dass der letzte
+> Spieler neuer Spieler 1 wird: `[P_n, P_1, …, P_{n-1}]`. Damit wandert die Mischpflicht eine
+> Sitzposition weiter (der alte Spieler n-1 mischt in der neuen Runde 1). Die Rotation wird
+> zusätzlich auf `settingsStore.playerNames` angewendet, damit "Neues Spiel" dieselbe
+> Sitzordnung vorbelegt. Revanche öffnet sofort das Schätz-Overlay Runde 1.
+>
+> **Confetti:** CSS-only (`.confetti-container` in `index.css`), `pointer-events-none`,
+> z-index 10 (unter Footer 30, Dialogen 50). Läuft genau einmal pro Mount (~2.5 s,
+> `animation-fill-mode: forwards` blendet aus). Bei `prefers-reduced-motion: reduce` rendert
+> die Komponente keinen sichtbaren Container. E2E-Haken: `T.winner.confetti` +
+> `data-reduced-motion="true|false"`.
+>
+> **Aktionen im Winner-Screen:** Revanche (grün, Primär, volle Breite) · Ergebnis speichern
+> (umrandet) · Als Text kopieren (umrandet) · Neues Spiel (Ghost-Link, ohne Confirm —
+> Begründung bleibt wie in F11: kein Versehens-Risiko am Spielende).
+>
+> **Abgesichert** in `e2e/winner.spec.ts`: Rangfolge, Gleichstand-Rank, `data-*`-Attribute der
+> Statistik-Zeilen, Revanche-Rotation (Header-Name-Assertion), Download-Event mit
+> Dateiname-Regex, Confetti-Container.
 
 **Beobachtung:** Nach der letzten Runde erscheint ein gelber Kasten mit Textzeile über dem Tabellenrest; kein Ranking, keine Hervorhebung, kein Teilen:
 
@@ -505,6 +538,60 @@ Das Produkt richtet sich an eine klare Kernsituation: **Wizard-Runde am Tisch, e
 - "Revanche starten"-Button (gleiche Spieler, neues Spiel) — direkter Next-Best-Action.
 
 **Aufwand:** M (~3–4 h). **Risiko:** gering.
+
+---
+
+### F25 · Spielerstatistik expandable (nur aktuelles Spiel) 🟡 ✅ umgesetzt
+
+> **Status:** umgesetzt. Ein Panel für alle Spieler (Default zu, `data-stats-open="false"`).
+> Immer sichtbar: Rang, Name, Punkte, Trefferquote in %. Aufgeklappt pro Spieler: Tipps korrekt
+> n/m, beste Runde +X, schlechteste Runde −X, Rückstand auf Platz 1, Wolke n×.
+> Nenner: `points.length` (tatsächlich gespielte Runden), bei 0 rendiert `–` statt `NaN`.
+> Bewertet wird `results` (gewertete Stiche). Reines Modul `src/store/stats.ts`
+> (`computePlayerStats`, `rankPlayers`) ohne React, genutzt von WinnerView und resultImage.
+> Keine spielübergreifende Statistik — das wäre F27.
+
+**Aufwand:** ~2 h. **Risiko:** gering — reine Berechnung auf vorhandenem Store.
+
+---
+
+### F26 · Ergebnis-Export als PNG und Text 🟡 ✅ umgesetzt
+
+> **Status:** umgesetzt. PNG via eigene Canvas-2D-Zeichnung (`src/components/resultImage.ts`),
+> 1080×1350 logical (Scale 2), dunkler Hintergrund mit Gold-Akzent für den Sieger.
+> Download über Blob → `URL.createObjectURL` → `<a download>`.
+> Dateiname: `wizard-<ISO-Datum>-<Sieger>.png`, Unicode-bereinigt, Tie → `geteilt`.
+> Text-Export: `navigator.clipboard.writeText` mit zusammengefasster Rangliste,
+> Status über `data-copied="true|false"`. Kein `navigator.share`-Pfad.
+> E2E: `page.waitForEvent('download')` mit Regex auf Dateiname-Präfix.
+
+**Aufwand:** ~2 h. **Risiko:** gering — kein DOM-Capture, keine neue Abhängigkeit.
+
+---
+
+### F27 · Spielübergreifende Statistik und Siegesserien 🟡 · zurückgestellt
+
+**Beobachtung:** "Siege in Folge", "Siege gesamt" und vergleichbare Serien-Statistiken
+erfordern eine spielüberschreitende Persistenz (`wizard_history_v1`), da `wizard_state_v1`
+mit `resetGame()` gelöscht wird und den Abschluss eines Spiels nicht überdauert.
+
+**Warum zurückgestellt:** Eigener localStorage-Key, Kappe, Lösch-Option, idempotenter
+Schreibzeitpunkt in `advanceRound`, E2E-Seeding via `seedHistory` — erhöht den Scope
+deutlich über das eigentliche F16/F25 hinaus. Bewusst als eigenes Finding dokumentiert,
+damit die Entscheidung nachvollziehbar bleibt.
+
+**Vorgeschlagene Umsetzung (wann immer gebaut):**
+- Key `wizard_history_v1`, Array von Einträgen `{ finishedAt, playerCount, totalRounds, ranking, winnerNames }`.
+- Schreibort: `advanceRound()` beim Übergang `currentRound > totalRounds` (Reload im Winner-Screen
+  ruft das nicht erneut auf → keine Duplikate).
+- Serie pro Name: aufeinanderfolgende Einträge mit Sieg; Tie zählt für alle Sieger.
+- Kappe: letzte 50 Einträge, ältester fliegt.
+- `resetGame()` löscht die Historie NICHT.
+- E2E: neuer Helper `seedHistory(page, entries)`, ein echter 5-Runden-Durchlauf als
+  Schreibbeweis.
+
+**Aufwand:** M (~3 h inkl. Fixture + Tests). **Risiko:** mittel — neuer Store-Key,
+Interaktion mit `resetGame`, History-Tests brauchen Seeding.
 
 ---
 
@@ -664,14 +751,17 @@ F11 und die Spaltenbreiten-Assertion aus F2 bleiben grün.
 **P2 — Politur & Identität:**
 
 13. F15 — Design-Tokens/Dark-Theme schrittweise (M)
-14. F16 — Winner-View mit Rangliste & Teilen (M)
-15. F12/F17 — A11y: Dialoge, Fokus (M) ✅ umgesetzt (beide Dialoge über `useDialogA11y`; der
+14. F16 — Winner-View mit Rangliste & Teilen (M) ✅ umgesetzt (Rangliste, Confetti, Revanche mit Rotation)
+15. F25 — Spielerstatistik expandable (S) ✅ umgesetzt
+16. F26 — Ergebnis-Export als PNG/Text (S) ✅ umgesetzt
+17. F27 — Spielübergreifende Statistik / Siegesserien (M) — zurückgestellt
+18. F12/F17 — A11y: Dialoge, Fokus (M) ✅ umgesetzt (beide Dialoge über `useDialogA11y`; der
     Tooltip-Teil entfiel mit F2) — F17 ✅ umgesetzt (Lucide `CircleHelp`)
-16. F13/F14 — Sprachumschalter + `lang`-Synchronisation (S) ✅ umgesetzt (Flaggen im Footer mittig, Wahl persistiert und überschreibt den Detector, `<html lang>` synchron)
-17. F22 — Spieler-Reihenfolge per Drag & Drop (M) — Nachfolger von F9
-18. F23 — Overlay-Dialoge mit `role`/Fokus-Trap/Escape (S–M) — Folge von F12
-19. F18/F20 — Code-Hygiene & Kleinigkeiten (S)
-20. F24 — Zentrierung der ganzen Seite (S) ✅ umgesetzt (Brett, Primäraktion, Winner-Karte)
+19. F13/F14 — Sprachumschalter + `lang`-Synchronisation (S) ✅ umgesetzt (Flaggen im Footer mittig, Wahl persistiert und überschreibt den Detector, `<html lang>` synchron)
+20. F22 — Spieler-Reihenfolge per Drag & Drop (M) — Nachfolger von F9
+21. F23 — Overlay-Dialoge mit `role`/Fokus-Trap/Escape (S–M) — Folge von F12
+22. F18/F20 — Code-Hygiene & Kleinigkeiten (S)
+23. F24 — Zentrierung der ganzen Seite (S) ✅ umgesetzt (Brett, Primäraktion, Winner-Karte)
 
 > F12 ist auf den Bestätigungs-Dialog und die Regel-Erklärung geschrumpft: der
 > Scoreboard-Zellen-Tooltip war mit F2 schon entfernt, damit entfiel auch der dortige
@@ -711,5 +801,12 @@ F11 und die Spaltenbreiten-Assertion aus F2 bleiben grün.
     (`overflow-x-auto max-w-full` im `flex justify-center`-Wrapper), [`App.tsx`](./src/App.tsx)
     (Wrapper um die Primäraktion, `sticky` bleibt), [`WinnerView.tsx`](./src/components/WinnerView.tsx)
     (`mx-auto max-w-md text-center`); Beweise in `ux-shots/capture-centre.mjs`
+  - Winner-View / Revanche (F16, ✅ umgesetzt): [`WinnerView.tsx`](./src/components/WinnerView.tsx)
+    (Rangliste, Confetti, Aktionen), [`gameStore.ts`](./src/store/gameStore.ts) (`rematch()`),
+    [`index.css`](./src/index.css) (`.confetti-container` Keyframes)
+  - Statistik (F25, ✅ umgesetzt): [`src/store/stats.ts`](./src/store/stats.ts)
+    (`computePlayerStats`, `rankPlayers`, `buildTextSummary`, `sanitizeNameForFile`)
+  - Export (F26, ✅ umgesetzt): [`src/components/resultImage.ts`](./src/components/resultImage.ts)
+    (`renderResultImage`, `downloadBlob`) — Canvas 2D, 1080×1350, Scale 2
 
 > Hinweis: `ux-shots/` und `ux-screens.mjs` sind Analyse-Artefakte. Wenn sie nicht ins Repository sollen, können sie nach der Durchsicht gelöscht oder zu `.gitignore` hinzugefügt werden.

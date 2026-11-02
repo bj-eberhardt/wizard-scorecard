@@ -1,6 +1,5 @@
 import { useTranslation } from 'react-i18next';
 import type { ReactElement } from 'react';
-import { Globe } from 'lucide-react';
 import i18n from '../i18n/i18n';
 import useSettingsStore, { type SupportedLanguage } from '../store/settingsStore';
 import { T } from '../test-ids';
@@ -50,21 +49,16 @@ const focusRing =
  * `Footer`, which the app shows on every screen — configuration, scoreboard and
  * winner — so the language is never only reachable before the game starts.
  *
- * Two CSS-switched variants share one state (no JS media query): the full flag
- * row is shown from the `md` breakpoint up, while on a phone — where a footer is
- * all about not stealing height from the round table — a single compact chip
- * cycles directly between the two languages. Both drive the same
- * `activeLanguage`, so `aria-pressed` (flags) and `data-lang` (chip) always agree.
- *
- * An explicit choice persisted in the settings store overrides the browser
- * detector on the next boot (read back in i18n.ts); while none is stored, the
- * detector decides.
+ * The full flag row is shown on all viewports: the footer on mobile flows after
+ * the content (not fixed), so it no longer competes for viewport height and the
+ * compact-chip simplification is unnecessary. An explicit choice persisted in
+ * the settings store overrides the browser detector on the next boot (read back
+ * in i18n.ts); while none is stored, the detector decides.
  */
 export default function LanguageSwitcher() {
   const { t } = useTranslation();
   const setLanguage = useSettingsStore((s) => s.setLanguage);
   const activeLanguage: SupportedLanguage = i18n.resolvedLanguage === 'en' ? 'en' : 'de';
-  const other: SupportedLanguage = activeLanguage === 'en' ? 'de' : 'en';
 
   const switchLanguage = (code: SupportedLanguage) => {
     setLanguage(code);
@@ -72,52 +66,33 @@ export default function LanguageSwitcher() {
   };
 
   return (
-    <>
-      {/* Mobile: one slim chip that switches straight to the other language. It
-          carries the current code in `data-lang` (never asserted as text) and is
-          hidden again from `md` up. */}
-      <button
-        type="button"
-        onClick={() => switchLanguage(other)}
-        data-testid={T.footer.langToggle}
-        data-lang={activeLanguage}
-        aria-label={t('footer.langSwitch')}
-        title={t('footer.langSwitch')}
-        className={`mx-auto flex min-h-11 cursor-pointer items-center justify-center gap-1.5 rounded-full bg-gray-100 px-3 text-xs font-semibold text-gray-600 hover:bg-gray-200 md:hidden ${focusRing}`}
-      >
-        <Globe size={16} aria-hidden className="shrink-0" />
-        {activeLanguage.toUpperCase()}
-      </button>
-
-      {/* Desktop: the full flag group. Hidden below `md`. */}
-      <div
-        role="group"
-        aria-label={t('footer.langGroup')}
-        className="mb-2 hidden items-center justify-center gap-2 md:flex"
-      >
-        {LANGUAGES.map(({ code, flag: Flag, labelKey }) => (
-          <button
-            key={code}
-            type="button"
-            onClick={() => switchLanguage(code)}
-            data-testid={T.footer.langButton(code)}
-            data-lang={code}
-            aria-label={t(labelKey)}
-            aria-pressed={activeLanguage === code}
-            title={t(labelKey)}
-            className={`flex min-h-11 min-w-11 cursor-pointer items-center justify-center rounded px-2 opacity-60 hover:opacity-100 focus-visible:opacity-100 aria-pressed:opacity-100 ${focusRing}`}
+    <div
+      role="group"
+      aria-label={t('footer.langGroup')}
+      className="mb-2 flex items-center justify-center gap-2"
+    >
+      {LANGUAGES.map(({ code, flag: Flag, labelKey }) => (
+        <button
+          key={code}
+          type="button"
+          onClick={() => switchLanguage(code)}
+          data-testid={T.footer.langButton(code)}
+          data-lang={code}
+          aria-label={t(labelKey)}
+          aria-pressed={activeLanguage === code}
+          title={t(labelKey)}
+          className={`flex min-h-11 min-w-11 cursor-pointer items-center justify-center rounded px-2 opacity-60 hover:opacity-100 focus-visible:opacity-100 aria-pressed:opacity-100 ${focusRing}`}
+        >
+          {/* the active language is outlined, the ring also shows keyboard focus */}
+          <span
+            className={`overflow-hidden rounded-[3px] shadow-sm ring-1 ${
+              activeLanguage === code ? 'ring-gray-700' : 'ring-black/10'
+            }`}
           >
-            {/* the active language is outlined, the ring also shows keyboard focus */}
-            <span
-              className={`overflow-hidden rounded-[3px] shadow-sm ring-1 ${
-                activeLanguage === code ? 'ring-gray-700' : 'ring-black/10'
-              }`}
-            >
-              <Flag />
-            </span>
-          </button>
-        ))}
-      </div>
-    </>
+            <Flag />
+          </span>
+        </button>
+      ))}
+    </div>
   );
 }

@@ -99,8 +99,7 @@ test.describe('Localization safety', () => {
           expect(box?.height).toBeGreaterThanOrEqual(44);
         }
       });
-      await test.step('Desktop shows flags + copyright and hides the mobile chip', async () => {
-        await expect(game.getByTestId(T.footer.langToggle)).toBeHidden();
+      await test.step('Desktop shows flags + copyright', async () => {
         await expect(game.getByTestId(T.footer.copyright)).toBeVisible();
       });
       await test.step('Click the British flag -> UI and <html lang> switch to English', async () => {
@@ -127,30 +126,22 @@ test.describe('Localization safety', () => {
       });
     });
 
-    test('Mobile: the footer collapses to one compact language chip @mobile', async ({ game }) => {
-      await test.step('Chip is visible; flags and copyright are not', async () => {
+    test('Mobile: the footer shows flags and copyright like desktop @mobile', async ({ game }) => {
+      await test.step('Flags and copyright are visible', async () => {
         await openApp(game);
-        const chip = game.getByTestId(T.footer.langToggle);
-        await expect(chip).toBeVisible();
-        await expect(game.getByTestId(T.footer.langButton('de'))).toBeHidden();
-        await expect(game.getByTestId(T.footer.copyright)).toBeHidden();
+        await expect(game.getByTestId(T.footer.langButton('de'))).toBeVisible();
+        await expect(game.getByTestId(T.footer.langButton('en'))).toBeVisible();
+        await expect(game.getByTestId(T.footer.copyright)).toBeVisible();
       });
       await test.step('The footer flows after the content instead of pinning to the bottom', async () => {
         const footer = game.getByTestId(T.footer.root);
         await expect(footer).toHaveCSS('position', 'static');
-        const box = await footer.boundingBox();
-        expect(box).not.toBeNull();
-        expect(box!.height).toBeLessThan(70);
       });
-      await test.step('One tap cycles to the other language and persists', async () => {
-        const chip = game.getByTestId(T.footer.langToggle);
-        const before = (await chip.getAttribute('data-lang')) as 'de' | 'en';
-        const after = before === 'de' ? 'en' : 'de';
-        await chip.click();
-        await expect(chip).toHaveAttribute('data-lang', after);
-        await expectActive(game, after);
+      await test.step('Clicking a flag switches language and persists', async () => {
+        await game.getByTestId(T.footer.langButton('en')).click();
+        await expectActive(game, 'en');
         const stored = await game.evaluate((key) => localStorage.getItem(key), SETTINGS_KEY);
-        expect(JSON.parse(stored ?? '{}')?.state?.language).toBe(after);
+        expect(JSON.parse(stored ?? '{}')?.state?.language).toBe('en');
       });
     });
 
@@ -179,8 +170,8 @@ test.describe('Localization safety', () => {
        * (z-30 over z-20), so the language is reachable mid-round without ever
        * navigating away. The overlays must NOT host their own switcher — there is
        * exactly one, in the footer — and it stays visible and clickable while a
-       * modal overlay is open. (On mobile the footer instead flows after the
-       * content; that path is covered by the @mobile chip test above.)
+       * modal overlay is open. (On mobile the footer flows after the content;
+       * the @mobile test above verifies that it shows the same flags.)
        */
       const expectOverlayWithoutOwnSwitcher = async (overlayTestId: string) => {
         await expect(game.getByTestId(overlayTestId)).toBeVisible();

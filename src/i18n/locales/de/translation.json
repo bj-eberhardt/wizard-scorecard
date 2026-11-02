@@ -22,7 +22,10 @@
     "submit": "Bestätigen",
     "startNextRound": "Nächste Runde starten",
     "newGame": "Neues Spiel starten",
-    "toggleFullscreen": "Vollbild umschalten"
+    "toggleFullscreen": "Vollbild umschalten",
+    "rematch": "Revanche starten",
+    "saveImage": "Ergebnis speichern",
+    "copyText": "Als Text kopieren"
   },
   "labels": {
     "prediction": "Tipp",
@@ -45,7 +48,18 @@
   "winnerView": {
     "announcement_single": "🎉 Gewinner: {{name}} mit {{points}} Punkten!",
     "announcement_two": "🎉 Gewinner: {{name1}} und {{name2}} mit {{points}} Punkten!",
-    "announcement_multiple": "🎉 Gewinner: {{names}} und {{lastName}} mit {{points}} Punkten!"
+    "announcement_multiple": "🎉 Gewinner: {{names}} und {{lastName}} mit {{points}} Punkten!",
+    "statsToggle": "Statistik einblenden",
+    "statsHide": "Statistik ausblenden",
+    "hitRateLabel": "Trefferquote",
+    "hitRateColumn": "Quote",
+    "statHitCorrect": "Tipps korrekt: {{correct}}/{{total}}",
+    "statBestRound": "Beste Runde: +{{delta}}",
+    "statWorstRound": "Schlechteste Runde: {{delta}}",
+    "statGap": "Rückstand: −{{gap}}",
+    "statWolkeSaved_one": "Erfolg: {{count}}× Tipp gerettet",
+    "statWolkeSaved_other": "Erfolg: {{count}}× Tipp gerettet",
+    "statWolkeNoEffect": "Ergebnis: Wolke {{count}}× ohne Effekt"
   },
   "confirmDialog": {
     "title": "Möchtest du das aktuelle Spiel wirklich beenden?",
@@ -59,7 +73,6 @@
   "footer": {
     "copy": "© {{year}} - Version: {{version}}",
     "langGroup": "Sprache",
-    "langSwitch": "Sprache wechseln",
     "langDe": "Deutsch",
     "langEn": "Englisch"
   },
