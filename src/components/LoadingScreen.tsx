@@ -1,14 +1,20 @@
 import { useEffect, useState } from 'react';
 import logoPng from '../assets/logo.png';
 import logoWebp from '../assets/logo.webp';
+import { isE2E } from '../e2eFlag';
+import { T } from '../test-ids';
 
 export const LoadingScreen = () => {
   const [isVisible, setIsVisible] = useState(true);
 
   useEffect(() => {
-    const timer = setTimeout(() => {
-      setIsVisible(false);
-    }, 2_000);
+    // In e2e runs (?e2e=1) skip the artificial splash delay to keep tests fast.
+    const timer = setTimeout(
+      () => {
+        setIsVisible(false);
+      },
+      isE2E() ? 0 : 2_000
+    );
 
     return () => clearTimeout(timer);
   }, []);
@@ -17,9 +23,10 @@ export const LoadingScreen = () => {
 
   return (
     <div
-      className={`fixed inset-0 bg-white z-[1000] flex items-center justify-center transition-opacity duration-1000 ${
-        isVisible ? 'opacity-100' : 'opacity-0'
-      }`}
+      className={`fixed inset-0 bg-white z-[1000] flex items-center justify-center transition-opacity ${
+        isE2E() ? 'duration-0' : 'duration-1000'
+      } ${isVisible ? 'opacity-100' : 'opacity-0'}`}
+      data-testid={T.loading.splash}
     >
       <div className="w-48 h-48 sm:w-64 sm:h-64 md:w-128 md:h-128 relative">
         <picture>

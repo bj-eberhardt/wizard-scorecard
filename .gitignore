@@ -29,5 +29,15 @@ Thumbs.db
 # TypeScript
 *.tsbuildinfo
 
-.husky/
-.husky/_/pre-commit
+# Playwright artifacts
+/playwright-report/
+/test-results/
+/blob-report/
+
+# UX analysis screenshots (generated locally)
+/ux-shots/
+/ux-screens.mjs
+
+# Husky: ignore generated internals, but keep the actual hooks tracked so the
+team/CI get the pre-commit gate via `npm run prepare`.
+.husky/_/

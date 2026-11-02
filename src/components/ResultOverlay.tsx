@@ -1,6 +1,8 @@
 import { useGameStore } from '../store/gameStore';
 import React, { useState, useEffect, useRef } from 'react';
 import { useTranslation } from 'react-i18next';
+import { T } from '../test-ids';
+import { isE2E } from '../e2eFlag';
 
 export function ResultOverlay({ close }: { close: () => void }) {
   const { t } = useTranslation();
@@ -16,19 +18,26 @@ export function ResultOverlay({ close }: { close: () => void }) {
   const [results, setResults] = useState<number[]>(Array(players.length).fill(0));
   const [wolkeFlags, setWolkeFlags] = useState<boolean[]>(Array(players.length).fill(false));
   const [error, setError] = useState<string>('');
+  // raw i18n key of the current error, exposed via data-error-key for E2E
+  const [errorKey, setErrorKey] = useState<string>('');
   // prevent immediate submit: disable OK for a short time after the overlay opens
   const [submitDisabled, setSubmitDisabled] = useState<boolean>(true);
   const timerRef = useRef<number | null>(null);
   // confirmation for all-zero inputs (not allowed accidentally for rounds > 1)
   const [confirmZero, setConfirmZero] = useState<boolean>(false);
 
+  const showError = (key: string, options?: Record<string, unknown>) => {
+    setError(t(key, options));
+    setErrorKey(key);
+  };
+
   useEffect(() => {
-    // enable submit after 2 seconds
+    // enable submit after 2 seconds (immediately in e2e runs to keep tests fast)
     setSubmitDisabled(true);
     if (timerRef.current) {
       window.clearTimeout(timerRef.current);
     }
-    timerRef.current = window.setTimeout(() => setSubmitDisabled(false), 2000);
+    timerRef.current = window.setTimeout(() => setSubmitDisabled(false), isE2E() ? 0 : 2000);
     return () => {
       if (timerRef.current) window.clearTimeout(timerRef.current);
       timerRef.current = null;
@@ -64,11 +73,9 @@ export function ResultOverlay({ close }: { close: () => void }) {
       .filter((i) => i !== -1);
 
     if (tooSmallInputPlayerIndex.length > 0) {
-      setError(
-        t('errors.valueTooSmall', {
-          playerNames: tooSmallInputPlayerIndex.map((i) => rotatedPlayers[i].name).join(', '),
-        })
-      );
+      showError('errors.valueTooSmall', {
+        playerNames: tooSmallInputPlayerIndex.map((i) => rotatedPlayers[i].name).join(', '),
+      });
       return;
     }
 
@@ -77,23 +84,21 @@ export function ResultOverlay({ close }: { close: () => void }) {
       .filter((i) => i !== -1);
 
     if (tooLargeInputPlayerIndex.length > 0) {
-      setError(
-        t('errors.valueTooLarge', {
-          playerNames: tooLargeInputPlayerIndex.map((i) => rotatedPlayers[i].name).join(', '),
-        })
-      );
+      showError('errors.valueTooLarge', {
+        playerNames: tooLargeInputPlayerIndex.map((i) => rotatedPlayers[i].name).join(', '),
+      });
       return;
     }
 
     for (let i = 0; i < players.length; i++) {
       if (useAnniversaryRules && wolkeFlags[i] && results[i] < 1) {
-        setError(t('errors.wolkeMinOne', { playerName: rotatedPlayers[i].name }));
+        showError('errors.wolkeMinOne', { playerName: rotatedPlayers[i].name });
         return;
       }
     }
 
     if (wolkeFlags.filter((i) => i).length > 1) {
-      setError(t('errors.onlyOneWolke'));
+      showError('errors.onlyOneWolke');
       return;
     }
 
@@ -120,13 +125,24 @@ export function ResultOverlay({ close }: { close: () => void }) {
   };
 
   return (
-    <div className="fixed inset-0 bg-black bg-opacity-60 flex  xs:items-[normal] items-center justify-center z-20">
-      <form className="relative bg-white p-4 rounded shadow w-96" onSubmit={(e) => submit(e)}>
+    <div
+      className="fixed inset-0 bg-black/60 flex  xs:items-[normal] items-center justify-center overflow-y-auto z-20 px-4 py-6 md:pb-28"
+      data-testid={T.result.overlay}
+    >
+      <form
+        className="relative bg-white p-4 rounded shadow w-96"
+        noValidate
+        onSubmit={(e) => submit(e)}
+      >
         <h2 className="text-lg font-bold mb-2">
           {t('resultOverlay.title', { round: currentRound })}
         </h2>
         {rotatedPlayers.map((p, i) => (
-          <div key={p.name} className="flex justify-between mb-2">
+          <div
+            key={p.name}
+            data-testid={T.result.playerRow(i)}
+            className="flex justify-between mb-2"
+          >
             <div>
               <span>{p.name}</span>
               <span className="italic">
@@ -134,12 +150,15 @@ export function ResultOverlay({ close }: { close: () => void }) {
               </span>
             </div>
             <div>
+              {/* No `max` attribute: the browser would block submission with a native,
+                  unlocalized bubble before our app validation can run. Range checks are
+                  owned by `valueTooSmall` / `valueTooLarge` below. */}
               <input
                 autoFocus={i == 0}
                 type="number"
                 min={0}
-                max={currentRound}
                 value={results[i]}
+                data-testid={T.result.input(i)}
                 onFocus={(e) => e.target.select()}
                 onChange={(e) => {
                   const copy = [...results];
@@ -154,6 +173,7 @@ export function ResultOverlay({ close }: { close: () => void }) {
                     tabIndex={-1}
                     type="checkbox"
                     checked={wolkeFlags[i]}
+                    data-testid={T.result.wolke(i)}
                     onChange={(e) => {
                       const copy = [...wolkeFlags];
                       copy[i] = e.target.checked;
@@ -166,15 +186,29 @@ export function ResultOverlay({ close }: { close: () => void }) {
             </div>
           </div>
         ))}
-        {error && <div className="bg-red-100 text-red-700 p-2 mb-2 rounded">{error}</div>}
+        {error && (
+          <div
+            className="bg-red-100 text-red-700 p-2 mb-2 rounded"
+            data-testid={T.result.error}
+            data-error-key={errorKey}
+          >
+            {error}
+          </div>
+        )}
         {confirmZero && (
-          <div className="bg-orange-100 text-orange-800 p-2 mb-2 rounded">
+          <div
+            className="bg-orange-100 text-orange-800 p-2 mb-2 rounded"
+            data-testid={T.result.confirmZero}
+          >
             {t('resultOverlay.confirmAllZero')}
           </div>
         )}
         {/* single info line above the buttons, shown once if any wolke is selected */}
         {anyWolkeSelected && (
-          <div className="text-sm text-gray-700 bg-gray-50 p-2 rounded mb-2">
+          <div
+            className="text-sm text-gray-700 bg-gray-50 p-2 rounded mb-2"
+            data-testid={T.result.wolkeInfo}
+          >
             {t('resultOverlay.wolkeInfo')}
           </div>
         )}
@@ -185,8 +219,10 @@ export function ResultOverlay({ close }: { close: () => void }) {
             onClick={() => {
               setConfirmZero(false);
               setError('');
+              setErrorKey('');
               setOverlay('prediction');
             }}
+            data-testid={T.result.revert}
             className="flex-0 bg-gray-200 text-gray-800 px-3 py-2 rounded"
             title={t('resultOverlay.revertButton')}
           >
@@ -198,6 +234,8 @@ export function ResultOverlay({ close }: { close: () => void }) {
             disabled={submitDisabled}
             aria-disabled={submitDisabled}
             aria-busy={submitDisabled}
+            data-submit-ready={submitDisabled ? 'false' : 'true'}
+            data-testid={T.result.submit}
             className={`flex-1 px-4 py-2 rounded ${submitDisabled ? 'bg-gray-300 text-gray-600 cursor-not-allowed' : 'bg-green-500 text-white'}`}
           >
             {submitDisabled

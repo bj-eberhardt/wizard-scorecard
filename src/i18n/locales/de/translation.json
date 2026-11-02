@@ -2,6 +2,9 @@
   "predictionOverlay": {
     "title": "Stiche schätzen für Runde {{round}}",
     "points": "({{points}} Punkte)",
+    "dealerInfo_one": "{{name}} mischt und verteilt {{cards}} Karte an jeden Spieler",
+    "dealerInfo_other": "{{name}} mischt und verteilt {{cards}} Karten an jeden Spieler",
+    "startPlayerInfo": "Startspieler: {{name}}",
     "startRound": "Runde starten"
   },
   "errors": {
@@ -19,14 +22,23 @@
     "submit": "Bestätigen",
     "startNextRound": "Nächste Runde starten",
     "newGame": "Neues Spiel starten",
-    "toggleFullscreen": "Vollbild umschalten"
+    "toggleFullscreen": "Vollbild umschalten",
+    "rematch": "Revanche starten",
+    "saveImage": "Ergebnis speichern",
+    "copyText": "Als Text kopieren"
   },
   "labels": {
-    "prediction": "Vorhersage",
+    "prediction": "Tipp",
     "result": "Ergebnis",
+    "tricks": "Stiche",
     "round": "Runde",
+    "roundShort": "#",
     "player": "Spieler",
     "points": "Punkte"
+  },
+  "scoreboard": {
+    "compact": "Kompakte Ansicht",
+    "full": "Vollständige Ansicht"
   },
   "resultOverlay": {
     "title": "Spiele Runde {{round}} und trage dann die Ergebnisse ein:",
@@ -38,16 +50,22 @@
     "wolkeInfo": "Trage die erhaltenen Stiche ein und markiere die Wolke für diesen Spieler – die Berechnung übernehmen wir.",
     "revertButton": "Zurück"
   },
-  "scoreboard": {
-    "tooltip": "Vorhersage: {{prediction}}\nErreichte Stiche: {{tricks}}\nPunkte: {{points}}",
-    "wolkeNote": "Wolke angewendet",
-    "originalPredictionLabel": "Originale Vorhersage: {{original}}",
-    "receivedTricksLabel": "Eingetragene Stiche: {{received}}"
-  },
   "winnerView": {
     "announcement_single": "🎉 Gewinner: {{name}} mit {{points}} Punkten!",
     "announcement_two": "🎉 Gewinner: {{name1}} und {{name2}} mit {{points}} Punkten!",
-    "announcement_multiple": "🎉 Gewinner: {{names}} und {{lastName}} mit {{points}} Punkten!"
+    "announcement_multiple": "🎉 Gewinner: {{names}} und {{lastName}} mit {{points}} Punkten!",
+    "statsToggle": "Statistik einblenden",
+    "statsHide": "Statistik ausblenden",
+    "hitRateLabel": "Trefferquote",
+    "hitRateColumn": "Quote",
+    "statHitCorrect": "Tipps korrekt: {{correct}}/{{total}}",
+    "statBestRound": "Beste Runde: +{{delta}}",
+    "statWorstRound": "Schlechteste Runde: {{delta}}",
+    "statGap": "Rückstand: −{{gap}}",
+    "statWolkeSaved_one": "Erfolg: {{count}}× Tipp gerettet",
+    "statWolkeSaved_other": "Erfolg: {{count}}× Tipp gerettet",
+    "statWolkeNoEffect": "Ergebnis: Wolke {{count}}× ohne Effekt",
+    "fileTieSuffix": "geteilt"
   },
   "confirmDialog": {
     "title": "Möchtest du das aktuelle Spiel wirklich beenden?",
@@ -59,12 +77,21 @@
     "logoAlt": "Logo"
   },
   "footer": {
-    "copy": "© {{year}} - Version: {{version}}"
+    "copy": "© {{year}} - Version: {{version}}",
+    "langGroup": "Sprache",
+    "langDe": "Deutsch",
+    "langEn": "Englisch"
   },
   "configureGame": {
     "title": "Bitte gib die Namen der Spieler ein:",
+    "sectionPlayers": "Spieler",
+    "sectionRounds": "Runden",
+    "sectionOptions": "Optionen",
     "playerNamePlaceholder": "Name Spieler {{number}}",
+    "playerBadge": "Spieler {{number}}",
+    "addPlayer": "Spieler hinzufügen",
     "removePlayerLabel": "Entferne Spieler {{number}}",
+    "dragHint": "Spieler {{number}} zum Umsortieren ziehen",
     "useAnniversaryRules": "Jubiläumsregeln verwenden (Wolke)",
     "wolkeInfoTitle": "Zur Wolke (Jubiläum)?",
     "wolkeInfo": "Diese Regel gehört zur Jubiläumsausgabe und kann nur verwendet werden, wenn das Spielset spezielle Karten wie Wolke, Jongleur, Drache, Fee und Bombe enthält. Wenn ein Spieler die Wolke erhält, wird seine Vorhersage am Ende der Runde automatisch um +1 oder −1 angepasst; die Berechnung erfolgt automatisch. Wichtig: Beim Eintragen der Ergebnisse muss angegeben werden, welcher Spieler die Wolke erhalten hat.",
@@ -73,9 +100,10 @@
     "notEqualInfo": "Die Summe aller Spieler‑Vorhersagen darf nicht gleich der Anzahl der in dieser Runde verfügbaren Stiche sein. Beispiel: In Runde 5 sind 5 Stiche zu vergeben — die Summe aller Vorhersagen darf daher nicht 5 sein. Sollte die Summe sonst gleich werden, muss der zuletzt vorhersagende Spieler seine Angabe so anpassen, dass die Gesamtsumme davon abweicht.",
     "startGame": "Spiel starten",
     "roundsLabel": "Anzahl Runden",
+    "roundsStandard": "Standard ({{default}})",
+    "roundsCustom": "Eigene",
     "roundsHelp": "Standard: {{default}}",
     "errors": {
-      "gapInNames": "Spielernamen müssen von oben nach unten lückenlos eingegeben werden.",
       "minPlayers": "Mindestens 3 Spieler erforderlich.",
       "maxPlayers": "Maximal {{max}} Spieler erlaubt.",
       "uniqueNames": "Jeder Name muss einzigartig sein.",

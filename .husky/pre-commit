@@ -1,0 +1,15 @@
+# Pre-commit gate: lint + formatting + type check over src AND e2e.
+#
+# Runs the shared npm scripts so behaviour is identical on Windows and Linux —
+# glob expansion happens inside Node/prettier, not the shell. On a failure, fix
+# with `npm run format` (prettier --write + eslint) and re-commit.
+set -e
+
+echo "[pre-commit] linting (src + e2e)..."
+npm run lint
+
+echo "[pre-commit] checking formatting..."
+npm run prettier:check
+
+echo "[pre-commit] type checking..."
+npm run typecheck

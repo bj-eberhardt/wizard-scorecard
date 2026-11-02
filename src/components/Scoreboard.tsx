@@ -1,264 +1,200 @@
-import React, { useState, useRef, useEffect } from 'react';
+import React from 'react';
 import { Player, useGameStore } from '../store/gameStore';
 import { useTranslation } from 'react-i18next';
+import { T } from '../test-ids';
 
-export function Scoreboard() {
+/**
+ * Scoreboard: one row per round, three columns per player — prediction, tricks, points.
+ * Every value is mirrored into a `data-*` attribute so the E2E suite can assert the whole
+ * cell matrix without touching localized text. A Wolke round shows `entered → evaluated`
+ * plus the cloud marker, because the anniversary rule rewrites the value that counts.
+ *
+ * `compact`: on the narrow phone screen the per-player points column is the
+ * furthest-right and hardest to reach, so it is hidden and the current total is shown under
+ * the player name instead. The name cell then spans two columns, not three. `App` owns the
+ * flag (it also forces it off at game over); the column is genuinely not rendered, so the
+ * fixed layout stays balanced without a CSS-only hide.
+ */
+export function Scoreboard({ compact = false }: { compact?: boolean }) {
   const { t } = useTranslation();
-  const { players, totalRounds, currentRound } = useGameStore();
+  const { players, totalRounds } = useGameStore();
   const rounds = Array.from({ length: totalRounds }, (_, i) => i);
-  const lastPlayedIndex = currentRound > 1 ? Math.max(0, currentRound - 2) : -1;
 
-  // show a subtle one-time pulse animation on the round-1 prediction cells
-  // after the first round has completed to indicate interactivity (mobile users)
-  const [showPulse, setShowPulse] = useState<boolean>(false);
-  const pulseTimerRef = useRef<number | null>(null);
-  useEffect(() => {
-    // Do not persist animation state; show pulse when currentRound > 1 (also after F5).
-    const prefersReduced =
-      typeof window !== 'undefined' &&
-      window.matchMedia &&
-      window.matchMedia('(prefers-reduced-motion: reduce)').matches;
-    if (prefersReduced) {
-      // respect user preference and don't animate
-      return;
-    }
-    if (currentRound > 1) {
-      // show pulse for about 1.6s on the last played round
-      setShowPulse(true);
-      pulseTimerRef.current = window.setTimeout(() => {
-        setShowPulse(false);
-        pulseTimerRef.current = null;
-      }, 1600);
-    }
-    return () => {
-      if (pulseTimerRef.current) {
-        window.clearTimeout(pulseTimerRef.current);
-        pulseTimerRef.current = null;
-      }
-    };
-  }, [currentRound]);
+  // The table is auto-layout, so `w-12` is what keeps the three sub-columns of a player group
+  // equally wide; `px-0.5` makes the longest cell content (`4→2☁`) still fit into those 48 px.
+  // Numbers are right-aligned with `tabular-nums`: equal digit widths plus a shared right edge
+  // line the same decimal places up across rows (the `1` of `1` sits under the `0` of `30`) —
+  // centring would instead float a short number to the middle and break that place alignment.
+  const cellClass = 'border border-black w-12 px-0.5 py-0.5 text-xs text-right tabular-nums';
+  // Backgrounds are set per cell, never here, so no element carries two conflicting ones.
+  const headerLabelClass =
+    'w-12 px-0.5 py-0.5 text-xs font-normal text-gray-500 border-2 border-black text-center';
 
-  const [tooltip, setTooltip] = useState<{
-    visible: boolean;
-    x: number;
-    y: number;
-    contentBase: string;
-    contentExtras: string[];
-    playerIndex: number;
-    roundIndex: number;
-    tooltipId: string;
-  } | null>(null);
-
-  const touchTimerRef = useRef<number | null>(null);
-
-  function getTooltipContent(p: Player, roundIndex: number) {
-    const base = t('scoreboard.tooltip', {
-      prediction: p.predictions[roundIndex] ?? '-',
-      tricks: p.receivedResults?.[roundIndex] ?? p.results?.[roundIndex] ?? '-',
-      points: p.points[roundIndex] - (p.points[roundIndex - 1] ?? 0),
-    });
-    const extras: string[] = [];
-    if (p.wolkeUsed?.[roundIndex]) {
-      extras.push('\u2601 ' + t('scoreboard.wolkeNote'));
-      const received = p.receivedResults?.[roundIndex];
-      if (typeof received === 'number') {
-        const pointsForRound = p.results?.[roundIndex] ?? '-';
-        extras.push(t('scoreboard.receivedTricksLabel', { received: pointsForRound }));
-      }
-    }
-
-    return { base, extras };
+  /**
+   * Rendered text of the tricks cell: `3→2 ☁` for a Wolke round, else the value. The narrow
+   * no-break space (U+202F) keeps the marker inside the fixed column without wrapping.
+   */
+  function tricksText(p: Player, roundIndex: number): string {
+    const evaluated = p.results?.[roundIndex];
+    if (typeof evaluated !== 'number') return '-';
+    if (!p.wolkeUsed?.[roundIndex]) return String(evaluated);
+    const entered = p.receivedResults?.[roundIndex] ?? evaluated;
+    return `${entered}\u2192${evaluated}\u202F\u2601`;
   }
 
-  function createTooltipMeasureDiv(content: string) {
-    const temp = document.createElement('div');
-    temp.style.position = 'absolute';
-    temp.style.visibility = 'hidden';
-    temp.style.padding = '0.5rem';
-    temp.style.whiteSpace = 'pre-line';
-    temp.style.fontSize = '1rem';
-    temp.innerText = content;
-    document.body.appendChild(temp);
-    const width = temp.offsetWidth;
-    document.body.removeChild(temp);
-    return width;
+  /** Attribute value of a per-round number: '' when the round is not played yet. */
+  function attr(value: number | undefined): number | '' {
+    return typeof value === 'number' ? value : '';
   }
 
-  function getTooltipData(
-    e: React.MouseEvent<HTMLElement> | React.TouchEvent<HTMLElement>,
-    p: Player,
-    roundIndex: number,
-    playerIndex: number
-  ) {
-    if (!p.points[roundIndex]) return null;
-    const rect = e.currentTarget.getBoundingClientRect();
-    const content = getTooltipContent(p, roundIndex);
-    const combinedText =
-      content.base + (content.extras.length ? '\n' + content.extras.join('\n') : '');
-    const tooltipWidth = createTooltipMeasureDiv(combinedText);
-    let x = rect.right + window.scrollX + 8;
-    if (x + tooltipWidth > window.innerWidth) {
-      x = rect.left + window.scrollX - tooltipWidth - 8;
-    }
-    return {
-      visible: true,
-      x,
-      y: rect.top + window.scrollY,
-      contentBase: content.base,
-      contentExtras: content.extras,
-      playerIndex,
-      roundIndex,
-      tooltipId: `scoreboard-tooltip-${playerIndex}-${roundIndex}`,
-    };
+  /** Cumulative total after the last played round, undefined before round 1 is scored. */
+  function totalPoints(p: Player): number | undefined {
+    return p.points.length > 0 ? p.points[p.points.length - 1] : undefined;
   }
-
-  const handleMouseEnter = (
-    e: React.MouseEvent<HTMLElement>,
-    p: Player,
-    roundIndex: number,
-    playerIndex: number
-  ) => {
-    // cancel any touch timer
-    if (touchTimerRef.current) {
-      window.clearTimeout(touchTimerRef.current);
-      touchTimerRef.current = null;
-    }
-    setTooltip(getTooltipData(e, p, roundIndex, playerIndex));
-  };
-
-  const handleMouseLeave = () => {
-    // cancel any touch timer
-    if (touchTimerRef.current) {
-      window.clearTimeout(touchTimerRef.current);
-      touchTimerRef.current = null;
-    }
-    setTooltip(null);
-  };
-
-  const handleTouchStart = (
-    e: React.TouchEvent<HTMLElement>,
-    p: Player,
-    roundIndex: number,
-    playerIndex: number
-  ) => {
-    // start a long-press timer (500ms) to open the tooltip
-    if (touchTimerRef.current) window.clearTimeout(touchTimerRef.current);
-    // store the touch event's currentTarget bounding rect when firing
-    touchTimerRef.current = window.setTimeout(() => {
-      setTooltip(getTooltipData(e, p, roundIndex, playerIndex));
-      touchTimerRef.current = null;
-    }, 500);
-  };
-
-  const handleTouchMove = () => {
-    if (touchTimerRef.current) {
-      window.clearTimeout(touchTimerRef.current);
-      touchTimerRef.current = null;
-    }
-  };
-
-  const handleTouchEnd = () => {
-    // if tooltip was opened, hide it on touch end; otherwise cancel timer
-    if (touchTimerRef.current) {
-      window.clearTimeout(touchTimerRef.current);
-      touchTimerRef.current = null;
-    } else {
-      // tooltip likely visible from long-press, hide it
-      setTooltip(null);
-    }
-  };
 
   return (
     <div className="text-center flex justify-center w-full">
-      <div className="overflow-x-auto w-full">
-        <table className="min-w-max w-full border-separate border-spacing-0">
+      {/* `max-w-full` instead of `w-full`: the scroll container shrinks to the table, so the
+          whole board is centred on wide screens, and it is still capped at the viewport, so
+          the horizontal scroll on narrow ones keeps working. */}
+      <div className="overflow-x-auto max-w-full">
+        {/* No `w-full`: with fixed data columns a full-width table would hand every leftover
+            pixel to the round column and stretch it into an empty block. */}
+        <table
+          className="min-w-max border-separate border-spacing-0"
+          data-testid={T.scoreboard.table}
+          data-compact={compact ? 'true' : 'false'}
+        >
           <thead>
             <tr>
-              <th className="bg-white sticky left-0 z-10 px-2 text-center border-2 border-black">
-                {t('labels.round')}
-              </th>
-              {players.map((p, i) => (
-                <th
-                  key={i + 'name'}
-                  colSpan={2}
-                  className="px-2 text-center border-2 border-black whitespace-nowrap"
+              <th
+                rowSpan={2}
+                data-testid={T.scoreboard.roundHeader}
+                aria-label={t('labels.round')}
+                className="bg-white sticky left-0 z-10 px-1 md:px-2 py-1 text-xs md:text-base text-center border-2 border-black"
+              >
+                {/* Narrow the sticky round column on phones (the auto-layout table lets the
+                    header word stretch it well beyond the two digits below); on desktop
+                    there is no space pressure so the full word stays readable. */}
+                <span
+                  data-testid={T.scoreboard.roundHeaderShort}
+                  className="md:hidden"
+                  aria-hidden="true"
                 >
-                  {p.name}
-                </th>
+                  {t('labels.roundShort')}
+                </span>
+                <span data-testid={T.scoreboard.roundHeaderFull} className="hidden md:inline">
+                  {t('labels.round')}
+                </span>
+              </th>
+              {players.map((p, i) => {
+                const total = totalPoints(p);
+                return (
+                  <th
+                    key={`${i}-name`}
+                    colSpan={compact ? 2 : 3}
+                    data-testid={T.scoreboard.headerPlayer(i)}
+                    className={`px-2 py-1 text-center border-2 border-black ${
+                      i > 0 ? 'border-l-4' : ''
+                    }`}
+                  >
+                    {p.name}
+                    {compact && typeof total === 'number' && (
+                      <span
+                        data-testid={T.scoreboard.headerPoints(i)}
+                        data-points={total}
+                        className="block text-xs font-normal text-gray-600"
+                      >
+                        ({total})
+                      </span>
+                    )}
+                  </th>
+                );
+              })}
+            </tr>
+            <tr>
+              {players.map((_, i) => (
+                <React.Fragment key={`${i}-labels`}>
+                  <th
+                    data-testid={T.scoreboard.headerLabel(i, 'prediction')}
+                    className={`bg-white ${headerLabelClass} ${i > 0 ? 'border-l-4' : ''}`}
+                  >
+                    {t('labels.prediction')}
+                  </th>
+                  <th
+                    data-testid={T.scoreboard.headerLabel(i, 'tricks')}
+                    className={`bg-white ${headerLabelClass} ${
+                      compact && i === players.length - 1 ? 'border-r-4' : ''
+                    }`}
+                  >
+                    {t('labels.tricks')}
+                  </th>
+                  {!compact && (
+                    <th
+                      data-testid={T.scoreboard.headerLabel(i, 'points')}
+                      className={`bg-gray-50 ${headerLabelClass} ${
+                        i === players.length - 1 ? 'border-r-4' : ''
+                      }`}
+                    >
+                      {t('labels.points')}
+                    </th>
+                  )}
+                </React.Fragment>
               ))}
             </tr>
           </thead>
           <tbody>
             {rounds.map((_, roundIndex) => (
               <tr key={roundIndex}>
-                <td className="bg-white sticky left-0  z-10 border-2 border-black">
+                <td className="bg-white sticky left-0 z-10 border-2 border-black">
                   {roundIndex + 1}
                 </td>
-                {players.map((p, i) => (
-                  <React.Fragment key={i + 'player' + roundIndex}>
-                    <td
-                      className={`border border-black text-sm font-bold px-2 ${i === 0 ? '' : 'border-l-4'} whitespace-nowrap`}
-                    >
-                      {p.points[roundIndex] ?? '-'}
-                    </td>
-                    <td
-                      className={`cursor-pointer border border-black px-2 ${i === players.length - 1 ? 'border-r-4' : ''} whitespace-nowrap`}
-                      onMouseLeave={() => handleMouseLeave()}
-                      onTouchMove={() => handleTouchMove()}
-                      onTouchEnd={() => handleTouchEnd()}
-                    >
-                      <span
-                        className={`w-full inline-block text-left transition ease-out duration-150 hover:bg-gray-100 hover:shadow-sm rounded px-1 py-0.5 ${showPulse && roundIndex === lastPlayedIndex ? 'animate-pulse bg-yellow-100 ring-4 ring-yellow-300 shadow-md transform scale-105' : ''}`}
-                        onMouseEnter={(e) => handleMouseEnter(e, p, roundIndex, i)}
-                        onTouchStart={(e) => handleTouchStart(e, p, roundIndex, i)}
+                {players.map((p, i) => {
+                  const prediction = p.predictions[roundIndex];
+                  const evaluated = p.results?.[roundIndex];
+                  const entered = p.receivedResults?.[roundIndex] ?? evaluated;
+                  const wolke = !!p.wolkeUsed?.[roundIndex];
+                  return (
+                    <React.Fragment key={`${i}-player${roundIndex}`}>
+                      <td
+                        data-testid={T.scoreboard.cell(i, roundIndex, 'prediction')}
+                        data-prediction={attr(prediction)}
+                        className={`${cellClass} ${i > 0 ? 'border-l-4' : ''}`}
                       >
-                        {p.predictions[roundIndex] ?? '-'}
-                      </span>
-                    </td>
-                  </React.Fragment>
-                ))}
+                        <span className="w-full inline-block text-right rounded px-1 py-0.5">
+                          {prediction ?? '-'}
+                        </span>
+                      </td>
+                      <td
+                        data-testid={T.scoreboard.cell(i, roundIndex, 'tricks')}
+                        data-tricks={attr(evaluated)}
+                        data-received-tricks={attr(entered)}
+                        data-wolke={wolke ? 'true' : 'false'}
+                        className={`${cellClass} ${
+                          compact && i === players.length - 1 ? 'border-r-4' : ''
+                        }`}
+                      >
+                        {tricksText(p, roundIndex)}
+                      </td>
+                      {!compact && (
+                        <td
+                          data-testid={T.scoreboard.cell(i, roundIndex, 'points')}
+                          data-points={attr(p.points[roundIndex])}
+                          className={`${cellClass} bg-gray-50 font-bold ${
+                            i === players.length - 1 ? 'border-r-4' : ''
+                          }`}
+                        >
+                          {p.points[roundIndex] ?? '-'}
+                        </td>
+                      )}
+                    </React.Fragment>
+                  );
+                })}
               </tr>
             ))}
           </tbody>
         </table>
       </div>
-      {tooltip?.visible && (
-        <div
-          id={tooltip.tooltipId}
-          role="tooltip"
-          aria-live="polite"
-          style={{
-            position: 'absolute',
-            left: tooltip.x,
-            top: tooltip.y,
-            background: 'white',
-            border: '1px solid black',
-            borderRadius: '0.25rem',
-            padding: '0.5rem',
-            zIndex: 1000,
-            whiteSpace: 'pre-line',
-            boxShadow: '0 2px 8px rgba(0,0,0,0.15)',
-          }}
-        >
-          <div>{tooltip.contentBase}</div>
-          {tooltip.contentExtras.length > 0 && (
-            <div className="mt-1 text-xs text-gray-600 italic">
-              {tooltip.contentExtras.map((l, idx) => (
-                // mark the cloud icon part as decorative but provide accessible label via aria-label
-                <div key={idx}>
-                  {l.startsWith('\u2601') ? (
-                    <span role="img" aria-label={t('scoreboard.wolkeNote')}>
-                      {l.replace('\u2601 ', '\u2601\u00A0')}
-                    </span>
-                  ) : (
-                    <span>{l}</span>
-                  )}
-                </div>
-              ))}
-            </div>
-          )}
-        </div>
-      )}
     </div>
   );
 }

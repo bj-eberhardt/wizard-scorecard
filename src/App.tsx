@@ -1,5 +1,5 @@
 import { useGameStore } from './store/gameStore';
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useId, useRef } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Scoreboard } from './components/Scoreboard';
 import { PredictionOverlay } from './components/PredictionOverlay';
@@ -10,6 +10,13 @@ import Header from './components/Header';
 import Footer from './components/Footer';
 import FullscreenButton from './components/FullscreenButton';
 import { LoadingScreen } from './components/LoadingScreen';
+import { useDialogA11y } from './hooks/useDialogA11y';
+import { RotateCcw } from 'lucide-react';
+import { T } from './test-ids';
+
+/** Visible keyboard focus ring; Tailwind's default outline is too subtle on white. */
+const focusRing =
+  'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 focus-visible:ring-offset-2';
 
 export default function App() {
   const { t } = useTranslation();
@@ -26,6 +33,19 @@ export default function App() {
     resetGame,
   } = useGameStore();
   const [showConfirm, setShowConfirm] = useState(false);
+  // Compact view: the default follows the viewport once at mount (narrow screen =
+  // compact); the user can then override it with the toggle. No resize listener on purpose —
+  // rotating the phone must not silently discard a manual choice.
+  const [compact, setCompact] = useState<boolean>(
+    () => window.matchMedia('(max-width: 768px)').matches
+  );
+  const confirmTitleId = useId();
+  const confirmRef = useRef<HTMLDivElement>(null);
+  useDialogA11y({
+    open: showConfirm,
+    containerRef: confirmRef,
+    onClose: () => setShowConfirm(false),
+  });
 
   const handleStart = (
     names: string[],
@@ -49,38 +69,54 @@ export default function App() {
     resetGame();
   };
 
+  // The wake-lock sentinel must survive renders, so it lives in a ref, not a
+  // render-local variable. The whole effect (request + visibilitychange listener)
+  // runs only while a game is in progress: it re-runs when the game starts or ends,
+  // and its cleanup releases the lock and removes the listener. Registering the
+  // listener in the render body would attach a new closure on every render.
+  const wakeLockRef = useRef<WakeLockSentinel | null>(null);
   useEffect(() => {
-    // Optional: Listen for fullscreen changes if needed
-  }, []);
+    if (!gameStarted || isGameOver) return;
 
-  let wakeLock: WakeLockSentinel | null = null;
-
-  async function activateWakeLock() {
-    try {
-      // eslint-disable-next-line
-      wakeLock = await (navigator as any).wakeLock.request('screen');
-    } catch {
-      // ignore
+    async function requestWakeLock() {
+      try {
+        // eslint-disable-next-line
+        wakeLockRef.current = await (navigator as any).wakeLock.request('screen');
+      } catch {
+        // ignore (denied or unsupported)
+      }
     }
-  }
 
-  document.addEventListener('visibilitychange', async () => {
-    if (wakeLock !== null && document.visibilityState === 'visible') {
-      await activateWakeLock();
-    }
-  });
-
-  useEffect(() => {
+    // Feature detection stays runtime-guarded; desktop deliberately never locks.
     if (window.matchMedia('(max-width: 768px)').matches && 'wakeLock' in navigator) {
-      activateWakeLock().then();
+      void requestWakeLock();
     }
-  }, []);
+
+    // The browser releases the sentinel when the tab is hidden; reactivate on return
+    // only if a lock had been held (ref non-null), never after the game ended.
+    const onVisibility = async () => {
+      if (document.visibilityState === 'visible' && wakeLockRef.current !== null) {
+        await requestWakeLock();
+      }
+    };
+    document.addEventListener('visibilitychange', onVisibility);
+
+    return () => {
+      document.removeEventListener('visibilitychange', onVisibility);
+      const lock = wakeLockRef.current;
+      // Null the ref before releasing so a late 'release' event of the old sentinel
+      // can never overwrite a value acquired by a subsequent effect run.
+      wakeLockRef.current = null;
+      // Already released (tab hidden) → the promise rejects; that is expected.
+      void lock?.release().catch(() => {});
+    };
+  }, [gameStarted, isGameOver]);
 
   if (!gameStarted) {
     return (
       <>
         <LoadingScreen />
-        <div className="p-4 space-y-2 relative min-h-screen">
+        <div className="p-4 space-y-2 relative min-h-screen md:pb-28">
           <FullscreenButton />
           <Header />
           <ConfigureGame onStart={handleStart} />
@@ -91,76 +127,82 @@ export default function App() {
   }
 
   return (
-    <>
-      <div className="relative min-h-screen p-4">
-        <FullscreenButton />
-        <Header />
-        {!gameStarted ? (
-          <div className="space-y-2">
-            <ConfigureGame onStart={handleStart} />
-            <Footer />
-          </div>
-        ) : (
-          <>
-            <Scoreboard />
-            {!isGameOver && overlay === 'none' && (
-              <button
-                onClick={() => setOverlay('prediction')}
-                className="mt-4 bg-green-500 text-white px-4 py-2 rounded sticky bottom-2 z-[200]"
-              >
-                {t('buttons.startNextRound')}
-              </button>
-            )}
-            {/* Button für neues Spiel, nur wenn Spiel läuft */}
-            {!isGameOver && (
-              <div className="mt-2">
-                <button
-                  onClick={() => setShowConfirm(true)}
-                  className="bg-red-500 text-white px-4 py-2 rounded"
-                >
-                  {t('buttons.newGame')}
-                </button>
-              </div>
-            )}
+    <div className="relative min-h-screen p-4 md:pb-28">
+      <FullscreenButton />
+      <Header />
+      {!isGameOver && (
+        <div className="flex justify-center -mt-2 mb-1">
+          <button
+            onClick={() => setShowConfirm(true)}
+            data-testid={T.app.newGame}
+            className={`cursor-pointer inline-flex min-h-11 items-center gap-1.5 rounded px-2 text-sm text-gray-500 underline-offset-4 hover:text-red-600 hover:underline ${focusRing}`}
+          >
+            <RotateCcw size={14} aria-hidden />
+            {t('buttons.newGame')}
+          </button>
+        </div>
+      )}
+      <Scoreboard compact={compact && !isGameOver} />
+      {!isGameOver && (
+        <div className="mt-2 flex justify-center">
+          <button
+            type="button"
+            onClick={() => setCompact((v) => !v)}
+            data-compact={compact ? 'true' : 'false'}
+            data-testid={T.scoreboard.compactToggle}
+            className={`cursor-pointer inline-flex min-h-11 items-center rounded px-2 text-sm text-gray-500 underline-offset-4 hover:text-gray-800 hover:underline ${focusRing}`}
+          >
+            {compact ? t('scoreboard.full') : t('scoreboard.compact')}
+          </button>
+        </div>
+      )}
+      {!isGameOver && overlay === 'none' && (
+        <div className="mt-4 flex justify-center sticky bottom-2 md:bottom-24 z-[200]">
+          <button
+            onClick={() => setOverlay('prediction')}
+            data-testid={T.app.nextRound}
+            className="bg-green-500 text-white px-5 py-2 rounded min-h-11 shadow-lg cursor-pointer"
+          >
+            {t('buttons.startNextRound')}
+          </button>
+        </div>
+      )}
 
-            {/* Confirm Dialog */}
-            {showConfirm && (
-              <div className="fixed inset-0 flex items-center justify-center bg-black bg-opacity-50 z-50">
-                <div className="bg-white p-6 rounded shadow-lg text-center">
-                  <p>{t('confirmDialog.title')}</p>
-                  <div className="mt-4 flex justify-center gap-4">
-                    <button
-                      onClick={handleNewGame}
-                      className="bg-red-600 text-white px-4 py-2 rounded"
-                    >
-                      {t('confirmDialog.yes')}
-                    </button>
-                    <button
-                      onClick={() => setShowConfirm(false)}
-                      className="bg-gray-300 px-4 py-2 rounded"
-                    >
-                      {t('confirmDialog.cancel')}
-                    </button>
-                  </div>
-                </div>
-              </div>
-            )}
-            {overlay === 'prediction' && <PredictionOverlay close={() => setOverlay('result')} />}
-            {overlay === 'result' && <ResultOverlay close={() => setOverlay('none')} />}
-            {isGameOver && <WinnerView />}
-            {isGameOver && (
-              <div className="mt-2">
-                <button
-                  onClick={() => handleNewGame()}
-                  className="bg-red-500 text-white px-4 py-2 rounded"
-                >
-                  {t('buttons.newGame')}
-                </button>
-              </div>
-            )}
-          </>
-        )}
-      </div>
-    </>
+      {showConfirm && (
+        <div
+          ref={confirmRef}
+          role="dialog"
+          aria-modal="true"
+          aria-labelledby={confirmTitleId}
+          className="fixed inset-0 flex items-center justify-center bg-black/50 z-50"
+          data-testid={T.app.confirmDialog}
+        >
+          <div className="bg-white p-6 rounded shadow-lg text-center">
+            <p id={confirmTitleId}>{t('confirmDialog.title')}</p>
+            <div className="mt-4 flex justify-center gap-4">
+              <button
+                onClick={handleNewGame}
+                data-testid={T.app.confirmYes}
+                className={`cursor-pointer rounded border-2 border-red-600 px-4 py-2 text-red-600 min-h-11 hover:bg-red-50 ${focusRing}`}
+              >
+                {t('confirmDialog.yes')}
+              </button>
+              <button
+                onClick={() => setShowConfirm(false)}
+                data-testid={T.app.confirmCancel}
+                data-autofocus
+                className={`cursor-pointer rounded bg-gray-300 px-4 py-2 min-h-11 hover:bg-gray-200 ${focusRing}`}
+              >
+                {t('confirmDialog.cancel')}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+      {overlay === 'prediction' && <PredictionOverlay close={() => setOverlay('result')} />}
+      {overlay === 'result' && <ResultOverlay close={() => setOverlay('none')} />}
+      {isGameOver && <WinnerView />}
+      <Footer />
+    </div>
   );
 }

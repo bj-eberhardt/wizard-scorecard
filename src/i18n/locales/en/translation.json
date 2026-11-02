@@ -2,6 +2,9 @@
   "predictionOverlay": {
     "title": "Predict tricks for round {{round}}",
     "points": "({{points}} points)",
+    "dealerInfo_one": "{{name}} shuffles and deals {{cards}} card to each player",
+    "dealerInfo_other": "{{name}} shuffles and deals {{cards}} cards to each player",
+    "startPlayerInfo": "Start player: {{name}}",
     "startRound": "Start round"
   },
   "errors": {
@@ -19,14 +22,23 @@
     "submit": "Submit",
     "startNextRound": "Start next round",
     "newGame": "Start new game",
-    "toggleFullscreen": "Toggle fullscreen"
+    "toggleFullscreen": "Toggle fullscreen",
+    "rematch": "Rematch",
+    "saveImage": "Save result",
+    "copyText": "Copy as text"
   },
   "labels": {
-    "prediction": "Prediction",
+    "prediction": "Bid",
     "result": "Result",
+    "tricks": "Tricks",
     "round": "Round",
+    "roundShort": "#",
     "player": "Player",
     "points": "Points"
+  },
+  "scoreboard": {
+    "compact": "Compact view",
+    "full": "Full view"
   },
   "resultOverlay": {
     "title": "Results Round {{round}}",
@@ -38,21 +50,33 @@
     "wolkeInfo": "Enter the received tricks and mark the cloud for this user — we'll do the calculation.",
     "revertButton": "Revert"
   },
-  "scoreboard": {
-    "tooltip": "Prediction: {{prediction}}\nTricks taken: {{tricks}}\nPoints: {{points}}",
-    "wolkeNote": "Cloud applied",
-    "originalPredictionLabel": "Original prediction: {{original}}",
-    "receivedTricksLabel": "Entered tricks: {{received}}"
-  },
   "winnerView": {
     "announcement_single": "🎉 Winner: {{name}} with {{points}} points!",
     "announcement_two": "🎉 Winners: {{name1}} and {{name2}} with {{points}} points!",
-    "announcement_multiple": "🎉 Winners: {{names}} and {{lastName}} with {{points}} points!"
+    "announcement_multiple": "🎉 Winners: {{names}} and {{lastName}} with {{points}} points!",
+    "statsToggle": "Show statistics",
+    "statsHide": "Hide statistics",
+    "hitRateLabel": "Hit rate",
+    "hitRateColumn": "Rate",
+    "statHitCorrect": "Correct bids: {{correct}}/{{total}}",
+    "statBestRound": "Best round: +{{delta}}",
+    "statWorstRound": "Worst round: {{delta}}",
+    "statGap": "Gap to leader: −{{gap}}",
+    "statWolkeSaved_one": "Saved: {{count}} bid rescued",
+    "statWolkeSaved_other": "Saved: {{count}} bids rescued",
+    "statWolkeNoEffect": "Outcome: Cloud {{count}}× without effect",
+    "fileTieSuffix": "tie"
   },
   "configureGame": {
     "title": "Please enter the names of the players:",
+    "sectionPlayers": "Players",
+    "sectionRounds": "Rounds",
+    "sectionOptions": "Options",
     "playerNamePlaceholder": "Player {{number}} name",
+    "playerBadge": "Player {{number}}",
+    "addPlayer": "Add player",
     "removePlayerLabel": "Remove player {{number}}",
+    "dragHint": "Drag to reorder player {{number}}",
     "useAnniversaryRules": "Use anniversary rules (Cloud)",
     "wolkeInfoTitle": "About Cloud (Anniversary)",
     "wolkeInfo": "This rule belongs to the anniversary edition and can only be used if the game set includes special cards such as Cloud, Juggler, Dragon, Fairy and Bomb. If a player receives the Cloud, their prediction will be adjusted by +1 or -1 at the end of the round; the calculation is done automatically. Important: When entering results you must indicate which player received the Cloud.",
@@ -61,9 +85,10 @@
     "notEqualInfo": "The sum of all players' predictions must not equal the number of tricks available in that round. Example: In round 5 there are 5 tricks — the sum of all predictions must therefore not be 5. If the total would otherwise match the number of tricks, the last player to announce a prediction must adjust theirs so the overall sum differs.",
     "startGame": "Start Game",
     "roundsLabel": "Number of rounds",
+    "roundsStandard": "Standard ({{default}})",
+    "roundsCustom": "Custom",
     "roundsHelp": "Default: {{default}}",
     "errors": {
-      "gapInNames": "Player names must be entered consecutively from top to bottom.",
       "minPlayers": "At least 3 players required.",
       "maxPlayers": "Maximum {{max}} players allowed.",
       "uniqueNames": "Each name must be unique.",
@@ -81,6 +106,9 @@
     "logoAlt": "Logo"
   },
   "footer": {
-    "copy": "© {{year}} - Version: {{version}}"
+    "copy": "© {{year}} - Version: {{version}}",
+    "langGroup": "Language",
+    "langDe": "German",
+    "langEn": "English"
   }
 }

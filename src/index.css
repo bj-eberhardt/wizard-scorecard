@@ -4,3 +4,63 @@
 @theme {
   --breakpoint-xs: 25rem;
 }
+
+/* F16 Confetti — CSS-only, runs once on mount, respects reduced-motion */
+.confetti-container {
+  position: fixed;
+  inset: 0;
+  pointer-events: none;
+  z-index: 10;
+  overflow: hidden;
+}
+
+.confetti-container::before,
+.confetti-container::after {
+  content: '';
+  position: absolute;
+  top: -10px;
+  width: 10px;
+  height: 10px;
+  border-radius: 2px;
+  animation: confetti-fall 2.5s ease-out forwards;
+}
+
+.confetti-container::before {
+  left: 15%;
+  background: #d4af37;
+  animation-delay: 0s;
+}
+
+.confetti-container::after {
+  left: 75%;
+  background: #3b82f6;
+  animation-delay: 0.3s;
+}
+
+@keyframes confetti-fall {
+  0% {
+    transform: translateY(0) rotate(0deg);
+    opacity: 1;
+  }
+  100% {
+    transform: translateY(100vh) rotate(720deg);
+    opacity: 0;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .confetti-container {
+    display: none;
+  }
+}
+
+/* F25 Stats panel — smooth expand/collapse via grid-template-rows */
+.stats-panel {
+  display: grid;
+  grid-template-rows: 0fr;
+  transition: grid-template-rows 0.3s ease;
+}
+
+.stats-panel--open {
+  grid-template-rows: 1fr;
+}
