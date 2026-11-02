@@ -200,23 +200,25 @@ E2E fixtures clear both game/settings keys before every test. See §8.
   country symbols, and on Windows emoji of regional indicators render as the letters "DE"/"GB".
   Because they are graphics, a test can never assert them as text — `data-lang`/`aria-pressed`
   carry the state.
-- **The footer is an always-visible fixed bar** (`Footer.tsx`: `fixed inset-x-0 bottom-0 z-30`),
-  mounted in both `App.tsx` branches, so the language is switchable on every screen and every
-  device — start, scoreboard, winner — **and while a round overlay is open**. Its z-30 sits above
-  the two full-screen overlays (`PredictionOverlay`, `ResultOverlay`, `z-20`) so the switcher stays
-  clickable mid-round, but below the modal dialogs (`z-50`) and the splash (`z-[1000]`), which are
-  allowed to cover it. The overlays deliberately **do not** host a second switcher — the language
-  choice lives only in `LanguageSwitcher` (its own component, rendered by the footer).
-  **The footer is responsive (mobile-first, `md` = the 768 px `FullscreenButton` threshold):** on
-  a phone the full flag row and the copyright (`T.footer.copyright`, `hidden md:block`) collapse and
-  `LanguageSwitcher` shows a **single compact chip** (`T.footer.langToggle`, `md:hidden`, a lucide
-  `Globe` + the current code) that cycles `de`↔`en` in one tap — the language is not needed loudly on
-  every screen and the bar must not steal height from the round table. Desktop (`md:`) keeps the two
-  flag buttons + copyright. Both variants share one `activeLanguage`, so `aria-pressed` (flags) and
-  `data-lang` (chip) always agree. Because the bar overlays content, scroll containers reserve its
-  height **per breakpoint**: the `App.tsx` wrappers and both overlays use `pb-16 md:pb-28` and the
-  sticky next-round button `bottom-16 md:bottom-24` (the mobile chip is a ~56 px bar, the desktop
-  flags+copyright bar is taller).
+- **The footer holds the language switcher; its placement is responsive**
+  (`Footer.tsx`, mobile-first, `md` = the 768 px `FullscreenButton` threshold). On **desktop**
+  (`md:`) it is an always-visible bar fixed to the viewport bottom (`md:fixed md:inset-x-0
+  md:bottom-0 md:z-30`), so the language is switchable on every screen **and while a round
+  overlay is open**; its z-30 sits above the two full-screen overlays (`z-20`) but below the
+  modal dialogs (`z-50`) and the splash (`z-[1000]`). On **mobile** it is NOT pinned: it is a
+  plain in-flow block (`mt-8`) that simply follows the page content, i.e. it appears **after
+  the round table** and scrolls with it — a permanently fixed bar would cost the table height
+  for a control only needed occasionally. `App.tsx` mounts it in both branches. The overlays
+  deliberately **do not** host a second switcher — the language choice lives only in
+  `LanguageSwitcher` (its own component, rendered by the footer).
+  On a phone the full flag row and the copyright (`T.footer.copyright`, `hidden md:block`)
+  collapse and `LanguageSwitcher` shows a **single compact chip** (`T.footer.langToggle`,
+  `md:hidden`, a lucide `Globe` + the current code) that cycles `de`↔`en` in one tap. Desktop
+  (`md:`) keeps the two flag buttons + copyright. Both variants share one `activeLanguage`, so
+  `aria-pressed` (flags) and `data-lang` (chip) always agree. Only where the footer is fixed
+  does content reserve its height: the `App.tsx` wrappers and both overlays use `md:pb-28`
+  (no mobile bottom reserve, since the footer flows) and the sticky next-round button is
+  `bottom-2 md:bottom-24`.
 
 ---
 
@@ -320,10 +322,11 @@ map to the rotated players, not the roster order.
 - `i18n.spec.ts` — same testid structure under `de` and `en` (proves locale-safety); plus the
   footer language switcher: the two flag buttons, `aria-pressed`, `<html lang>` sync, persistence across
   reload, that the stored choice overrides the detector (`data-lang`/`aria-*`, no text asserts), that
-  the footer is present and clickable on **every** screen (start, scoreboard, winner — switching works
-  mid-game, incl. over an open overlay) while neither overlay contains a switcher of its own, and —
-  `@mobile` — that the footer collapses to the single compact chip (flags + copyright hidden, thin bar,
-  one tap cycles the language).
+  the footer is present and clickable on **every** desktop screen (start, scoreboard, winner —
+  switching works mid-game, incl. over an open overlay; `position: fixed`) while neither overlay
+  contains a switcher of its own, and — `@mobile` — that the footer collapses to the single compact
+  chip, flows **after** the content instead of pinning (`position: static`), stays thin, and one tap
+  cycles the language (flags + copyright hidden).
 - `responsive.spec.ts` — desktop vs mobile fullscreen button, mobile overlay input, and that a
   six-player board on a phone is still wider than the viewport and still horizontally scrollable
   (the centring wrapper must shrink to the screen, not outgrow it)
@@ -396,9 +399,9 @@ E2E suite. Run `npm run format` and `npm run test:e2e` locally before pushing.
   shrinks to the table, so a 3-player board is not flush left on a desktop screen, and it is
   still capped at the viewport, so a 6-player board keeps scrolling horizontally on a phone.
   Buttons are centred by a wrapper `div` (`flex justify-center`) rather than by widening them;
-  the sticky next-round button keeps `sticky bottom-16 md:bottom-24 z-[200]` **on that wrapper**
-  (raised off the page bottom so it clears the always-visible fixed footer bar underneath it, the
-  offset being responsive). Narrow
+  the sticky next-round button keeps `sticky bottom-2 md:bottom-24 z-[200]` **on that wrapper**
+  (raised off the page bottom so that on desktop it clears the fixed footer bar underneath it; on
+  mobile the footer flows after the content so the button sits low). Narrow
   centred columns use `max-w-md mx-auto` (config form, winner card, InfoTooltip panel) — that
   is a deliberate content width, not a leftover. `scoreboard.spec.ts` asserts equal left/right
   gaps for table and primary button; the `@mobile` test in `responsive.spec.ts` asserts the
@@ -410,7 +413,7 @@ E2E suite. Run `npm run format` and `npm run test:e2e` locally before pushing.
   primary button (see F11 in `UX-REVIEW.md`).
 - **Action layout of the scoreboard screen** (UX-REVIEW F11): the destructive "new game" action is
   a centred ghost link ABOVE the table, the primary "next round" button keeps its **content
-  width** and is `sticky bottom-16 md:bottom-24`. Do not move the destructive action back into the sticky bar and
+  width** and is `sticky bottom-2 md:bottom-24`. Do not move the destructive action back into the sticky bar and
   do not widen the primary button to full width — `game-flow.spec.ts` measures the distance between
   the two and will fail.
 - **Modal dialogs** (UX-REVIEW F12) share `src/hooks/useDialogA11y.ts`: `role="dialog"`,
