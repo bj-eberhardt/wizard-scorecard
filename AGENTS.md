@@ -82,6 +82,7 @@ src/
     InfoTooltip.tsx     # rule explainer modal (Wolke / NotEqual)
   hooks/
     useDialogA11y.ts    # shared modal focus behaviour (trap, Escape, focus restore)
+    useDragReorder.ts   # pointer-event vertical drag & drop reorder (mouse/touch/pen)
   store/
     gameStore.ts        # the running game (zustand, manual localStorage save)
     settingsStore.ts    # remembered names/rules across games (zustand persist)
@@ -307,7 +308,13 @@ map to the rotated players, not the roster order.
 ### 8.5 Coverage map (specs → area)
 - `configure-game.spec.ts` — names/rounds/rules/validation, `roundsForCount`, info dialogs incl.
   their keyboard path (modal attributes, focus trap, Escape, focus return — F12);
-  F9 flow: add/remove player rows (gap-free by construction), standard/custom rounds segments
+  F9 flow: add/remove player rows (gap-free by construction), standard/custom rounds segments;
+  F22 flow: reorder rows by dragging the `GripVertical` handle (`T.config.grip(i)`, pointer
+  events via the `useDragReorder` hook — live swap at the half-row threshold, rows keyed by
+  stable ids; the spec drags with `page.mouse` over measured row heights and asserts
+  `toHaveValue` on the positional `playerName(i)` ids, no extra `data-*` needed); the
+  `@mobile` variant plays the same gesture as a real **touch** sequence through CDP
+  (`Input.dispatchTouchEvent`), because `page.mouse` would report `pointerType: 'mouse'`
 - `prediction.spec.ts` — submit, prefill, start-player rotation, dealer/start-player info
   lines (round-1 wrap-around + one-seat-on), too-small/large, not-equal
 - `result.spec.ts` — points formula, all-zero confirm, Wolke rules, revert
@@ -422,6 +429,14 @@ E2E suite. Run `npm run format` and `npm run test:e2e` locally before pushing.
   trigger on close. A new dialog gets the hook, not a copy of the effect. Note that a
   programmatically focused element shows no `:focus-visible` ring in Chromium — the ring appears
   from the first Tab on, which is also how the `ux-shots/capture-f12.mjs` proofs are produced.
+- **Reorderable lists** share `src/hooks/useDragReorder.ts` (pointer events, not HTML5 drag —
+  Firefox on Android has none, iOS is flaky). Contract: rows are keyed by a **stable id list**
+  (never the array index), because the same DOM node must keep representing the grabbed row
+  across a live swap; the grip carries `touch-action: none` (`touch-none`) so the browser does
+  not steal the gesture for scrolling; the grip is `tabIndex={-1}` (no keyboard path by decision).
+  The row **pitch is measured once at `pointerdown`**, from `getBoundingClientRect().top` of the
+  `[data-row-index]` elements only, and only while no row is translated yet — measuring during the
+  drag or over all parent children yields a neighbour-section spacing instead of the row spacing.
 
 ---
 

@@ -1,9 +1,10 @@
-import React, { useState, useEffect } from 'react';
-import { Plus, X } from 'lucide-react';
+import React, { useState, useEffect, useRef } from 'react';
+import { GripVertical, Plus, X } from 'lucide-react';
 import useSettingsStore from '../store/settingsStore';
 import { useTranslation } from 'react-i18next';
 import { roundsForCount } from '../store/gameStore';
 import InfoTooltip from './InfoTooltip';
+import { useDragReorder } from '../hooks/useDragReorder';
 import { T } from '../test-ids';
 
 interface ConfigureGameProps {
@@ -31,6 +32,10 @@ const ConfigureGame: React.FC<ConfigureGameProps> = ({ onStart }) => {
   const [rows, setRows] = useState<string[]>(() =>
     [...playerNames, ...Array(MAX_PLAYERS).fill('')].slice(0, initialCount).map((n) => n ?? '')
   );
+  // Stable ids parallel to `rows`: during a drag the DOM node of the grabbed
+  // row must survive the live swap, so React must NOT reconcile rows by index.
+  const [rowIds, setRowIds] = useState<number[]>(() => rows.map((_, i) => i + 1));
+  const nextRowIdRef = useRef(initialCount + 1);
   const [useWolke, setUseWolke] = useState(useAnniversaryRules);
   const [useNotEqual, setUseNotEqual] = useState(useNotEqualSetting);
   const [error, setError] = useState<string | null>(null);
@@ -71,12 +76,34 @@ const ConfigureGame: React.FC<ConfigureGameProps> = ({ onStart }) => {
   }, [nonEmptyCount, usedManualOverride]);
 
   const addRow = () => {
-    setRows((r) => (r.length < MAX_PLAYERS ? [...r, ''] : r));
+    if (rows.length >= MAX_PLAYERS) return;
+    setRows((r) => [...r, '']);
+    setRowIds((ids) => [...ids, nextRowIdRef.current++]);
   };
 
   const removeRow = (idx: number) => {
     setRows((r) => r.filter((_, i) => i !== idx));
+    setRowIds((ids) => ids.filter((_, i) => i !== idx));
   };
+
+  // Move the grabbed row to the drop position (array remove + insert, the
+  // parallel id list travels with it).
+  const reorderRows = (from: number, to: number) => {
+    setRows((r) => {
+      const copy = [...r];
+      const [moved] = copy.splice(from, 1);
+      copy.splice(to, 0, moved);
+      return copy;
+    });
+    setRowIds((ids) => {
+      const copy = [...ids];
+      const [moved] = copy.splice(from, 1);
+      copy.splice(to, 0, moved);
+      return copy;
+    });
+  };
+
+  const { isDragging, dragOffsetY, gripProps } = useDragReorder(rows.length, reorderRows);
 
   const handleStart = () => {
     const trimmed = rows.map((n) => n.trim());
@@ -127,7 +154,30 @@ const ConfigureGame: React.FC<ConfigureGameProps> = ({ onStart }) => {
           </h2>
           <p className="mb-3 text-sm text-gray-500">{t('configureGame.title')}</p>
           {rows.map((name, i) => (
-            <div key={i} className="flex items-center gap-2 mb-2">
+            <div
+              key={rowIds[i]}
+              data-row-index={i}
+              data-dragging={isDragging && dragOffsetY(i) !== 0 ? 'true' : 'false'}
+              style={{
+                transform: dragOffsetY(i) !== 0 ? `translateY(${dragOffsetY(i)}px)` : undefined,
+              }}
+              className={`flex items-center gap-2 mb-2 ${
+                isDragging && dragOffsetY(i) !== 0 ? 'opacity-90' : ''
+              }`}
+            >
+              {/* Drag handle: pointer events (mouse + touch), `touch-action:none`
+                  keeps the browser from stealing the vertical gesture for scrolling. */}
+              <button
+                autoFocus={false}
+                type="button"
+                tabIndex={-1}
+                {...gripProps(i)}
+                data-testid={T.config.grip(i)}
+                aria-label={t('configureGame.dragHint', { number: i + 1 })}
+                className="shrink-0 w-7 h-7 flex items-center justify-center rounded cursor-grab touch-none text-gray-400 hover:text-gray-700 hover:bg-gray-100 transition-colors"
+              >
+                <GripVertical size={18} strokeWidth={2} aria-hidden />
+              </button>
               <span className="shrink-0 w-16 text-left text-sm text-gray-600">
                 {t('configureGame.playerBadge', { number: i + 1, defaultValue: i + 1 })}
               </span>

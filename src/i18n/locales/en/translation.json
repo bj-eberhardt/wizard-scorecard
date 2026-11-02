@@ -76,6 +76,7 @@
     "playerBadge": "Player {{number}}",
     "addPlayer": "Add player",
     "removePlayerLabel": "Remove player {{number}}",
+    "dragHint": "Drag to reorder player {{number}}",
     "useAnniversaryRules": "Use anniversary rules (Cloud)",
     "wolkeInfoTitle": "About Cloud (Anniversary)",
     "wolkeInfo": "This rule belongs to the anniversary edition and can only be used if the game set includes special cards such as Cloud, Juggler, Dragon, Fairy and Bomb. If a player receives the Cloud, their prediction will be adjusted by +1 or -1 at the end of the round; the calculation is done automatically. Important: When entering results you must indicate which player received the Cloud.",

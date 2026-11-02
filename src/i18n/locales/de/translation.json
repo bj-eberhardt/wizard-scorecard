@@ -91,6 +91,7 @@
     "playerBadge": "Spieler {{number}}",
     "addPlayer": "Spieler hinzufügen",
     "removePlayerLabel": "Entferne Spieler {{number}}",
+    "dragHint": "Spieler {{number}} zum Umsortieren ziehen",
     "useAnniversaryRules": "Jubiläumsregeln verwenden (Wolke)",
     "wolkeInfoTitle": "Zur Wolke (Jubiläum)?",
     "wolkeInfo": "Diese Regel gehört zur Jubiläumsausgabe und kann nur verwendet werden, wenn das Spielset spezielle Karten wie Wolke, Jongleur, Drache, Fee und Bombe enthält. Wenn ein Spieler die Wolke erhält, wird seine Vorhersage am Ende der Runde automatisch um +1 oder −1 angepasst; die Berechnung erfolgt automatisch. Wichtig: Beim Eintragen der Ergebnisse muss angegeben werden, welcher Spieler die Wolke erhalten hat.",

@@ -19,6 +19,7 @@ export const T = {
     root: 'config-root',
     playerName: (i: number) => `config-player-name-${i}`,
     removePlayer: (i: number) => `config-remove-player-${i}`,
+    grip: (i: number) => `config-grip-${i}`,
     addPlayer: 'config-add-player',
     rounds: 'config-rounds',
     roundsModeStandard: 'config-rounds-mode-standard',

@@ -192,4 +192,110 @@ test.describe('Configure game', () => {
       await expect(game.getByTestId(T.config.playerName(0))).toHaveValue('Ben');
     });
   });
+
+  test('Player rows: reorder via drag & drop on the grip handle', async ({ game }) => {
+    /** Visual row pitch: distance between the top edges of two adjacent rows. */
+    async function rowSlotHeight(): Promise<number> {
+      return game.evaluate(() => {
+        const rows = document.querySelectorAll('[data-row-index]');
+        return rows[1].getBoundingClientRect().top - rows[0].getBoundingClientRect().top;
+      });
+    }
+
+    /** Pointer drag from the grip of `from` by `dy` pixels, then release. */
+    async function dragGrip(from: number, dy: number) {
+      const box = await game.getByTestId(T.config.grip(from)).boundingBox();
+      if (!box) throw new Error('grip bounding box unavailable');
+      const x = box.x + box.width / 2;
+      const y = box.y + box.height / 2;
+      await game.mouse.move(x, y);
+      await game.mouse.down();
+      // several intermediate moves so the live-swap thresholds are crossed
+      const steps = Math.max(2, Math.ceil(Math.abs(dy) / 10));
+      await game.mouse.move(x, y + dy / 2, { steps: Math.ceil(steps / 2) });
+      await game.mouse.move(x, y + dy, { steps: Math.ceil(steps / 2) });
+      await game.mouse.up();
+    }
+
+    await test.step('Open app and enter three names', async () => {
+      await openApp(game);
+      await game.getByTestId(T.config.playerName(0)).fill('Alice');
+      await game.getByTestId(T.config.playerName(1)).fill('Bob');
+      await game.getByTestId(T.config.playerName(2)).fill('Charlie');
+    });
+
+    await test.step('Drag row 1 up past one slot -> Bob and Alice swap', async () => {
+      const slot = await rowSlotHeight();
+      await dragGrip(1, -slot * 1.2);
+      await expect(game.getByTestId(T.config.playerName(0))).toHaveValue('Bob');
+      await expect(game.getByTestId(T.config.playerName(1))).toHaveValue('Alice');
+      await expect(game.getByTestId(T.config.playerName(2))).toHaveValue('Charlie');
+    });
+
+    await test.step('Drag Bob down past one slot -> original order restored', async () => {
+      const slot = await rowSlotHeight();
+      await dragGrip(0, slot * 1.2);
+      await expect(game.getByTestId(T.config.playerName(0))).toHaveValue('Alice');
+      await expect(game.getByTestId(T.config.playerName(1))).toHaveValue('Bob');
+      await expect(game.getByTestId(T.config.playerName(2))).toHaveValue('Charlie');
+    });
+
+    await test.step('Drag Alice to the last row -> the others shift up', async () => {
+      const slot = await rowSlotHeight();
+      await dragGrip(0, slot * 2.4);
+      await expect(game.getByTestId(T.config.playerName(0))).toHaveValue('Bob');
+      await expect(game.getByTestId(T.config.playerName(1))).toHaveValue('Charlie');
+      await expect(game.getByTestId(T.config.playerName(2))).toHaveValue('Alice');
+    });
+
+    await test.step('Every row carries a grip handle', async () => {
+      for (let i = 0; i < 3; i++) {
+        await expect(game.getByTestId(T.config.grip(i))).toBeVisible();
+      }
+    });
+  });
+
+  test('Player rows: reorder by touch-dragging the grip @mobile', async ({ game }) => {
+    // Real touch gestures via CDP, because page.mouse would produce pointerType
+    // 'mouse' and the whole point is that the same pointer-event handler serves
+    // a finger on a phone.
+    const cdp = await game.context().newCDPSession(game);
+
+    async function touchDrag(from: number, dy: number) {
+      const box = await game.getByTestId(T.config.grip(from)).boundingBox();
+      if (!box) throw new Error('grip bounding box unavailable');
+      const x = box.x + box.width / 2;
+      const y = box.y + box.height / 2;
+      await cdp.send('Input.dispatchTouchEvent', {
+        type: 'touchStart',
+        touchPoints: [{ x, y }],
+      });
+      // several moves so the live-swap threshold is crossed on the way
+      for (let step = 1; step <= 6; step++) {
+        await cdp.send('Input.dispatchTouchEvent', {
+          type: 'touchMove',
+          touchPoints: [{ x, y: y + (dy * step) / 6 }],
+        });
+      }
+      await cdp.send('Input.dispatchTouchEvent', { type: 'touchEnd', touchPoints: [] });
+    }
+
+    await test.step('Open app on a phone and enter three names', async () => {
+      await openApp(game);
+      await game.getByTestId(T.config.playerName(0)).fill('Alice');
+      await game.getByTestId(T.config.playerName(1)).fill('Bob');
+      await game.getByTestId(T.config.playerName(2)).fill('Charlie');
+    });
+
+    await test.step('Swipe row 1 up past one slot -> Bob and Alice swap', async () => {
+      const slot = await game.evaluate(() => {
+        const rows = document.querySelectorAll('[data-row-index]');
+        return rows[1].getBoundingClientRect().top - rows[0].getBoundingClientRect().top;
+      });
+      await touchDrag(1, -slot * 1.2);
+      await expect(game.getByTestId(T.config.playerName(0))).toHaveValue('Bob');
+      await expect(game.getByTestId(T.config.playerName(1))).toHaveValue('Alice');
+      await expect(game.getByTestId(T.config.playerName(2))).toHaveValue('Charlie');
+    });
+  });
 });

@@ -51,7 +51,7 @@ Das Produkt richtet sich an eine klare Kernsituation: **Wizard-Runde am Tisch, e
 | F19 | Wolke-Historie zeigt im Tooltip die korrigierten statt der eingetragenen Stiche (Label sagt "Eingetragene Stiche") | Korrektheit | 🟡 Gering |
 | F20 | 2 s Lade-Splash bei jedem Start, auch bei Fortsetzen eines gespeicherten Spiels | UX | 🟡 Gering |
 | F21 | Mobile: Kompakt-Ansicht blendet Punkte-Spalte aus, Summe in Klammern im Header | UX/Design | 🟠 Mittel · ✅ |
-| F22 | Spieler-Reihenfolge in der Konfiguration nicht anpassbar (kein Drag & Drop) | UX | 🟠 Mittel |
+| F22 | Spieler-Reihenfolge in der Konfiguration nicht anpassbar (kein Drag & Drop) | UX | 🟠 Mittel · ✅ |
 | F24 | Gemischte Ausrichtung auf Desktop: Brett linksbündig, Primäraktion links, Ghost-Link mittig, Winner-Balken vollbreit | Design | 🟡 Gering · ✅ |
 | F25 | Spielerstatistik expandable (Trefferquote, beste/schlechteste Runde, Rückstand, Wolke) | UX | 🟡 Gering · ✅ |
 | F26 | Ergebnis-Export als PNG-Bild und als Text in die Zwischenablage | UX | 🟡 Gering · ✅ |
@@ -302,7 +302,8 @@ Das Produkt richtet sich an eine klare Kernsituation: **Wizard-Runde am Tisch, e
 >
 > **Belege:** [17-desktop](./ux-shots/17-config-desktop.png) (1280 px, Regel-Icons aligniert und
 > nicht am Rand), [17-mobile](./ux-shots/17-config-mobile.png) (390 px, beide blauen Icons
-> untereinander). Nachfolger F22 (Drag & Drop) ergänzt die Zeilen um einen Greif-Griff.
+> untereinander). Nachfolger F22 ergänzt die Zeilen um einen `GripVertical`-Greifer
+> zum Umsortieren per Drag & Drop.
 
 
 **Beobachtung:** Beim Start stehen 6 leere Eingabefelder, "Anzahl Runden" zeigt `0` mit "Standard: 0", und der Hilfetext dazu erscheint erst nach Spielernamen:
@@ -642,7 +643,48 @@ Timer/Effekt. Bestehende Breiten- und Zell-Matrix-Tests behalten unter Desktop i
 
 ---
 
-### F22 · Spieler-Reihenfolge per Drag & Drop anpassen 🟠
+### F22 · Spieler-Reihenfolge per Drag & Drop anpassen 🟠 ✅ umgesetzt
+
+> **Status:** umgesetzt — Drag & Drop mit **lucide `GripVertical`** als Greif-Griff links
+> in jeder Zeile. ↑/↓-Buttons waren als Zwischenstand gebaut und wurden verworfen.
+>
+> - **Zeilen-Anfang:** der Greifer **ersetzt** die Buttons; jede Zeile hat einen, an den
+>   Kanten gibt es keinen Sonderfall mehr.
+> - **Pointer-Events statt HTML5-Drag:** eigener Hook
+>   [`src/hooks/useDragReorder.ts`](./src/hooks/useDragReorder.ts) — Maus, Touch und Pen
+>   laufen über denselben Pfad; HTML5-Drag fehlt u. a. in Firefox auf Android und ist auf
+>   iOS zickig. Der Greifer trägt `touch-action: none`, damit das Handy nicht mitscrollt.
+> - **Live-Swap:** überschreitet der Zeiger die Halbzeilen-Schwelle, wandert die Zeile
+>   sofort; die gezogene Zeile folgt per `translateY` dem Finger/Zeiger, ihre Geschwister
+>   rücken auf. Damit ist das Einfüge-Ziel aus der Liste selbst lesbar — keine separate
+>   Einfüge-Markierung nötig. Der Abzug nach unten ist durch die Zeilenhöhe begrenzt,
+>   deshalb braucht die Liste kein Extra-Padding.
+> - **Stabile Zeilen-ids:** die Rows werden nicht mehr per Array-Index, sondern über eine
+>   parallele id-Liste gekümmert — sonst würde React nach einem Live-Swap den DOM-Knoten
+>   einer anderen Zeile weiterverschieben.
+> - **Nummern-Badge bleibt Positionsnummer** (`i+1`): nach dem Umsortieren wandert die
+>   Nummer mit der Position, nicht mit dem Namen — sie ist die Rotationsnummer
+>   (`startIndex = (round-1) % playerCount`).
+> - **Persistenz unverändert:** `handleStart` schreibt die (sortierte) Roster-Reihenfolge
+>   über das bestehende `setPlayerNames` in `settingsStore` — live während des Editierens
+>   wird nichts gemerkt, ein Abbruch verwirft die Sortierung.
+> - **A11y:** Greifer-aria-Label über `configureGame.dragHint` mit `{{number}}` (de+en).
+>   **Bewusst nicht gebaut:** Umsortieren per Tastatur — der Greifer ist nicht fokussierbar
+>   (`tabIndex={-1}`); ein Keyboard-Pfad wäre eine eigene Maßnahme.
+> - **Test-Ids:** `T.config.grip(i)`; Zustand der gezogenen Zeile über `data-dragging`.
+> - **Abgesichert** in `e2e/configure-game.spec.ts`: Pointer-Drag (Maus-Events) über
+>   gemessene Zeilenhöhen — Swap hoch/runter, Mehr-Spalten-Drag auf die letzte Position
+>   (andere rücken nach), Greifer in jeder Zeile sichtbar; dazu ein `@mobile`-Test, der die
+>   Geste per CDP als echte **Touch**-Sequenz (`touchStart`/`touchMove`/`touchEnd`) spielt.
+>   Assertet wird `toHaveValue` auf den positionsgebundenen `playerName(i)`-IDs — kein Text,
+>   kein Extra-`data-*`.
+>
+> **Belege:** [`ux-shots/capture-reorder.mjs`](./ux-shots/capture-reorder.mjs) →
+> [26-desktop](./ux-shots/26-reorder-6player-desktop.png) (1280 px, 6 Spieler),
+> [26-mobile](./ux-shots/26-reorder-6player-mobile.png) (390 px, 6 Spieler,
+> Input-Breite bleibt lesbar),
+> [26-mid-drag](./ux-shots/26-reorder-mid-drag.png) (gezogene Zeile folgt dem Zeiger, die
+> Liste ist bereits umsortiert).
 
 **Beobachtung:** Die Konfiguration (F9) legt Spieler in der Reihenfolge ihrer Zeilen fest. Einmal
 falsch eingegeben oder in Tischreihenfolge (im Uhrzeigersinn) umsortieren ist nur möglich, indem
@@ -653,18 +695,9 @@ Reihenfolge, ist aber starr.
 Roster-Reihenfolge davon ab, stimmt die rotierte Startspieler-Abbildung (§5) nicht mit der realen
 Sitzordnung überein. Umsortieren muss deshalb direkt möglich sein.
 
-**Änderung im Detail (bewusst noch nicht gebaut — neues Feature, Nachfolger von F9):**
-
-- Pro Zeile einen Greif-Griff (lucide `GripVertical`) links; Ziehen verschiebt die Zeile.
-- Umsetzung ohne neue Abhängigkeit denkbar (HTML5 Drag-and-Drop oder Pointer-Events); alternativ
-  eine kleine Library — Entscheidung vor Umsetzung nötig (Bundle vs. Touch-Qualität).
-- Touch: Long-Press-Grab + klare Einfüge-Markierung; reine Pfeil-Buttons (↑/↓) als mobile-
-  taugliche Fallback-Option abwägen.
-- Reihenfolge ist für `startGame`/E2E unsichtbar (Roster-Indices bleiben), aber `data-*`-Attribut
-  am Greifer für einen neuen Sortier-Test erwägen.
-
-**Aufwand:** M (~3–4 h inkl. Touch-Greiffall). **Risiko:** mittel — Drag & Drop auf Mobile ist
-fehleranfällig; Fokus/Screenreader-Pfad mitsdenken.
+**Aufwand:** M. **Risiko:** mittel — Drag & Drop auf Mobile ist fehleranfällig; die Zeilen-Pitch
+wird bei `pointerdown` gemessen (solange noch keine Zeile per `translateY` versetzt ist), sonst
+rechnet man gegen benachbarte Abschnitte statt gegen Zeilenabstände.
 
 ---
 
@@ -780,7 +813,7 @@ F11 und die Spaltenbreiten-Assertion aus F2 bleiben grün.
 18. F12/F17 — A11y: Dialoge, Fokus (M) ✅ umgesetzt (beide Dialoge über `useDialogA11y`; der
     Tooltip-Teil entfiel mit F2) — F17 ✅ umgesetzt (Lucide `CircleHelp`)
 19. F13/F14 — Sprachumschalter + `lang`-Synchronisation (S) ✅ umgesetzt (Flaggen im Footer mittig, Wahl persistiert und überschreibt den Detector, `<html lang>` synchron)
-20. F22 — Spieler-Reihenfolge per Drag & Drop (M) — Nachfolger von F9
+20. F22 — Spieler-Reihenfolge per Drag & Drop (M) — Nachfolger von F9 ✅ umgesetzt (`GripVertical`-Greifer, Pointer-Events via `useDragReorder`-Hook, Touch-tauglich)
 21. F23 — Overlay-Dialoge mit `role`/Fokus-Trap/Escape (S–M) — Folge von F12
 22. F18/F20 — Code-Hygiene & Kleinigkeiten (S)
 23. F24 — Zentrierung der ganzen Seite (S) ✅ umgesetzt (Brett, Primäraktion, Winner-Karte)
