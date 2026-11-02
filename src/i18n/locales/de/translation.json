@@ -32,6 +32,7 @@
     "result": "Ergebnis",
     "tricks": "Stiche",
     "round": "Runde",
+    "roundShort": "#",
     "player": "Spieler",
     "points": "Punkte"
   },
@@ -59,7 +60,8 @@
     "statGap": "Rückstand: −{{gap}}",
     "statWolkeSaved_one": "Erfolg: {{count}}× Tipp gerettet",
     "statWolkeSaved_other": "Erfolg: {{count}}× Tipp gerettet",
-    "statWolkeNoEffect": "Ergebnis: Wolke {{count}}× ohne Effekt"
+    "statWolkeNoEffect": "Ergebnis: Wolke {{count}}× ohne Effekt",
+    "fileTieSuffix": "geteilt"
   },
   "confirmDialog": {
     "title": "Möchtest du das aktuelle Spiel wirklich beenden?",

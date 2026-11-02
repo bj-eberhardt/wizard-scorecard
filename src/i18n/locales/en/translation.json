@@ -32,6 +32,7 @@
     "result": "Result",
     "tricks": "Tricks",
     "round": "Round",
+    "roundShort": "#",
     "player": "Player",
     "points": "Points"
   },
@@ -59,7 +60,8 @@
     "statGap": "Gap to leader: −{{gap}}",
     "statWolkeSaved_one": "Saved: {{count}} bid rescued",
     "statWolkeSaved_other": "Saved: {{count}} bids rescued",
-    "statWolkeNoEffect": "Outcome: Cloud {{count}}× without effect"
+    "statWolkeNoEffect": "Outcome: Cloud {{count}}× without effect",
+    "fileTieSuffix": "tie"
   },
   "configureGame": {
     "title": "Please enter the names of the players:",

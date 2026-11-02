@@ -1,9 +1,13 @@
 import type { RankedPlayer } from '../store/stats';
+import i18n from '../i18n/i18n';
 
 /**
  * F26: Render the result card to a Canvas and produce a PNG blob for download.
  * Owns no React state; receives already-computed ranked players.
  * Image size: logical 1080×1350 (4:5 portrait), rendered at scale 2 for crispness.
+ * Column header + date label follow the current UI language: the header reuses
+ * the winner-view labels (Spieler · Punkte · Quote / Player · Points · Rate),
+ * and the date is formatted via `Intl.DateTimeFormat` on the i18next language.
  */
 
 const W = 1080;
@@ -21,6 +25,7 @@ const COLORS = {
 };
 
 export interface ExportMeta {
+  /** ISO `YYYY-MM-DD`, used only for the download filename. */
   dateStr: string;
   totalRounds: number;
   playerCount: number;
@@ -58,8 +63,13 @@ export async function renderResultImage(ranked: RankedPlayer[], meta: ExportMeta
   if (meta.useWolke) rulesParts.push('Wolke');
   if (meta.useNotEqual) rulesParts.push('NotEqual');
   const rulesSuffix = rulesParts.length > 0 ? ` · ${rulesParts.join(' · ')}` : '';
+  // Render-visible date follows the current UI locale (browser/locale standard);
+  // the ISO `dateStr` stays put for the download filename only.
+  const displayDate = new Intl.DateTimeFormat(i18n.language, { dateStyle: 'long' }).format(
+    new Date()
+  );
   ctx.fillText(
-    `${meta.dateStr} · ${meta.totalRounds} Runden · ${meta.playerCount} Spieler${rulesSuffix}`,
+    `${displayDate} · ${meta.totalRounds} Runden · ${meta.playerCount} Spieler${rulesSuffix}`,
     W / 2,
     130
   );
@@ -72,8 +82,18 @@ export async function renderResultImage(ranked: RankedPlayer[], meta: ExportMeta
   ctx.lineTo(W - 60, 160);
   ctx.stroke();
 
+  // Column header — makes the right-hand percentage self-explanatory
+  // ("Quote"/"Rate"), mirroring the winner-view list header.
+  ctx.fillStyle = COLORS.textMuted;
+  ctx.font = 'bold 22px system-ui, sans-serif';
+  ctx.textAlign = 'left';
+  ctx.fillText(i18n.t('labels.player'), 70, 195);
+  ctx.textAlign = 'right';
+  ctx.fillText(i18n.t('labels.points'), W - 180, 195);
+  ctx.fillText(i18n.t('winnerView.hitRateColumn'), W - 70, 195);
+
   // Ranking rows
-  const rowStartY = 210;
+  const rowStartY = 240;
   const rowHeight = 90;
 
   ranked.forEach((rp, i) => {

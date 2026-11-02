@@ -157,6 +157,23 @@ test.describe('Scoreboard', () => {
         expect(Math.max(...widths) - Math.min(...widths)).toBeLessThanOrEqual(1);
       }
     });
+    await test.step('Round header shows the full word on desktop and names itself via aria-label', async () => {
+      // the sticky round column is only narrowed on phones; here on desktop the full
+      // "Runde"/"Round" label stays readable and the compact "#" span is display:none
+      const roundHeader = game.getByTestId(T.scoreboard.roundHeader);
+      await expect(roundHeader).toBeVisible();
+      await expect(roundHeader).toHaveAttribute('rowspan', '2');
+      await expect(roundHeader).toHaveAttribute('aria-label', /.+/);
+      await expect(game.getByTestId(T.scoreboard.roundHeaderFull)).toBeVisible();
+      await expect(game.getByTestId(T.scoreboard.roundHeaderShort)).toBeHidden();
+      // the digits below still fit inside the column
+      const headerBox = await roundHeader.boundingBox();
+      const firstRoundCell = game
+        .locator(`[data-testid="${T.scoreboard.table}"] tbody tr td`)
+        .first();
+      const cellBox = await firstRoundCell.boundingBox();
+      expect(headerBox?.width ?? 0).toBeGreaterThanOrEqual(cellBox?.width ?? Infinity);
+    });
   });
 
   test('Complete cell matrix shows the correct values', async ({ game }) => {
@@ -255,6 +272,34 @@ test.describe('Scoreboard', () => {
           expect(cls).not.toMatch(/animate-|transition|ring-|scale-|bg-yellow/);
         }
       }
+    });
+  });
+
+  test('Round column narrows to "#" on mobile @mobile', async ({ game }) => {
+    await test.step('Seed a played game', async () => {
+      await seedPlayedGame(game);
+      await openApp(game);
+      await expect(game.getByTestId(T.scoreboard.table)).toBeVisible();
+    });
+    await test.step('The compact label swaps in and the full word hides', async () => {
+      const roundHeader = game.getByTestId(T.scoreboard.roundHeader);
+      await expect(roundHeader).toBeVisible();
+      // accessible name still the full word — never the symbol alone
+      await expect(roundHeader).toHaveAttribute('aria-label', /.+/);
+      await expect(game.getByTestId(T.scoreboard.roundHeaderShort)).toBeVisible();
+      await expect(game.getByTestId(T.scoreboard.roundHeaderFull)).toBeHidden();
+    });
+    await test.step('The column is narrow but still fits two digits', async () => {
+      const headerBox = await game.getByTestId(T.scoreboard.roundHeader).boundingBox();
+      const width = headerBox?.width ?? 0;
+      expect(width).toBeGreaterThan(0);
+      // the whole point of the mobile abbreviation: much slimmer than the full word
+      expect(width).toBeLessThan(48);
+      const firstRoundCell = game
+        .locator(`[data-testid="${T.scoreboard.table}"] tbody tr td`)
+        .first();
+      const cellBox = await firstRoundCell.boundingBox();
+      expect(width).toBeGreaterThanOrEqual(cellBox?.width ?? Infinity);
     });
   });
 });

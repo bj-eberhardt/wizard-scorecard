@@ -54,9 +54,23 @@ export function Scoreboard() {
             <tr>
               <th
                 rowSpan={2}
-                className="bg-white sticky left-0 z-10 px-2 py-1 text-center border-2 border-black"
+                data-testid={T.scoreboard.roundHeader}
+                aria-label={t('labels.round')}
+                className="bg-white sticky left-0 z-10 px-1 md:px-2 py-1 text-xs md:text-base text-center border-2 border-black"
               >
-                {t('labels.round')}
+                {/* Narrow the sticky round column on phones (the auto-layout table lets the
+                    header word stretch it well beyond the two digits below); on desktop
+                    there is no space pressure so the full word stays readable. */}
+                <span
+                  data-testid={T.scoreboard.roundHeaderShort}
+                  className="md:hidden"
+                  aria-hidden="true"
+                >
+                  {t('labels.roundShort')}
+                </span>
+                <span data-testid={T.scoreboard.roundHeaderFull} className="hidden md:inline">
+                  {t('labels.round')}
+                </span>
               </th>
               {players.map((p, i) => (
                 <th

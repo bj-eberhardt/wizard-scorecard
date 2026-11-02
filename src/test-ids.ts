@@ -53,6 +53,10 @@ export const T = {
   },
   scoreboard: {
     table: 'scoreboard-table',
+    // the sticky round-column header — short visible label, full word in aria-label
+    roundHeader: 'scoreboard-header-round',
+    roundHeaderShort: 'scoreboard-header-round-short',
+    roundHeaderFull: 'scoreboard-header-round-full',
     headerPlayer: (player: number) => `scoreboard-header-player-${player}`,
     headerLabel: (player: number, kind: CellKind) => `scoreboard-header-label-${kind}-${player}`,
     cell: (player: number, round: number, kind: CellKind) =>
