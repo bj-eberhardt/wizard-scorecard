@@ -275,6 +275,59 @@ test.describe('Scoreboard', () => {
     });
   });
 
+  test('Compact toggle is viewport-independent: desktop starts full, toggles to compact and back', async ({
+    game,
+  }) => {
+    const roundsByPlayer = [GAME.P0, GAME.P1, GAME.P2];
+    /** Cumulative total after the last played round for a player's seeded rounds. */
+    const totalOf = (rounds: RoundData[]) => cumulative(rounds)[PLAYED_ROUNDS - 1];
+
+    await test.step('Seed a played game on the wide desktop viewport', async () => {
+      await seedPlayedGame(game);
+      await openApp(game);
+      await expect(game.getByTestId(T.scoreboard.table)).toBeVisible();
+    });
+
+    await test.step('Desktop defaults to the full three-column board', async () => {
+      await expect(game.getByTestId(T.scoreboard.table)).toHaveAttribute('data-compact', 'false');
+      for (let player = 0; player < 3; player++) {
+        await expect(game.getByTestId(T.scoreboard.headerLabel(player, 'points'))).toBeVisible();
+        await expect(game.getByTestId(T.scoreboard.headerPoints(player))).toHaveCount(0);
+      }
+    });
+
+    await test.step('First click on the ghost link switches to compact', async () => {
+      await game.getByTestId(T.scoreboard.compactToggle).click();
+      await expect(game.getByTestId(T.scoreboard.table)).toHaveAttribute('data-compact', 'true');
+      for (let player = 0; player < 3; player++) {
+        await expect(game.getByTestId(T.scoreboard.headerPlayer(player))).toHaveAttribute(
+          'colspan',
+          '2'
+        );
+        await expect(game.getByTestId(T.scoreboard.headerLabel(player, 'points'))).toHaveCount(0);
+        const points = game.getByTestId(T.scoreboard.headerPoints(player));
+        await expect(points).toBeVisible();
+        await expect(points).toHaveAttribute(
+          'data-points',
+          String(totalOf(roundsByPlayer[player]))
+        );
+      }
+    });
+
+    await test.step('Second click returns to the full board', async () => {
+      await game.getByTestId(T.scoreboard.compactToggle).click();
+      await expect(game.getByTestId(T.scoreboard.table)).toHaveAttribute('data-compact', 'false');
+      for (let player = 0; player < 3; player++) {
+        await expect(game.getByTestId(T.scoreboard.headerPlayer(player))).toHaveAttribute(
+          'colspan',
+          '3'
+        );
+        await expect(game.getByTestId(T.scoreboard.headerLabel(player, 'points'))).toBeVisible();
+        await expect(game.getByTestId(T.scoreboard.headerPoints(player))).toHaveCount(0);
+      }
+    });
+  });
+
   test('Round column narrows to "#" on mobile @mobile', async ({ game }) => {
     await test.step('Seed a played game', async () => {
       await seedPlayedGame(game);
