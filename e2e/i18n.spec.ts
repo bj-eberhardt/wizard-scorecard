@@ -30,6 +30,17 @@ test.describe('Localization safety', () => {
         await expect(game.getByTestId(T.prediction.input(0))).toBeVisible();
         await expect(game.getByTestId(T.prediction.submit)).toBeVisible();
       });
+      await test.step('Scoreboard header keeps its three column labels per player', async () => {
+        // the scoreboard renders behind the overlay, so the header is measurable
+        // in both locales without asserting any of the (localized) label texts
+        await expect(game.getByTestId(T.scoreboard.table)).toBeAttached();
+        for (let player = 0; player < 3; player++) {
+          await expect(game.getByTestId(T.scoreboard.headerPlayer(player))).toBeAttached();
+          for (const kind of ['prediction', 'tricks', 'points'] as const) {
+            await expect(game.getByTestId(T.scoreboard.headerLabel(player, kind))).toBeAttached();
+          }
+        }
+      });
     });
   }
 });

@@ -9,7 +9,7 @@
  * visible text (which changes with the active language).
  */
 
-export type CellKind = 'points' | 'prediction';
+export type CellKind = 'points' | 'prediction' | 'tricks';
 
 export const T = {
   loading: {
@@ -47,9 +47,10 @@ export const T = {
   },
   scoreboard: {
     table: 'scoreboard-table',
+    headerPlayer: (player: number) => `scoreboard-header-player-${player}`,
+    headerLabel: (player: number, kind: CellKind) => `scoreboard-header-label-${kind}-${player}`,
     cell: (player: number, round: number, kind: CellKind) =>
       `scoreboard-cell-${kind}-${player}-${round}`,
-    tooltip: 'scoreboard-tooltip',
   },
   winner: {
     container: 'winner-container',

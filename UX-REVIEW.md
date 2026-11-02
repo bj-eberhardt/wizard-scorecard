@@ -19,7 +19,8 @@ Das Produkt richtet sich an eine klare Kernsituation: **Wizard-Runde am Tisch, e
 - Spielzustand wird in `localStorage` persistiert → Abbruch/F5 kostet keine Daten
 - Startspieler-Rotation wird berechnet und in den Overlays korrekt nach oben sortiert
 - Punkteberechnung inkl. Wolke-Regel korrekt implementiert und im Tooltip explainiert
-- i18n-Grundgerüst (DE/EN) vorhanden, `prefers-reduced-motion` wird respektiert
+- i18n-Grundgerüst (DE/EN) vorhanden (die Pulse-Animation des Scoreboards und damit die
+  einzige `prefers-reduced-motion`-Rücksicht ist mit F5 entfallen)
 - Bestätigungsdialog vor dem destruktiven "Neues Spiel"
 
 ---
@@ -32,7 +33,7 @@ Das Produkt richtet sich an eine klare Kernsituation: **Wizard-Runde am Tisch, e
 | F2 | Scoreboard-Spalten nicht beschriftet; erzielte Stiche nur im Tooltip versteckt | UX/Design | 🔴 Hoch |
 | F3 | 20-Runden-Tabelle auf Mobile: Buttons und aktueller Stand unter dem Fold | Bedienung | 🔴 Hoch |
 | F4 | 2-Sekunden-Submit-Sperre im Ergebnis-Overlay ohne Erklärung | Bedienung | 🔴 Hoch |
-| F5 | Pulse-Animation auf allen Vorhersage-Zellen feuert bei jedem Render neu | Design | 🟠 Mittel |
+| F5 | Pulse-Animation auf allen Vorhersage-Zellen feuert bei jedem Render neu | Design | 🟠 Mittel · ✅ |
 | F6 | Touch-Targets zu klein (Zahleneingaben ~36 px, Checkboxen, ×-Button) | Bedienung | 🟠 Mittel |
 | F7 | Modal auf Mobile top-bündig mit großer schwarzer Fläche; Vollbild-Button überlagert Logo | Design | 🟠 Mittel |
 | F8 | Startspieler-Rotation im Overlay ohne Kennzeichnung ("wer ist dran") | UX | 🟠 Mittel |
@@ -48,6 +49,7 @@ Das Produkt richtet sich an eine klare Kernsituation: **Wizard-Runde am Tisch, e
 | F18 | `visibilitychange`-Listener wird in jedem Render neu angelegt (Wake-Lock leak) | Code/Robustheit | 🟡 Gering |
 | F19 | Wolke-Historie zeigt im Tooltip die korrigierten statt der eingetragenen Stiche (Label sagt "Eingetragene Stiche") | Korrektheit | 🟡 Gering |
 | F20 | 2 s Lade-Splash bei jedem Start, auch bei Fortsetzen eines gespeicherten Spiels | UX | 🟡 Gering |
+| F21 | Mobile-Breite: Gesamt-Punkte ausblenden, dafür eine "Punkte"-Zeile am Tabellenende | UX/Design | 🟠 Mittel |
 
 ---
 
@@ -76,7 +78,24 @@ Das Produkt richtet sich an eine klare Kernsituation: **Wizard-Runde am Tisch, e
 
 ---
 
-### F2 · Scoreboard: Spalten ohne Beschriftung, Stiche fehlen 🔴
+### F2 · Scoreboard: Spalten ohne Beschriftung, Stiche fehlen 🔴 ✅ umgesetzt
+
+> **Status:** umgesetzt. Zweizeilige Kopfzeile (Name `colSpan=3`, darunter **Tipp · Stiche · Punkte**,
+> en `Bid · Tricks · Points`), die Stiche-Spalte ist jetzt sichtbar im Brett und zeigt bei einer
+> Wolke-Runde `eingetragen→gewertet ☁` (z. B. `4→2 ☁`). Die Punkte-Spalte ist hellgrau
+> hinterlegt, alle drei Unter-Spalten haben eine **feste Einheitsbreite** (`w-12` = 48 px,
+> `px-0.5 text-xs`) — eine Spielergruppe ist damit 144 px statt ~166 px breit, auf dem
+> 390-px-Screen passen zwei Gruppen statt gut einer. Der Hover-/Long-Press-Tooltip des
+> Scoreboards ist entfallen — damit ist auch F19 gegenstandslos. Offene Folge der
+> kompakteren Dichte: siehe F21.
+>
+> **Hintergrund:** das ursprünglich lange Header-Wort "Vorhersage" (en
+> "Prediction") machte die Tipp-Spalte ~1,7× so breit wie ihre Nachbarn, weil die Tabelle in
+> Auto-Layout läuft und der längste Zelleninhalt die Spaltenbreite bestimmt. Fix: kurzes Label
+> plus feste Breite; die Gleichmäßigkeit wird jetzt von einer `boundingBox`-Assertion in
+> `e2e/scoreboard.spec.ts` bewacht (Toleranz 1 px). Zusätzlich hat die Tabelle kein `w-full`
+> mehr — sonst hätte die einzige flexible Spalte ("Runde") den gesamten Rest der Bildschirmbreite
+> bekommen und wäre als leerer Block stehen geblieben.
 
 **Beobachtung:** Jeder Spieler hat zwei gleich aussehende Spalten — links kumulierte Punkte, rechts die Vorhersage. Es gibt keine Spaltenüberschrift, und die **erzielten Stiche** (das eigentliche Rundenergebnis) sind nur im Hover-/Long-Press-Tooltip sichtbar:
 
@@ -134,7 +153,18 @@ Das Produkt richtet sich an eine klare Kernsituation: **Wizard-Runde am Tisch, e
 
 ---
 
-### F5 · Pulse-Highlight feuert zu breit und zu oft 🟠
+### F5 · Pulse-Highlight feuert zu breit und zu oft 🟠 ✅ umgesetzt
+
+> **Status:** umgesetzt, aber anders als vorgeschlagen: der Puls wurde **vollständig
+> entfernt** statt auf einmalig + kommende Runde reduziert. Der Hinweis richtete sich auf
+> die abgeschlossene Runde, klickbar ist aber die kommende — er war also auch in der
+> entschärften Form nicht als Affordanz brauchbar, sondern lediglich ein Blinken, das nach
+> jedem Render (und nach F5) neu anfing. Weg ist er, wenn die Klickbarkeit ohnehin anderweitig
+> erkennbar wird; der Rest (dauerhafte Affordanz der Zellen) bleibt bei F12 angesiedelt.
+> `Scoreboard.tsx` hat damit keinen Animationseffekt, keinen Timer und keine
+> `matchMedia`-Prüfung mehr; die Vorhersage-Zelle ist ein statisches `<span>`. Bewacht wird
+> das von einem Schritt in `e2e/scoreboard.spec.ts`, der **alle** Zellen der Matrix auf
+> Animations-/Ring-/Scale-Klassen prüft (der frühere `reducedMotion`-Test ist damit gegenstandslos).
 
 **Beobachtung:** Die Vorhersage-Zellen der letzten gespielten Runde pulsieren gelb (`animate-pulse`, `ring-4`, `scale-105`) — gedacht als einmaliger Hinweis auf die Klickbarkeit. In Screenshots 10+ Sekunden nach Rundende sind sie noch gelb markiert, und zwar **bei allen Spielern gleichzeitig**:
 
@@ -311,11 +341,36 @@ Das Produkt richtet sich an eine klare Kernsituation: **Wizard-Runde am Tisch, e
 
 ---
 
+### F19 · Wolke-Tooltip zeigt falsche Zahl fürs Label 🟡 · erledigt (entfällt)
+
+**Ursprüngliche Beobachtung:** In `Scoreboard.getTooltipContent` wurde für `receivedTricksLabel` `p.results[roundIndex]` (der **korrigierte** Wert) statt `p.receivedResults[roundIndex]` (der **eingetragene** Wert) eingesetzt — die Variable `received` wurde nur auf Existenz geprüft, nicht verwendet.
+
+**Auflösung:** Mit dem Wegfall des Scoreboard-Tooltips (F2) ist die fehlerhafte Funktion samt ihrer i18n-Keys (`scoreboard.tooltip`, `scoreboard.wolkeNote`, `scoreboard.receivedTricksLabel`, `scoreboard.originalPredictionLabel`) entfernt. Die Unterscheidung eingetragen vs. gewertet leistet jetzt die Stiche-Zelle selbst (`4→2 ☁`), abgesichert durch die Zell-Matrix in `e2e/scoreboard.spec.ts` und den Wolke-Test in `e2e/result.spec.ts`.
+
+---
+
+### F21 · Mobile-Breite: Punkte-Spalte ausblenden, "Punkte"-Zeile ans Tabellenende 🟠
+
+**Beobachtung:** F2 hat die Dichte pro Spieler von zwei auf drei Spalten erhöht. Auf dem 390-px-Screen passt damit gut eine Spielergruppe sichtbar nebeneinander; der Rest liegt im Horizontal-Scroll (`overflow-x-auto`). Die kumulierten Punkte sind pro Spieler die **letzte** Spalte einer Gruppe und damit diejenige, die am weitesten rechts (also am ehesten außerhalb des sichtbaren Bereichs) liegt.
+
+**Warum das stört:** Die häufigste Frage am Tisch ist "wer führt?". Genau die Antwort steht auf Mobile am rechten Rand einer scrollenden Tabelle.
+
+**Änderung im Detail (Option, bewusst noch nicht gebaut):**
+
+- Auf Mobile (`< md`) die **Punkte-Zellen ausblenden** (`hidden md:table-cell`) und stattdessen ganz unten in der Tabelle eine eigene **"Punkte"-Zeile** rendern, die pro Spieler den aktuellen Stand zeigt. Damit ist die Summe ohne Horizontal-Scroll erreichbar, weil sie am Zeilenende steht, nicht am Spaltenende.
+- Die Runden-Spalte bleibt sticky links; die Punkte-Zeile würde entsprechend sticky unterhalb des Tabellenkörpers laufen (oder als feste Action-Bar über dem Rand, siehe F3).
+- Kombination mit F3 (Sticky-Action-Bar) und F9 (weniger Felder) denken: beide wollen denselben unteren Screenrand.
+- Kostenpflichtig: `data-testid`-Struktur bleibt pro Zelle erhalten, aber die Punkte-Zelle wäre auf Mobile doppelten Ursprungs (Zelle ausgeblendet, Zeile sichtbar) → die E2E-Matrix müsste pro Viewport unterscheiden.
+
+**Aufwand:** M (~2–3 h inkl. Sticky-Verhalten auf iOS Safari). **Risiko:** mittel — doppelter Anzeigenort für dieselbe Zahl, Scroll-/Sticky-Interaktionen.
+
+---
+
 ### F17–F20 · Weitere Beobachtungen (kurz)
 
 - **F17 · Info-Icon passt nicht zur Frage:** Der Titel lautet "Was bedeutet 'Nicht Gleich'?" — das Icon zeigt ein "Ausrufezeichen" (SVG-Pfad `M11.5 6h1v7h-1z` + Punkt = "!"). Für Fragen ein "?" rendern; desgleichen fehlt im Tooltip-Titel ein Fragezeichen am Ende nicht, aber das Icon sollte die Absicht spiegeln.
 - **F18 · Wake-Lock-Listener im Render:** In `App.tsx` wird `document.addEventListener('visibilitychange', …)` direkt im Komponentenrumpf ausgeführt → bei jedem Render ein neuer Listener (Leak). In ein `useEffect` mit Cleanup verlagern; leeren `useEffect` (Zeile 52–54) entfernen. Zusätzlich: Wake-Lock nur bei `gameStarted` halten und bei Spielende releasen.
-- **F19 · Wolke-Tooltip zeigt falsche Zahl fürs Label:** In `Scoreboard.getTooltipContent` wird für `receivedTricksLabel` `p.results[roundIndex]` (der **korrigierte** Wert) statt `p.receivedResults[roundIndex]` (der **eingetragene** Wert) eingesetzt — die Variable `received` wird nur auf Existenz geprüft, nicht verwendet. Besser: "Eingetragen: 3 → gewertet: 2 (Wolke)".
+- **F19 · Wolke-Tooltip zeigt falsche Zahl fürs Label:** Entfallen — der Scoreboard-Tooltip wurde mit F2 entfernt, die Unterscheidung eingetragen/gewertet zeigt die Stiche-Zelle (`4→2 ☁`). Siehe Detail-Abschnitt zu F19.
 - **F20 · 2-Sekunden-Splash bei jedem Start:** `LoadingScreen` blockiert fix 2 s + 1 s Fade — auch beim Fortsetzen eines gespeicherten Spiels. Splash nur beim ersten Laden der Session zeigen (`sessionStorage`-Flag) oder auf < 800 ms reduzieren; der Splash ist zudem `z-[1000]` und überlagert alles ohne Fortschrittsinformation.
 
 ---
@@ -324,9 +379,9 @@ Das Produkt richtet sich an eine klare Kernsituation: **Wizard-Runde am Tisch, e
 
 **P0 — Fehler & Blocker (ohne Designarbeit, maximaler Effekt):**
 
-1. F1 — `noValidate` + funktionsfähige lokalisierte Validierung (S)
+1. F1 — `noValidate` + funktionsfähige lokalisierte Validierung (S) ✅ umgesetzt
 2. F4 — Submit-Sperre erklären oder entfernen (S)
-3. F2 — Spaltenüberschriften + Stiche-Spalte im Scoreboard (M)
+3. F2 — Spaltenüberschriften + Stiche-Spalte im Scoreboard (M) ✅ umgesetzt
 4. F3 — Sticky-Action-Bar + aktuelle Runde hervorheben (M)
 5. F10 — Mindestens "Runde zurücknehmen" (L für Vollversion, S für Undo des letzten Schritts)
 
@@ -335,17 +390,21 @@ Das Produkt richtet sich an eine klare Kernsituation: **Wizard-Runde am Tisch, e
 6. F6 — 44-px-Targets, Stepper-Inputs (M)
 7. F7 — Bottom-Sheet-Overlays, Header-Zeile für Vollbild-Button (S–M)
 8. F9 — Spieler-Hinzufügen-Flow statt 6 leerer Felder (M)
-9. F5 — Pulse auf einmalig + kommende Runde reduzieren (S)
+9. F5 — Pulse entfernen (S) ✅ umgesetzt (vollständig entfernt statt entschärft)
 10. F8 — Startspieler-Kennzeichnung (S)
 11. F11 — Destruktiven Button aus der Hauptaktion nehmen (S)
+12. F21 — Mobile: Punkte-Zeile am Tabellenende statt rechtspunktiger Punkte-Spalte (M)
 
 **P2 — Politur & Identität:**
 
-12. F15 — Design-Tokens/Dark-Theme schrittweise (M)
-13. F16 — Winner-View mit Rangliste & Teilen (M)
-14. F12/F17 — A11y: Dialoge, Fokus, Tooltip-Tastatur (M)
-15. F13/F14 — Sprachumschalter + `lang`-Synchronisation (S)
-16. F18/F19/F20 — Code-Hygiene & Kleinigkeiten (S)
+13. F15 — Design-Tokens/Dark-Theme schrittweise (M)
+14. F16 — Winner-View mit Rangliste & Teilen (M)
+15. F12/F17 — A11y: Dialoge, Fokus, Tooltip-Tastatur (M)
+16. F13/F14 — Sprachumschalter + `lang`-Synchronisation (S)
+17. F18/F20 — Code-Hygiene & Kleinigkeiten (S)
+
+> F12 betrifft nur noch den Bestätigungs-Dialog: der Scoreboard-Zellen-Tooltip ist mit F2
+> entfernt worden, damit entfällt auch der dortige Tastatur-Pfad.
 
 ---
 
@@ -353,11 +412,13 @@ Das Produkt richtet sich an eine klare Kernsituation: **Wizard-Runde am Tisch, e
 
 - Alle Screenshots wurden mit Playwright (Chromium 156, headless) im Frame `ux-screens.mjs` erzeugt: Desktop 1280×800, Mobile 390×844 mit Touch. Der kompletter Flow (4 Spieler, 6 Runden bzw. 3 Spieler, 2 Runden) wurde durchgespielt.
 - Code-Belege verlinken direkt in die Dateien:
-  - Native-Validierung: [`PredictionOverlay.tsx`](./src/components/PredictionOverlay.tsx) (`max={currentRound}`), [`ResultOverlay.tsx`](./src/components/ResultOverlay.tsx)
+  - Native-Validierung (F1, ✅ umgesetzt): [`PredictionOverlay.tsx`](./src/components/PredictionOverlay.tsx), [`ResultOverlay.tsx`](./src/components/ResultOverlay.tsx) — die Trick-Inputs haben kein `max`-Attribut mehr, die Bereichsprüfung liegt allein in den Submit-Handlern
   - Submit-Sperre (2 s): [`ResultOverlay.tsx` L25–36](./src/components/ResultOverlay.tsx)
-  - Pulse-Logik: [`Scoreboard.tsx` L13–39](./src/components/Scoreboard.tsx)
+  - Pulse-Logik (F5, ✅ entfernt): [`Scoreboard.tsx`](./src/components/Scoreboard.tsx) — der
+    `showPulse`-Effekt samt Timer und `matchMedia`-Prüfung ist ersatzlos weg, die Vorhersage-Zelle
+    rendert ein statisches `<span>`
   - Punktekette/`setResult`: [`gameStore.ts` L134–153](./src/store/gameStore.ts)
-  - Wolke-Tooltip-Label: [`Scoreboard.tsx` L61–68](./src/components/Scoreboard.tsx)
+  - Wolke eingetragen/gewertet: [`Scoreboard.tsx`](./src/components/Scoreboard.tsx) (`tricksText()`) — der alte Tooltip samt F19-Fehlerzeile ist entfernt
   - Wake-Lock im Render: [`App.tsx` L56–77](./src/App.tsx)
   - Splash: [`LoadingScreen.tsx` L8–14](./src/components/LoadingScreen.tsx)
   - `lang="de"` fix: [`index.html` L2](./index.html)

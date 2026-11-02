@@ -76,7 +76,7 @@ src/
     ConfigureGame.tsx   # player names, rounds, rule toggles, validation
     PredictionOverlay.tsx  # enter tricks per player (start-player rotated)
     ResultOverlay.tsx   # enter results, Wolke, submit-lock, all-zero confirm
-    Scoreboard.tsx      # table of rounds + hover tooltip
+    Scoreboard.tsx      # two-row header, three columns per player (prediction · tricks · points)
     WinnerView.tsx      # end screen incl. tie handling
     Header.tsx / Footer.tsx / FullscreenButton.tsx / LoadingScreen.tsx
     InfoTooltip.tsx     # rule explainer modal (Wolke / NotEqual)
@@ -133,7 +133,9 @@ Key rules (all implemented in `gameStore.ts` / `ResultOverlay.tsx`):
   its entered tricks value must be ≥ 1. It rewrites the effective result: if
   `|prediction - value| === 1` the result counts as the prediction (becomes
   correct), otherwise the effective result is `prediction + 1`. The raw entered
-  tricks are still stored in `receivedResults` for the tooltip.
+  tricks are still stored in `receivedResults` and shown in the scoreboard's tricks
+  cell as `entered→evaluated` with a ☁ marker (separated by a narrow no-break space
+  U+202F so the string stays inside the fixed column width).
 - **NotEqual rule (opt-in):** the sum of all predictions in a round may not equal the
   round's trick count; the last player to predict must adjust (error
   `predictionNotEqualLast`).
@@ -179,13 +181,17 @@ E2E fixtures clear both game/settings keys before every test. See §8.
    the specs import — a rename breaks the build, not the tests silently.
 2. **Never assert localized text.** Any state a human reads as text (error message,
    winner, submit-lock) is additionally exposed as a `data-*` attribute; tests assert
-   the attribute (i18n key / number / boolean), not the string. Attributes in use:
+   the attribute (i18n key / number / boolean), not the string. **Pure numbers are not
+   localized** — a cell that can only ever render `30` or `-` may also be asserted with
+   `toHaveText('30')`, which proves attribute and visible value agree. Anything that can
+   ever become a word stays attribute-only. Attributes in use:
    - `data-error-key` on error banners → the i18n key, e.g. `configureGame.errors.minPlayers`, `errors.wolkeMinOne`
    - `data-submit-ready="true|false"` on the result submit button
    - `data-start-player="true"` on the first (rotated) prediction/result row
    - winner container: `data-winner-count`, `data-points`, `data-winner-names="a|b"`
-   - scoreboard cells: `data-points`, `data-prediction`; tooltip: `data-prediction`,
-     `data-tricks`, `data-points`, `data-wolke`
+   - scoreboard cells: `data-prediction`, `data-tricks`, `data-received-tricks`,
+     `data-points`, `data-wolke="true|false"`; header cells via
+     `headerPlayer(i)` / `headerLabel(i, kind)` (kind: `prediction|tricks|points`)
 3. **Keep it fast.** Advanced states are *seeded*, not clicked through; artificial
    delays are bypassed (except in `waiting.spec.ts`).
 4. **Rich `test.step` descriptions** in English, one `await test.step('…', async () …)`
@@ -238,7 +244,9 @@ map to the rotated players, not the roster order.
 - `configure-game.spec.ts` — names/rounds/rules/validation, `roundsForCount`, info dialogs
 - `prediction.spec.ts` — submit, prefill, start-player rotation, too-small/large, not-equal
 - `result.spec.ts` — points formula, all-zero confirm, Wolke rules, revert
-- `scoreboard.spec.ts` — rendering, tooltip data attrs, reduced-motion pulse
+- `scoreboard.spec.ts` — two-row header, the full cell matrix (all players × all rounds,
+  incl. both Wolke branches), point sums/deltas, and that no prediction cell carries an
+  animation/highlight class (the old F5 pulse must not come back)
 - `game-flow.spec.ts` — integration: persistence across reload, round advance, reset, last round → winner
 - `winner.spec.ts` — 1 / 2 / N winners via seeded finished games
 - `i18n.spec.ts` — same testid structure under `de` and `en` (proves locale-safety)
@@ -298,6 +306,18 @@ E2E suite. Run `npm run format` and `npm run test:e2e` locally before pushing.
   checks unreachable. Range limits are enforced in the submit handlers only.
 - `base: './'` — assets are relative, so the app works under GitHub Pages sub-paths and
   the query string `?e2e=1` is preserved on load.
+- The scoreboard's three sub-columns are deliberately **fixed-width** (`w-12` = 48 px,
+  `px-0.5 text-xs`): the table is auto-layout, so the longest cell content — a header
+  label — would otherwise stretch its column and unbalance the whole table (this is what
+  made the old "Vorhersage" column ~1.7× too wide). Keep header labels short (de `Tipp`,
+  en `Bid`) and padding at `px-0.5` so the widest unbreakable string (`4→2☁`) still fits;
+  `scoreboard.spec.ts` guards that all three widths are equal within 1 px. The `<table>` has
+  **no `w-full`** for the same reason — with fixed data columns, a full-width table hands
+  every leftover pixel to the "Runde" column and stretches it into an empty block.
+- The scoreboard cells are **animation-free by decision** (UX-REVIEW F5): the pulse hint that
+  once flagged the last played round is removed, so `Scoreboard.tsx` has no `useState`/`useEffect`,
+  no timer and no `matchMedia` there. Do not re-introduce a highlight animation to indicate
+  clickability — make the affordance permanent instead (see F12 in `UX-REVIEW.md`).
 
 ---
 
@@ -309,6 +329,7 @@ E2E suite. Run `npm run format` and `npm run test:e2e` locally before pushing.
 - `src/assets/animation.gif` exists but is **unreferenced** — do not assume it is used.
 - Adding a translation key: put it in BOTH `de` and `en`, otherwise `fallbackLng: 'de'`
   hides the gap and tests won't notice.
-- Keep E2E assertions free of visible text or a locale change will break them; the
-  `i18n.spec.ts` suite enforces that discipline structurally.
+- Keep E2E assertions free of **localized** text or a locale change will break them; the
+  `i18n.spec.ts` suite enforces that discipline structurally. Plain numbers are the
+  exception — they cannot be translated, so asserting a cell's visible digits is safe.
 - Do not put E2E into a pre-commit hook (slow by design); it belongs to CI.

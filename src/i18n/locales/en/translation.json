@@ -22,8 +22,9 @@
     "toggleFullscreen": "Toggle fullscreen"
   },
   "labels": {
-    "prediction": "Prediction",
+    "prediction": "Bid",
     "result": "Result",
+    "tricks": "Tricks",
     "round": "Round",
     "player": "Player",
     "points": "Points"
@@ -37,12 +38,6 @@
     "confirmAllZero": "All results are 0. Click again to confirm.",
     "wolkeInfo": "Enter the received tricks and mark the cloud for this user — we'll do the calculation.",
     "revertButton": "Revert"
-  },
-  "scoreboard": {
-    "tooltip": "Prediction: {{prediction}}\nTricks taken: {{tricks}}\nPoints: {{points}}",
-    "wolkeNote": "Cloud applied",
-    "originalPredictionLabel": "Original prediction: {{original}}",
-    "receivedTricksLabel": "Entered tricks: {{received}}"
   },
   "winnerView": {
     "announcement_single": "🎉 Winner: {{name}} with {{points}} points!",

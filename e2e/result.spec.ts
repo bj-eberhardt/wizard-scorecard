@@ -130,12 +130,17 @@ test.describe('Enter results', () => {
         '140'
       );
     });
-    await test.step('Tooltip shows entered tricks (1) and the Wolke marker', async () => {
-      await game.getByTestId(T.scoreboard.cell(0, 3, 'prediction')).hover();
-      const tooltip = game.getByTestId(T.scoreboard.tooltip);
-      await expect(tooltip).toBeVisible();
-      await expect(tooltip).toHaveAttribute('data-tricks', '1');
-      await expect(tooltip).toHaveAttribute('data-wolke', 'true');
+    await test.step('Scoreboard tricks cell shows entered → evaluated with the Wolke marker', async () => {
+      const tricks = game.getByTestId(T.scoreboard.cell(0, 3, 'tricks'));
+      await expect(tricks).toHaveAttribute('data-tricks', '2');
+      await expect(tricks).toHaveAttribute('data-received-tricks', '1');
+      await expect(tricks).toHaveAttribute('data-wolke', 'true');
+      // numbers + arrow are not localized, so the rendered value can be asserted
+      await expect(tricks).toHaveText('1\u21922 \u2601');
+      // a player without Wolke shows the plain value only
+      const plain = game.getByTestId(T.scoreboard.cell(1, 3, 'tricks'));
+      await expect(plain).toHaveAttribute('data-wolke', 'false');
+      await expect(plain).toHaveText('0');
     });
   });
 
