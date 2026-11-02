@@ -40,7 +40,10 @@ export function Scoreboard() {
 
   return (
     <div className="text-center flex justify-center w-full">
-      <div className="overflow-x-auto w-full">
+      {/* `max-w-full` instead of `w-full`: the scroll container shrinks to the table, so the
+          whole board is centred on wide screens, and it is still capped at the viewport, so
+          the horizontal scroll on narrow ones keeps working. */}
+      <div className="overflow-x-auto max-w-full">
         {/* No `w-full`: with fixed data columns a full-width table would hand every leftover
             pixel to the round column and stretch it into an empty block. */}
         <table

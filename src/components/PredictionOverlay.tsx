@@ -84,7 +84,7 @@ export function PredictionOverlay({ close }: { close: () => void }) {
 
   return (
     <div
-      className="fixed inset-0 bg-black/60 flex xs:items-[normal] items-center justify-center z-20"
+      className="fixed inset-0 bg-black/60 flex xs:items-[normal] items-center justify-center overflow-y-auto z-20 px-4 py-6 pb-28"
       data-testid={T.prediction.overlay}
     >
       <form

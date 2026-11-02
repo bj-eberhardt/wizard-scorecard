@@ -85,6 +85,37 @@ async function seedPlayedGame(game: import('@playwright/test').Page) {
 }
 
 test.describe('Scoreboard', () => {
+  /**
+   * Free space to the left/right of an element inside the layout viewport.
+   * Equal gaps mean the element sits on the page's centre line.
+   */
+  const sideGaps = (page: import('@playwright/test').Page, testId: string) =>
+    page.evaluate((sel) => {
+      const el = document.querySelector(`[data-testid="${sel}"]`);
+      if (!el) throw new Error(`missing element: ${sel}`);
+      const rect = el.getBoundingClientRect();
+      const available = document.documentElement.clientWidth;
+      return { left: rect.left, right: available - rect.right };
+    }, testId);
+
+  test('Board and primary action are centred on the page', async ({ game }) => {
+    await test.step('Seed a played game with the scoreboard visible', async () => {
+      await seedPlayedGame(game);
+      await openApp(game);
+      await expect(game.getByTestId(T.scoreboard.table)).toBeVisible();
+    });
+    await test.step('The table is centred instead of flush left', async () => {
+      const gaps = await sideGaps(game, T.scoreboard.table);
+      // a 3-player board is far narrower than the desktop viewport, so both gaps are big
+      expect(gaps.left).toBeGreaterThan(40);
+      expect(Math.abs(gaps.left - gaps.right)).toBeLessThanOrEqual(2);
+    });
+    await test.step('The primary button shares that centre line', async () => {
+      const gaps = await sideGaps(game, T.app.nextRound);
+      expect(Math.abs(gaps.left - gaps.right)).toBeLessThanOrEqual(2);
+    });
+  });
+
   test('Header labels each of the three columns per player', async ({ game }) => {
     await test.step('Seed a played game (3 rounds of 6)', async () => {
       await seedPlayedGame(game);

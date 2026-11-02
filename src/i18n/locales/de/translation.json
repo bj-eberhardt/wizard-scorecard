@@ -57,7 +57,10 @@
     "logoAlt": "Logo"
   },
   "footer": {
-    "copy": "© {{year}} - Version: {{version}}"
+    "copy": "© {{year}} - Version: {{version}}",
+    "langGroup": "Sprache",
+    "langDe": "Deutsch",
+    "langEn": "Englisch"
   },
   "configureGame": {
     "title": "Bitte gib die Namen der Spieler ein:",

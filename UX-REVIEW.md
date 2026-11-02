@@ -42,8 +42,8 @@ Das Produkt richtet sich an eine klare Kernsituation: **Wizard-Runde am Tisch, e
 | F11 | "Neues Spiel" (rot) dauerhaft neben Haupt-Action knopfgleich erreichbar | Bedienung | 🟠 Mittel · ✅ |
 | F12 | Bestätigungsdialog ohne Fokus-Handling/Escape (Tooltip-Teil entfiel mit F2) | A11y | 🟠 Mittel · ✅ |
 | F23 | Schätz- und Ergebnis-Overlay ohne Dialog-Semantik (Fokus, Escape, `aria-modal`) | A11y | 🟡 Gering |
-| F13 | `lang="de"` fix im HTML, aber Sprache wird per Browser-Detector gewählt → gemischte Sprachen | i18n | 🟡 Gering |
-| F14 | Kein Sprachumschalter im UI, obwohl EN vorhanden | i18n | 🟡 Gering |
+| F13 | `lang="de"` fix im HTML, aber Sprache wird per Browser-Detector gewählt → gemischte Sprachen | i18n | 🟡 Gering · ✅ |
+| F14 | Kein Sprachumschalter im UI, obwohl EN vorhanden | i18n | 🟡 Gering · ✅ |
 | F15 | Design ohne eigene Sprache: weißer Hintergrund, harte schwarze Rahmen, Standard-Tailwind-Farben | Design | 🟡 Gering |
 | F16 | Winner-View ist ein gelber Textkasten – kein Abschluss-Moment, keine Rangliste | Design | 🟡 Gering |
 | F17 | Info-Icon zeigt "!" obwohl Titel eine Frage ist; doppelte `id` im Modal | A11y/Design | 🟡 Gering · ✅ |
@@ -52,6 +52,7 @@ Das Produkt richtet sich an eine klare Kernsituation: **Wizard-Runde am Tisch, e
 | F20 | 2 s Lade-Splash bei jedem Start, auch bei Fortsetzen eines gespeicherten Spiels | UX | 🟡 Gering |
 | F21 | Mobile-Breite: Gesamt-Punkte ausblenden, dafür eine "Punkte"-Zeile am Tabellenende | UX/Design | 🟠 Mittel |
 | F22 | Spieler-Reihenfolge in der Konfiguration nicht anpassbar (kein Drag & Drop) | UX | 🟠 Mittel |
+| F24 | Gemischte Ausrichtung auf Desktop: Brett linksbündig, Primäraktion links, Ghost-Link mittig, Winner-Balken vollbreit | Design | 🟡 Gering · ✅ |
 
 ---
 
@@ -435,14 +436,30 @@ Das Produkt richtet sich an eine klare Kernsituation: **Wizard-Runde am Tisch, e
 
 ---
 
-### F13/F14 · Sprache: kein Umschalter, `lang`-Attribut fix 🟡
+### F13/F14 · Sprache: kein Umschalter, `lang`-Attribut fix 🟡 · ✅ umgesetzt
+
+> **Status:** umgesetzt. Sprachumschalter im **Footer mittig** als zwei Flaggen-Buttons
+> (🇩🇪 / 🇬🇧, `aria-label` + `aria-pressed`, `role="group"` mit lokalisiertem Group-Label,
+> 44-px-Touch-Targets, aktive Flagge umrandet). Die Flaggen sind **Inline-SVG**, kein Flaggen-Emoji:
+> lucide führt keine Länder-Symbole, und Windows rendert Regional-Indicator-Emoji als Buchstaben
+> „DE"/"GB" (Beleg: `ux-shots/_emoji-probe.png`). Die Wahl wird als `language` in `settingsStore`
+> (`wizard_settings_v1`) persistiert und **überschreibt beim Boot den Browser-Detector**
+> (`i18n.ts` liest den persistierten Wert direkt aus localStorage und setzt `lng`).
+> Ohne explizite Wahl entscheidet wie bisher der Detector (fallback `de`).
+> F13: `document.documentElement.lang` wird nach `init` und bei jedem `languageChanged`
+> auf die aktive Sprache gesetzt — `index.html` bleibt nur der Startwert.
+> Belege: `e2e/i18n.spec.ts` (Umschalten, Persistenz über Reload, Override gegen den
+> Detector, `lang`-Attribut) und `ux-shots/capture-lang.mjs` →
+> [20](./ux-shots/20-lang-footer-desktop-de.png) (de, persistiert gegen einen en-US-Browser),
+> [21](./ux-shots/21-lang-footer-desktop-en.png) (en nach einem Klick),
+> [22](./ux-shots/22-lang-footer-mobile-de.png) (Mobile 390 px, Fokus-Ring sichtbar).
 
 **Beobachtung:** `index.html` hat fest `lang="de"`, `i18n.ts` detektiert per Browser (fallback `de`), aber es gibt **keinen** sichtbaren Sprachumschalter — EN ist faktisch nur erreichbar, wenn der Browser Englisch meldet. Kombiniert mit F1 (englische Native-Bubble in deutscher UI) entsteht ein inkonsistenter Eindruck.
 
 **Änderung im Detail:**
 
-- DEEN-Umschalter (Flaggen/Länderkürzel) im Header oder Footer; Auswahl in `settingsStore` persistieren.
-- `document.documentElement.lang = i18n.language` bei Init + `languageChanged`.
+- DEEN-Umschalter (Flaggen/Länderkürzel) im Header oder Footer; Auswahl in `settingsStore` persistieren. ✅
+- `document.documentElement.lang = i18n.language` bei Init + `languageChanged`. ✅
 
 **Aufwand:** S (~1–2 h). **Risiko:** gering.
 
@@ -562,6 +579,50 @@ Store-Logik.
 
 ---
 
+### F24 · Ausrichtung der Seite gemischt (Desktop: halbe Fläche frei) 🟡 ✅ umgesetzt
+
+> **Status:** umgesetzt. Alles liegt jetzt auf einer Mittellinie: Kopf, Konfigurationsspalte,
+> Brett, Primär- und destruktive Aktion, Winner-Karte. Umgesetzt als **Zentrierung ohne
+> Breite-Obergrenze** für das Brett (eine `max-width`-Spalte hätte das 6-Spieler-Board auf
+> Desktop horizontal scrollbar gemacht), nur die schmalen Textspalten (Konfiguration, Winner,
+> Tooltip) behalten ihre bewusste Inhaltsbreite `max-w-md`.
+
+**Beobachtung:** Auf dem Desktop (1280 px) endet die Nutzung nach gut einem Drittel der Breite:
+die Scoreboard-Tabelle stand linksbündig in einem vollbreiten Scroll-Container, der grüne
+"Nächste Runde starten"-Knopf lag im Fluss ebenfalls links, der "Neues Spiel starten"-Ghost-Link
+war schon mittig, und die Winner-Ausgabe war ein vollbreiter gelber Balken — vier verschiedene
+Ausrichtungen auf einem Screen.
+
+**Warum das stört:** Die halbe Bildfläche ist freies Weiß, der Blick springt zwischen links und
+mitte, und die Zerstörungs-Aktion wirkt wie ein anderes Element als die Hauptaktion, obwohl beide
+dieselbe Spalte bedienen.
+
+**Änderung im Detail:**
+
+- **Brett:** der Scroll-Container verliert `w-full` und bekommt `max-w-full` im bestehenden
+  `flex justify-center`-Wrapper — er schrumpft auf die Tabellenbreite (zentriert) und bleibt vom
+  Viewport begrenzt (auf dem Handy weiterhin Horizontal-Scroll). Die Tabelle selbst behält ihr
+  `min-w-max` und kein `w-full` (siehe F2).
+- **Primäraktion:** `mt-4 flex justify-center sticky bottom-2 z-[200]` auf einem Wrapper-`div`;
+  der Knopf behält seine Inhaltsbreite (F11 unverändert).
+- **Winner-Karte:** `mx-auto max-w-md text-center` statt Vollbreiten-Balken; der
+  "Neues Spiel starten"-Knopf darunter wird ebenso zentriert.
+- Bewacht von `e2e/scoreboard.spec.ts` (gleiche Links/Rechts-Abstände für Tabelle und Primärknopf,
+  gemessen am `clientWidth`) und `e2e/responsive.spec.ts` (`@mobile`: 6-Spieler-Brett bleibt
+  breiter als der Viewport und bleibt scrollbar — die Zentrierung darf den Container nicht
+  aufblähen).
+
+| 3 Spieler, Desktop (war linksbündig) | 6 Spieler, Desktop | 6 Spieler, Mobile (Scroll bleibt) |
+|---|---|---|
+| ![Zentriertes Brett, 3 Spieler](./ux-shots/23a-centre-3player-desktop.png) | ![Zentriertes Brett, 6 Spieler](./ux-shots/23b-centre-6player-desktop.png) | ![Mobiles Scroll-Brett](./ux-shots/23c-centre-6player-mobile.png) |
+
+![Zentrierte Winner-Karte](./ux-shots/23d-centre-winner-desktop.png)
+
+**Aufwand:** S (~30 min). **Risiko:** gering — reine Layout-Klassen; die Abstands-Assertion aus
+F11 und die Spaltenbreiten-Assertion aus F2 bleiben grün.
+
+---
+
 ### F17–F20 · Weitere Beobachtungen (kurz)
 
 - **F17 · Info-Icon passt nicht zur Frage: ✅ umgesetzt.** Der Titel lautet "Was bedeutet 'Nicht Gleich'?" — das Icon zeigte ein "!" (SVG-Pfad `M11.5 6h1v7h-1z` + Punkt). Ersetzt durch das lucide-Icon **`CircleHelp`** ("?" im Kreis); die doppelte Modal-`id` war zuvor schon per `useId()` behoben.
@@ -597,10 +658,11 @@ Store-Logik.
 14. F16 — Winner-View mit Rangliste & Teilen (M)
 15. F12/F17 — A11y: Dialoge, Fokus (M) ✅ umgesetzt (beide Dialoge über `useDialogA11y`; der
     Tooltip-Teil entfiel mit F2) — F17 ✅ umgesetzt (Lucide `CircleHelp`)
-16. F13/F14 — Sprachumschalter + `lang`-Synchronisation (S)
+16. F13/F14 — Sprachumschalter + `lang`-Synchronisation (S) ✅ umgesetzt (Flaggen im Footer mittig, Wahl persistiert und überschreibt den Detector, `<html lang>` synchron)
 17. F22 — Spieler-Reihenfolge per Drag & Drop (M) — Nachfolger von F9
 18. F23 — Overlay-Dialoge mit `role`/Fokus-Trap/Escape (S–M) — Folge von F12
 19. F18/F20 — Code-Hygiene & Kleinigkeiten (S)
+20. F24 — Zentrierung der ganzen Seite (S) ✅ umgesetzt (Brett, Primäraktion, Winner-Karte)
 
 > F12 ist auf den Bestätigungs-Dialog und die Regel-Erklärung geschrumpft: der
 > Scoreboard-Zellen-Tooltip war mit F2 schon entfernt, damit entfiel auch der dortige
@@ -630,6 +692,15 @@ Store-Logik.
     [`App.tsx`](./src/App.tsx) und von [`InfoTooltip.tsx`](./src/components/InfoTooltip.tsx)
   - Wake-Lock im Render: [`App.tsx` L56–77](./src/App.tsx)
   - Splash: [`LoadingScreen.tsx` L8–14](./src/components/LoadingScreen.tsx)
-  - `lang="de"` fix: [`index.html` L2](./index.html)
+  - `lang="de"` fix (F13, ✅ dynamisch synchronisiert): [`index.html` L2](./index.html) bleibt der
+    Startwert; [`i18n.ts`](./src/i18n/i18n.ts) setzt `document.documentElement.lang` bei Init und
+    bei `languageChanged`
+  - Sprachumschalter (F14, ✅ umgesetzt): [`Footer.tsx`](./src/components/Footer.tsx) (Flaggen,
+    `aria-pressed`), Persistenz in [`settingsStore.ts`](./src/store/settingsStore.ts)
+    (`language`), Detector-Override in [`i18n.ts`](./src/i18n/i18n.ts)
+  - Zentrierung (F24, ✅ umgesetzt): [`Scoreboard.tsx`](./src/components/Scoreboard.tsx)
+    (`overflow-x-auto max-w-full` im `flex justify-center`-Wrapper), [`App.tsx`](./src/App.tsx)
+    (Wrapper um die Primäraktion, `sticky` bleibt), [`WinnerView.tsx`](./src/components/WinnerView.tsx)
+    (`mx-auto max-w-md text-center`); Beweise in `ux-shots/capture-centre.mjs`
 
 > Hinweis: `ux-shots/` und `ux-screens.mjs` sind Analyse-Artefakte. Wenn sie nicht ins Repository sollen, können sie nach der Durchsicht gelöscht oder zu `.gitignore` hinzugefügt werden.

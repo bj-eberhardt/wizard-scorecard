@@ -37,7 +37,7 @@ export function WinnerView() {
 
   return (
     <div
-      className="mt-4 p-4 bg-yellow-100 border border-yellow-400 rounded"
+      className="mx-auto mt-4 max-w-md p-4 bg-yellow-100 border border-yellow-400 rounded text-center"
       data-testid={T.winner.container}
       data-winner-count={winners.length}
       data-points={maxReachedPoints}

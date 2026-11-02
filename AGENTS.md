@@ -78,7 +78,7 @@ src/
     ResultOverlay.tsx   # enter results, Wolke, submit-lock, all-zero confirm
     Scoreboard.tsx      # two-row header, three columns per player (prediction · tricks · points)
     WinnerView.tsx      # end screen incl. tie handling
-    Header.tsx / Footer.tsx / FullscreenButton.tsx / LoadingScreen.tsx
+    Header.tsx / Footer.tsx / LanguageSwitcher.tsx / FullscreenButton.tsx / LoadingScreen.tsx
     InfoTooltip.tsx     # rule explainer modal (Wolke / NotEqual)
   hooks/
     useDialogA11y.ts    # shared modal focus behaviour (trap, Escape, focus restore)
@@ -168,7 +168,7 @@ Key rules (all implemented in `gameStore.ts` / `ResultOverlay.tsx`):
 | Key | Owner | Contents |
 |---|---|---|
 | `wizard_state_v1` | `gameStore.ts` | full running game (`players`, `currentRound`, `totalRounds`, `gameStarted`, `useAnniversaryRules`, `useNotEqual`, `overlay`) |
-| `wizard_settings_v1` | `settingsStore.ts` (zustand `persist`) | remembered `playerNames` (6 slots), `useAnniversaryRules`, `useNotEqual` |
+| `wizard_settings_v1` | `settingsStore.ts` (zustand `persist`) | remembered `playerNames` (6 slots), `useAnniversaryRules`, `useNotEqual`, explicit `language` choice (`'de' | 'en' | null`) |
 | `i18nextLng` | i18next browser detector | active language |
 
 E2E fixtures clear both game/settings keys before every test. See §8.
@@ -189,6 +189,27 @@ E2E fixtures clear both game/settings keys before every test. See §8.
   render the wrong German "1 Karten" in round 1.
 - **Rule for agents:** never hardcode a UI string in a component — add a key and use
   `t(...)`. And never assert a UI string in tests — use `data-*` (§8).
+- **Language switching:** the footer shows two flag buttons (🇩🇪/🇬🇧, `role="group"`,
+  `aria-label`, `aria-pressed`, ids `T.footer.langButton(lng)`); the click persists `language` in
+  `settingsStore` AND calls `i18n.changeLanguage`. On boot `i18n.ts` reads the persisted choice
+  directly from `wizard_settings_v1` (localStorage) and passes it as `lng` — an explicit choice
+  **overrides the browser detector** (and therefore also the fixture's `i18nextLng`). Without a
+  stored choice the detector behaves as before (`fallbackLng: 'de'`). `document.documentElement.lang`
+  is synced at init and on `languageChanged` — `index.html`'s `lang="de"` is only the boot value.
+  The flags themselves are **inline SVG** in `LanguageSwitcher.tsx`, not flag emoji: lucide ships no
+  country symbols, and on Windows emoji of regional indicators render as the letters "DE"/"GB".
+  Because they are graphics, a test can never assert them as text — `data-lang`/`aria-pressed`
+  carry the state.
+- **The footer is an always-visible fixed bar** (`Footer.tsx`: `fixed inset-x-0 bottom-0 z-30`),
+  mounted in both `App.tsx` branches, so the language is switchable on every screen and every
+  device — start, scoreboard, winner — **and while a round overlay is open**. Its z-30 sits above
+  the two full-screen overlays (`PredictionOverlay`, `ResultOverlay`, `z-20`) so the flag buttons
+  stay clickable mid-round, but below the modal dialogs (`z-50`) and the splash (`z-[1000]`),
+  which are allowed to cover it. The overlays deliberately **do not** host a second switcher —
+  the language choice lives only in `LanguageSwitcher` (its own component, rendered by the footer).
+  Because the bar overlays page content, every scroll container reserves its height: both `App.tsx`
+  root wrappers use `pb-28`, the sticky next-round button is raised to `bottom-24`, and the overlays
+  are `overflow-y-auto` with `pb-28` so their submit buttons never hide behind the footer.
 
 ---
 
@@ -220,6 +241,7 @@ E2E fixtures clear both game/settings keys before every test. See §8.
      `headerPlayer(i)` / `headerLabel(i, kind)` (kind: `prediction|tricks|points`)
    - `data-autofocus` marks the control that receives initial focus inside a modal dialog
      (consumed by `useDialogA11y`; asserted with `toBeFocused()`, never via text)
+   - `data-lang` on the footer flag buttons → the language code each button switches to
    **Accessibility state is asserted the same way** — `role`/`aria-*` attributes and
    `toBeFocused()`/`keyboard.press(...)` — so a locale change can never break those tests.
 3. **Keep it fast.** Advanced states are *seeded*, not clicked through; artificial
@@ -256,7 +278,9 @@ Use these instead of re-implementing flows:
 - `game` — the test's `Page` with `localStorage` cleared via `addInitScript`.
 - `openApp(page, { e2e = true, locale?, waitReady = true })` — navigate; readiness is
   the generic `#root` not-empty check (works for config screen AND seeded in-game
-  states). `locale: 'de' | 'en'` sets `i18nextLng` before load.
+  states). `locale: 'de' | 'en'` sets `i18nextLng` before load — note that a persisted
+  explicit language choice in `wizard_settings_v1` OVERRIDES it (tests seed/clear the
+  settings key accordingly).
 - `seedGameState(page, partialState)` — inject a `wizard_state_v1` object BEFORE boot
   to jump straight to mid-game / game-over / tie states without clicking rounds.
 - `startGame(page, { players, rounds?, wolke?, notEqual? })` — fill config + start,
@@ -278,14 +302,21 @@ map to the rotated players, not the roster order.
   lines (round-1 wrap-around + one-seat-on), too-small/large, not-equal
 - `result.spec.ts` — points formula, all-zero confirm, Wolke rules, revert
 - `scoreboard.spec.ts` — two-row header, the full cell matrix (all players × all rounds,
-  incl. both Wolke branches), point sums/deltas, and that no prediction cell carries an
+  incl. both Wolke branches), point sums/deltas, the centred table and primary button
+  (equal left/right gaps), and that no prediction cell carries an
   animation/highlight class (the old F5 pulse must not come back)
 - `game-flow.spec.ts` — integration: persistence across reload, round advance, reset, last round
   → winner; plus the F11 action separation (bounding-box distance of the destructive link from
   the primary button) and the F12 confirm-dialog keyboard path
 - `winner.spec.ts` — 1 / 2 / N winners via seeded finished games
-- `i18n.spec.ts` — same testid structure under `de` and `en` (proves locale-safety)
-- `responsive.spec.ts` — desktop vs mobile fullscreen button, mobile overlay input
+- `i18n.spec.ts` — same testid structure under `de` and `en` (proves locale-safety); plus the
+  footer language switcher: the two flag buttons, `aria-pressed`, `<html lang>` sync, persistence across
+  reload, that the stored choice overrides the detector (`data-lang`/`aria-*`, no text asserts), and
+  that the footer is present on **every** screen (start, scoreboard, winner — switching works
+  mid-game) while neither overlay contains a switcher of its own.
+- `responsive.spec.ts` — desktop vs mobile fullscreen button, mobile overlay input, and that a
+  six-player board on a phone is still wider than the viewport and still horizontally scrollable
+  (the centring wrapper must shrink to the screen, not outgrow it)
 - `waiting.spec.ts` — real (un-bypassed) splash + submit-lock timing, no `?e2e`
 
 ### 8.6 Adding a new selector / test — checklist
@@ -349,13 +380,25 @@ E2E suite. Run `npm run format` and `npm run test:e2e` locally before pushing.
   `scoreboard.spec.ts` guards that all three widths are equal within 1 px. The `<table>` has
   **no `w-full`** for the same reason — with fixed data columns, a full-width table hands
   every leftover pixel to the "Runde" column and stretches it into an empty block.
+- **Everything sits on the page's centre line** (UX-REVIEW F24): header, config column,
+  scoreboard, primary and destructive action, winner card. The board is centred by its scroll
+  wrapper (`flex justify-center` + `overflow-x-auto max-w-full`, no `w-full`): the wrapper
+  shrinks to the table, so a 3-player board is not flush left on a desktop screen, and it is
+  still capped at the viewport, so a 6-player board keeps scrolling horizontally on a phone.
+  Buttons are centred by a wrapper `div` (`flex justify-center`) rather than by widening them;
+  the sticky next-round button keeps `sticky bottom-24 z-[200]` **on that wrapper** (`bottom-24`, not
+  `bottom-2`, so it clears the always-visible fixed footer bar underneath it). Narrow
+  centred columns use `max-w-md mx-auto` (config form, winner card, InfoTooltip panel) — that
+  is a deliberate content width, not a leftover. `scoreboard.spec.ts` asserts equal left/right
+  gaps for table and primary button; the `@mobile` test in `responsive.spec.ts` asserts the
+  board is still wider than the viewport and still scrollable.
 - The scoreboard cells are **animation-free by decision** (UX-REVIEW F5): the pulse hint that
   once flagged the last played round is removed, so `Scoreboard.tsx` has no `useState`/`useEffect`,
   no timer and no `matchMedia` there. Do not re-introduce a highlight animation to indicate
   clickability — the cells are not clickable at all; the way into the next round is the sticky
   primary button (see F11 in `UX-REVIEW.md`).
 - **Action layout of the scoreboard screen** (UX-REVIEW F11): the destructive "new game" action is
-  a right-aligned ghost link ABOVE the table, the primary "next round" button keeps its **content
+  a centred ghost link ABOVE the table, the primary "next round" button keeps its **content
   width** and is `sticky bottom-2`. Do not move the destructive action back into the sticky bar and
   do not widen the primary button to full width — `game-flow.spec.ts` measures the distance between
   the two and will fail.
@@ -380,3 +423,8 @@ E2E suite. Run `npm run format` and `npm run test:e2e` locally before pushing.
   `i18n.spec.ts` suite enforces that discipline structurally. Plain numbers are the
   exception — they cannot be translated, so asserting a cell's visible digits is safe.
 - Do not put E2E into a pre-commit hook (slow by design); it belongs to CI.
+- A `vite preview` left over from an earlier run keeps port 4173, and
+  `reuseExistingServer: !CI` then **reuses it without rebuilding** — the suite silently
+  tests the previous bundle. If a layout change shows no effect, check
+  `Get-NetTCPConnection -LocalPort 4173` and compare the `dist/` timestamp with your edits;
+  `npm run build` alone refreshes it in place (preview serves from disk).

@@ -94,7 +94,7 @@ export default function App() {
     return (
       <>
         <LoadingScreen />
-        <div className="p-4 space-y-2 relative min-h-screen">
+        <div className="p-4 space-y-2 relative min-h-screen pb-28">
           <FullscreenButton />
           <Header />
           <ConfigureGame onStart={handleStart} />
@@ -105,88 +105,80 @@ export default function App() {
   }
 
   return (
-    <>
-      <div className="relative min-h-screen p-4">
-        <FullscreenButton />
-        <Header />
-        {!gameStarted ? (
-          <div className="space-y-2">
-            <ConfigureGame onStart={handleStart} />
-            <Footer />
-          </div>
-        ) : (
-          <>
-            {!isGameOver && (
-              <div className="flex justify-center -mt-2 mb-1">
-                <button
-                  onClick={() => setShowConfirm(true)}
-                  data-testid={T.app.newGame}
-                  className={`cursor-pointer inline-flex min-h-11 items-center gap-1.5 rounded px-2 text-sm text-gray-500 underline-offset-4 hover:text-red-600 hover:underline ${focusRing}`}
-                >
-                  <RotateCcw size={14} aria-hidden />
-                  {t('buttons.newGame')}
-                </button>
-              </div>
-            )}
-            <Scoreboard />
-            {!isGameOver && overlay === 'none' && (
-              <button
-                onClick={() => setOverlay('prediction')}
-                data-testid={T.app.nextRound}
-                className="mt-4 bg-green-500 text-white px-5 py-2 rounded min-h-11 shadow-lg cursor-pointer sticky bottom-2 z-[200]"
-              >
-                {t('buttons.startNextRound')}
-              </button>
-            )}
+    <div className="relative min-h-screen p-4 pb-28">
+      <FullscreenButton />
+      <Header />
+      {!isGameOver && (
+        <div className="flex justify-center -mt-2 mb-1">
+          <button
+            onClick={() => setShowConfirm(true)}
+            data-testid={T.app.newGame}
+            className={`cursor-pointer inline-flex min-h-11 items-center gap-1.5 rounded px-2 text-sm text-gray-500 underline-offset-4 hover:text-red-600 hover:underline ${focusRing}`}
+          >
+            <RotateCcw size={14} aria-hidden />
+            {t('buttons.newGame')}
+          </button>
+        </div>
+      )}
+      <Scoreboard />
+      {!isGameOver && overlay === 'none' && (
+        <div className="mt-4 flex justify-center sticky bottom-24 z-[200]">
+          <button
+            onClick={() => setOverlay('prediction')}
+            data-testid={T.app.nextRound}
+            className="bg-green-500 text-white px-5 py-2 rounded min-h-11 shadow-lg cursor-pointer"
+          >
+            {t('buttons.startNextRound')}
+          </button>
+        </div>
+      )}
 
-            {showConfirm && (
-              <div
-                ref={confirmRef}
-                role="dialog"
-                aria-modal="true"
-                aria-labelledby={confirmTitleId}
-                className="fixed inset-0 flex items-center justify-center bg-black/50 z-50"
-                data-testid={T.app.confirmDialog}
+      {showConfirm && (
+        <div
+          ref={confirmRef}
+          role="dialog"
+          aria-modal="true"
+          aria-labelledby={confirmTitleId}
+          className="fixed inset-0 flex items-center justify-center bg-black/50 z-50"
+          data-testid={T.app.confirmDialog}
+        >
+          <div className="bg-white p-6 rounded shadow-lg text-center">
+            <p id={confirmTitleId}>{t('confirmDialog.title')}</p>
+            <div className="mt-4 flex justify-center gap-4">
+              <button
+                onClick={handleNewGame}
+                data-testid={T.app.confirmYes}
+                className={`cursor-pointer rounded border-2 border-red-600 px-4 py-2 text-red-600 min-h-11 hover:bg-red-50 ${focusRing}`}
               >
-                <div className="bg-white p-6 rounded shadow-lg text-center">
-                  <p id={confirmTitleId}>{t('confirmDialog.title')}</p>
-                  <div className="mt-4 flex justify-center gap-4">
-                    <button
-                      onClick={handleNewGame}
-                      data-testid={T.app.confirmYes}
-                      className={`cursor-pointer rounded border-2 border-red-600 px-4 py-2 text-red-600 min-h-11 hover:bg-red-50 ${focusRing}`}
-                    >
-                      {t('confirmDialog.yes')}
-                    </button>
-                    <button
-                      onClick={() => setShowConfirm(false)}
-                      data-testid={T.app.confirmCancel}
-                      data-autofocus
-                      className={`cursor-pointer rounded bg-gray-300 px-4 py-2 min-h-11 hover:bg-gray-200 ${focusRing}`}
-                    >
-                      {t('confirmDialog.cancel')}
-                    </button>
-                  </div>
-                </div>
-              </div>
-            )}
-            {overlay === 'prediction' && <PredictionOverlay close={() => setOverlay('result')} />}
-            {overlay === 'result' && <ResultOverlay close={() => setOverlay('none')} />}
-            {isGameOver && <WinnerView />}
-            {isGameOver && (
-              <div className="mt-2">
-                <button
-                  onClick={() => handleNewGame()}
-                  data-testid={T.app.newGame}
-                  className="bg-green-500 text-white px-5 py-2 rounded min-h-11 cursor-pointer hover:bg-green-600"
-                >
-                  {t('buttons.newGame')}
-                </button>
-              </div>
-            )}
-          </>
-        )}
-      </div>
-    </>
+                {t('confirmDialog.yes')}
+              </button>
+              <button
+                onClick={() => setShowConfirm(false)}
+                data-testid={T.app.confirmCancel}
+                data-autofocus
+                className={`cursor-pointer rounded bg-gray-300 px-4 py-2 min-h-11 hover:bg-gray-200 ${focusRing}`}
+              >
+                {t('confirmDialog.cancel')}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+      {overlay === 'prediction' && <PredictionOverlay close={() => setOverlay('result')} />}
+      {overlay === 'result' && <ResultOverlay close={() => setOverlay('none')} />}
+      {isGameOver && <WinnerView />}
+      {isGameOver && (
+        <div className="mt-2 flex justify-center">
+          <button
+            onClick={() => handleNewGame()}
+            data-testid={T.app.newGame}
+            className="bg-green-500 text-white px-5 py-2 rounded min-h-11 cursor-pointer hover:bg-green-600"
+          >
+            {t('buttons.newGame')}
+          </button>
+        </div>
+      )}
+      <Footer />
+    </div>
   );
 }

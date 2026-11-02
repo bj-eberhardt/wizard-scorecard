@@ -85,6 +85,9 @@
     "logoAlt": "Logo"
   },
   "footer": {
-    "copy": "© {{year}} - Version: {{version}}"
+    "copy": "© {{year}} - Version: {{version}}",
+    "langGroup": "Language",
+    "langDe": "German",
+    "langEn": "English"
   }
 }

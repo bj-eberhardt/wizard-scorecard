@@ -71,6 +71,11 @@ export const T = {
   header: {
     fullscreen: 'header-fullscreen',
   },
+  footer: {
+    root: 'footer',
+    // language switcher: one button per supported language, indexed by the i18n code
+    langButton: (lng: 'de' | 'en') => `footer-lang-${lng}`,
+  },
   infoModal: {
     dialog: 'info-modal-dialog',
     close: 'info-modal-close',

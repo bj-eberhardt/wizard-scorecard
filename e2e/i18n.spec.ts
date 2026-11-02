@@ -1,4 +1,14 @@
-import { test, expect, openApp } from './fixtures';
+import {
+  test,
+  expect,
+  openApp,
+  seedGameState,
+  startGame,
+  submitPredictions,
+  submitResults,
+  SETTINGS_KEY,
+} from './fixtures';
+import type { Page } from '@playwright/test';
 import { T } from '../src/test-ids';
 
 /**
@@ -49,4 +59,147 @@ test.describe('Localization safety', () => {
       });
     });
   }
+
+  test.describe('Footer language switcher', () => {
+    /** The active button carries aria-pressed; the flags are graphics, so no text is asserted. */
+    const expectActive = async (page: Page, code: 'de' | 'en') => {
+      await expect(page.getByTestId(T.footer.langButton(code))).toHaveAttribute(
+        'aria-pressed',
+        'true'
+      );
+      const other = page.getByTestId(T.footer.langButton(code === 'de' ? 'en' : 'de'));
+      await expect(other).toHaveAttribute('aria-pressed', 'false');
+      await expect(page.locator('html')).toHaveAttribute('lang', code);
+    };
+
+    test('Flag buttons switch the language and persist across reload', async ({ game }) => {
+      await test.step('Open the app; both flag buttons are present and centred', async () => {
+        await openApp(game);
+        // Which language boots without an explicit choice depends on the
+        // browser detector, so nothing is asserted about it here — only that
+        // each button renders its flag graphic and carries its language code.
+        for (const code of ['de', 'en'] as const) {
+          const button = game.getByTestId(T.footer.langButton(code));
+          await expect(button).toBeVisible();
+          await expect(button).toHaveAttribute('data-lang', code);
+          await expect(button.locator('svg')).toHaveCount(1);
+        }
+        const pressed = await game.evaluate(() =>
+          Array.from(document.querySelectorAll('[data-testid^="footer-lang-"]')).filter(
+            (el) => el.getAttribute('aria-pressed') === 'true'
+          )
+        );
+        // whatever the detector picked, exactly one flag is marked active
+        expect(pressed).toHaveLength(1);
+      });
+      await test.step('Both flags are 44px touch targets', async () => {
+        for (const code of ['de', 'en'] as const) {
+          const box = await game.getByTestId(T.footer.langButton(code)).boundingBox();
+          expect(box?.width).toBeGreaterThanOrEqual(44);
+          expect(box?.height).toBeGreaterThanOrEqual(44);
+        }
+      });
+      await test.step('Click the British flag -> UI and <html lang> switch to English', async () => {
+        await game.getByTestId(T.footer.langButton('en')).click();
+        await expectActive(game, 'en');
+      });
+      await test.step('Choice is persisted in the settings store', async () => {
+        const stored = await game.evaluate((key) => localStorage.getItem(key), SETTINGS_KEY);
+        expect(JSON.parse(stored ?? '{}')?.state?.language).toBe('en');
+      });
+      await test.step('Switch to German and reload -> the stored choice survives', async () => {
+        await game.getByTestId(T.footer.langButton('de')).click();
+        await expectActive(game, 'de');
+        // The `game` fixture clears localStorage on EVERY navigation, so the
+        // click itself cannot survive a reload here. Seed the exact state the
+        // click persisted (previous step proves that shape is written) and
+        // reload: a real refresh keeps wizard_settings_v1 and boots the same way.
+        await game.addInitScript(
+          ([key, payload]) => localStorage.setItem(key, payload),
+          [SETTINGS_KEY, JSON.stringify({ state: { language: 'de' }, version: 0 })]
+        );
+        await game.reload();
+        await expectActive(game, 'de');
+      });
+    });
+
+    test('Stored choice overrides the browser-detected language', async ({ game }) => {
+      // i18nextLng is explicitly set to en by openApp, but the persisted
+      // explicit choice (de) must win — the override path.
+      await test.step('Seed an explicit "de" choice, then open with locale "en"', async () => {
+        await game.addInitScript(
+          ([key, payload]) => localStorage.setItem(key, payload),
+          [SETTINGS_KEY, JSON.stringify({ state: { language: 'de' }, version: 0 })]
+        );
+        await openApp(game, { locale: 'en' });
+        await expectActive(game, 'de');
+      });
+      await test.step('Switching to en updates the stored choice as well', async () => {
+        await game.getByTestId(T.footer.langButton('en')).click();
+        await expectActive(game, 'en');
+        const stored = await game.evaluate((key) => localStorage.getItem(key), SETTINGS_KEY);
+        expect(JSON.parse(stored ?? '{}')?.state?.language).toBe('en');
+      });
+    });
+
+    test('Footer is always visible and switches on every screen', async ({ game }) => {
+      /**
+       * The footer is a fixed bar rendered above the round overlays (z-30 over z-20),
+       * so the language is reachable mid-round without ever navigating away. The
+       * overlays must NOT host their own switcher — there is exactly one, in the
+       * footer — and it stays visible and clickable while a modal overlay is open.
+       */
+      const expectOverlayWithoutOwnSwitcher = async (overlayTestId: string) => {
+        await expect(game.getByTestId(overlayTestId)).toBeVisible();
+        await expect(
+          game.getByTestId(overlayTestId).getByTestId(T.footer.langButton('de'))
+        ).toHaveCount(0);
+        // the single footer switcher is on top of the overlay and clickable
+        await expect(game.getByTestId(T.footer.langButton('de'))).toBeVisible();
+      };
+
+      await test.step('Start screen shows the footer', async () => {
+        await openApp(game);
+        await expect(game.getByTestId(T.config.root)).toBeVisible();
+        await expect(game.getByTestId(T.footer.langButton('de'))).toBeVisible();
+      });
+      await test.step('Prediction overlay: footer on top, no own switcher', async () => {
+        await startGame(game, { players: ['Anna', 'Ben', 'Cia'] });
+        await expectOverlayWithoutOwnSwitcher(T.prediction.overlay);
+      });
+      await test.step('Switching works while the prediction overlay is open', async () => {
+        await game.getByTestId(T.footer.langButton('en')).click();
+        await expectActive(game, 'en');
+        await expect(game.getByTestId(T.prediction.overlay)).toBeVisible();
+      });
+      await test.step('Result overlay likewise', async () => {
+        await submitPredictions(game, [1, 0, 0]);
+        await expectOverlayWithoutOwnSwitcher(T.result.overlay);
+      });
+      await test.step('Scoreboard: switching works with a running game', async () => {
+        await submitResults(game, [1, 0, 0]);
+        await expect(game.getByTestId(T.scoreboard.table)).toBeVisible();
+        await game.getByTestId(T.footer.langButton('de')).click();
+        await expectActive(game, 'de');
+      });
+      await test.step('Winner screen still offers the switcher', async () => {
+        await seedGameState(game, {
+          gameStarted: true,
+          currentRound: 4, // > totalRounds -> game over
+          totalRounds: 3,
+          overlay: 'none',
+          players: [100, 50, 200].map((p, i) => ({
+            name: `P${i}`,
+            predictions: [1, 1, 1],
+            results: [1, 1, 1],
+            points: [Math.round(p / 3), Math.round((2 * p) / 3), p],
+          })),
+        });
+        await openApp(game);
+        await expect(game.getByTestId(T.winner.container)).toBeVisible();
+        await game.getByTestId(T.footer.langButton('de')).click();
+        await expectActive(game, 'de');
+      });
+    });
+  });
 });

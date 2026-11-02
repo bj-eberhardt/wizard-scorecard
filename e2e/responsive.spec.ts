@@ -1,4 +1,4 @@
-import { test, expect, openApp, startGame } from './fixtures';
+import { test, expect, openApp, seedGameState, startGame } from './fixtures';
 import { T } from '../src/test-ids';
 
 /**
@@ -24,6 +24,41 @@ test.describe('Responsive', () => {
     });
     await test.step('Fullscreen button is present', async () => {
       await expect(game.getByTestId(T.header.fullscreen)).toBeVisible();
+    });
+  });
+
+  test('Mobile: a wide board stays horizontally scrollable @mobile', async ({ game }) => {
+    await test.step('Seed a six-player game', async () => {
+      await seedGameState(game, {
+        gameStarted: true,
+        currentRound: 2,
+        totalRounds: 3,
+        overlay: 'none',
+        players: ['P0', 'P1', 'P2', 'P3', 'P4', 'P5'].map((name) => ({
+          name,
+          predictions: [1],
+          points: [30],
+        })),
+      });
+      await openApp(game);
+      await expect(game.getByTestId(T.scoreboard.table)).toBeVisible();
+    });
+    await test.step('The centring wrapper never outgrows the viewport', async () => {
+      // the board is wider than the screen on purpose: centring must shrink the scroll
+      // container to the viewport, otherwise the right-hand players would be unreachable
+      const metrics = await game.evaluate((sel) => {
+        const table = document.querySelector(`[data-testid="${sel}"]`) as HTMLElement;
+        const scroller = table.parentElement as HTMLElement;
+        return {
+          available: document.documentElement.clientWidth,
+          scroller: scroller.clientWidth,
+          table: table.getBoundingClientRect().width,
+          scrollable: scroller.scrollWidth > scroller.clientWidth,
+        };
+      }, T.scoreboard.table);
+      expect(metrics.table).toBeGreaterThan(metrics.available);
+      expect(metrics.scroller).toBeLessThanOrEqual(metrics.available);
+      expect(metrics.scrollable).toBe(true);
     });
   });
 
