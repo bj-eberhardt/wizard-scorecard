@@ -40,6 +40,23 @@ test.describe('Enter results', () => {
       await startGame(game, { players: ['Anna', 'Ben', 'Cia'] });
       await submitPredictions(game, [1, 1, 0]);
     });
+    await test.step('Out-of-range results -> app errors, not native browser validation', async () => {
+      const input = game.getByTestId(T.result.input(0));
+      // No `max` attribute -> the browser lets the submit through and does not
+      // clamp the typed value, so the localized banners are reachable.
+      await expect(input).not.toHaveAttribute('max');
+      await input.fill('9');
+      await expect(input).toHaveValue('9');
+      const submit = game.getByTestId(T.result.submit);
+      await expect(submit).toHaveAttribute('data-submit-ready', 'true');
+      await submit.click();
+      await expectError(game, T.result.error, 'errors.valueTooLarge');
+      // The round must NOT have been submitted: the overlay is still open.
+      await expect(game.getByTestId(T.result.overlay)).toBeVisible();
+      await input.fill('-1');
+      await submit.click();
+      await expectError(game, T.result.error, 'errors.valueTooSmall');
+    });
     await test.step('Results [1,1,0] -> all correct: 30/30/20', async () => {
       await submitResults(game, [1, 1, 0]);
       // correct: 20 + value*10  -> P0/P1: 30, P2 (value 0): 20

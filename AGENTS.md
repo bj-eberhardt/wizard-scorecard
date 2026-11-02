@@ -292,6 +292,10 @@ E2E suite. Run `npm run format` and `npm run test:e2e` locally before pushing.
   components; Tailwind utility classes for styling.
 - Forms use `noValidate` and app-level validation (so localized `data-error-key`
   banners are reachable, not native browser bubbles).
+- The trick inputs in `PredictionOverlay`/`ResultOverlay` deliberately have **no
+  `max` attribute** (only `min={0}`): an HTML `max` belongs to the browser's
+  range validation, which keeps the app's own `predictionTooLarge` / `valueTooLarge`
+  checks unreachable. Range limits are enforced in the submit handlers only.
 - `base: './'` — assets are relative, so the app works under GitHub Pages sub-paths and
   the query string `?e2e=1` is preserved on load.
 

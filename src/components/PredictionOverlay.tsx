@@ -76,7 +76,7 @@ export function PredictionOverlay({ close }: { close: () => void }) {
 
   return (
     <div
-      className="fixed inset-0 bg-black bg-opacity-60 flex xs:items-[normal] items-center justify-center z-20"
+      className="fixed inset-0 bg-black/60 flex xs:items-[normal] items-center justify-center z-20"
       data-testid={T.prediction.overlay}
     >
       <form
@@ -105,11 +105,13 @@ export function PredictionOverlay({ close }: { close: () => void }) {
                 </span>
               )}
             </div>
+            {/* No `max` attribute: the browser would block submission with a native,
+                unlocalized bubble before our app validation can run. Range checks are
+                owned by `predictionTooSmall` / `predictionTooLarge` below. */}
             <input
               autoFocus={i === 0}
               type="number"
               min={0}
-              max={currentRound}
               value={predictions[i]}
               data-testid={T.prediction.input(i)}
               onFocus={(e) => e.target.select()}

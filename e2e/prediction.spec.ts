@@ -33,10 +33,19 @@ test.describe('Enter tricks (prediction)', () => {
       await startGame(game, { players: ['Anna', 'Ben', 'Cia'] });
     });
     await test.step('Enter value 5 -> app error (not native browser validation)', async () => {
-      await game.getByTestId(T.prediction.input(0)).fill('5');
+      const input = game.getByTestId(T.prediction.input(0));
+      // No `max` attribute: the browser must not clamp the value or swallow the
+      // submit — otherwise our own localized validation would be unreachable.
+      await expect(input).not.toHaveAttribute('max');
+      await input.fill('5');
+      await expect(input).toHaveValue('5');
       await game.getByTestId(T.prediction.submit).click();
       await expectError(game, T.prediction.error, 'errors.predictionTooLarge');
       await expect(game.getByTestId(T.result.overlay)).toHaveCount(0);
+    });
+    await test.step('Correct to a valid value -> submission proceeds', async () => {
+      await submitPredictions(game, [1, 0, 0]);
+      await expect(game.getByTestId(T.result.overlay)).toBeVisible();
     });
   });
 

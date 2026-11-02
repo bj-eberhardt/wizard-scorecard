@@ -126,7 +126,7 @@ export function ResultOverlay({ close }: { close: () => void }) {
 
   return (
     <div
-      className="fixed inset-0 bg-black bg-opacity-60 flex  xs:items-[normal] items-center justify-center z-20"
+      className="fixed inset-0 bg-black/60 flex  xs:items-[normal] items-center justify-center z-20"
       data-testid={T.result.overlay}
     >
       <form
@@ -150,11 +150,13 @@ export function ResultOverlay({ close }: { close: () => void }) {
               </span>
             </div>
             <div>
+              {/* No `max` attribute: the browser would block submission with a native,
+                  unlocalized bubble before our app validation can run. Range checks are
+                  owned by `valueTooSmall` / `valueTooLarge` below. */}
               <input
                 autoFocus={i == 0}
                 type="number"
                 min={0}
-                max={currentRound}
                 value={results[i]}
                 data-testid={T.result.input(i)}
                 onFocus={(e) => e.target.select()}
