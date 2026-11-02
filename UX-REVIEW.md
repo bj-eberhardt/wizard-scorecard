@@ -47,7 +47,7 @@ Das Produkt richtet sich an eine klare Kernsituation: **Wizard-Runde am Tisch, e
 | F15 | Design ohne eigene Sprache: weißer Hintergrund, harte schwarze Rahmen, Standard-Tailwind-Farben | Design | 🟡 Gering |
 | F16 | Winner-View ist ein gelber Textkasten – kein Abschluss-Moment, keine Rangliste | Design | 🟡 Gering · ✅ |
 | F17 | Info-Icon zeigt "!" obwohl Titel eine Frage ist; doppelte `id` im Modal | A11y/Design | 🟡 Gering · ✅ |
-| F18 | `visibilitychange`-Listener wird in jedem Render neu angelegt (Wake-Lock leak) | Code/Robustheit | 🟡 Gering |
+| F18 | `visibilitychange`-Listener wird in jedem Render neu angelegt (Wake-Lock leak) | Code/Robustheit | 🟡 Gering · ✅ |
 | F19 | Wolke-Historie zeigt im Tooltip die korrigierten statt der eingetragenen Stiche (Label sagt "Eingetragene Stiche") | Korrektheit | 🟡 Gering |
 | F20 | 2 s Lade-Splash bei jedem Start, auch bei Fortsetzen eines gespeicherten Spiels | UX | 🟡 Gering |
 | F21 | Mobile: Kompakt-Ansicht blendet Punkte-Spalte aus, Summe in Klammern im Header | UX/Design | 🟠 Mittel · ✅ |
@@ -777,7 +777,19 @@ F11 und die Spaltenbreiten-Assertion aus F2 bleiben grün.
 ### F17–F20 · Weitere Beobachtungen (kurz)
 
 - **F17 · Info-Icon passt nicht zur Frage: ✅ umgesetzt.** Der Titel lautet "Was bedeutet 'Nicht Gleich'?" — das Icon zeigte ein "!" (SVG-Pfad `M11.5 6h1v7h-1z` + Punkt). Ersetzt durch das lucide-Icon **`CircleHelp`** ("?" im Kreis); die doppelte Modal-`id` war zuvor schon per `useId()` behoben.
-- **F18 · Wake-Lock-Listener im Render:** In `App.tsx` wird `document.addEventListener('visibilitychange', …)` direkt im Komponentenrumpf ausgeführt → bei jedem Render ein neuer Listener (Leak). In ein `useEffect` mit Cleanup verlagern; leeren `useEffect` (Zeile 52–54) entfernen. Zusätzlich: Wake-Lock nur bei `gameStarted` halten und bei Spielende releasen.
+- **F18 · Wake-Lock-Listener im Render: ✅ umgesetzt.** `document.addEventListener('visibilitychange', …)`
+  lag im Komponentenrumpf von `App.tsx` → bei **jedem** Render ein neuer Closure, der nie entfernt
+  wurde (Leak). Jetzt ein einziges `useEffect` mit Cleanup, deps `[gameStarted, isGameOver]`: es
+  registriert den Listener genau einmal, re-requestt den Lock nur, wenn vorher einer gehalten wurde,
+  und ist bei `!gameStarted` oder Spielende gar nicht erst aktiv — der Cleanup setzt die Ref auf
+  `null` **vor** `release()`, damit ein nachlaufendes `release`-Event des alten Sentinels den Wert
+  eines neuen Laufs nicht überschreiben kann, und entfernt den Listener. Der Sentinel lebt in einer
+  `useRef` (vorher render-lokales `let`, also pro Render verloren), der leere `useEffect`
+  („Optional: Listen for fullscreen changes if needed“) ist ersatzlos weg. Bewusst gleich geblieben:
+  der Lock wird weiterhin nur auf Mobile (`matchMedia max-width:768px`) und bei vorhandener
+  `wakeLock`-API geholt, Desktop sperrt nie das Display. Kein neuer `data-*`, kein neuer Test —
+  `wakeLock` ist in headless Chromium nicht verifizierbar; die bestehenden Specs
+  (`game-flow.spec.ts`: Start, Reload, Reset, letzte Runde) laufen die Statuswechsel.
 - **F19 · Wolke-Tooltip zeigt falsche Zahl fürs Label:** Entfallen — der Scoreboard-Tooltip wurde mit F2 entfernt, die Unterscheidung eingetragen/gewertet zeigt die Stiche-Zelle (`4→2 ☁`). Siehe Detail-Abschnitt zu F19.
 - **F20 · 2-Sekunden-Splash bei jedem Start:** `LoadingScreen` blockiert fix 2 s + 1 s Fade — auch beim Fortsetzen eines gespeicherten Spiels. Splash nur beim ersten Laden der Session zeigen (`sessionStorage`-Flag) oder auf < 800 ms reduzieren; der Splash ist zudem `z-[1000]` und überlagert alles ohne Fortschrittsinformation.
 
@@ -815,7 +827,7 @@ F11 und die Spaltenbreiten-Assertion aus F2 bleiben grün.
 19. F13/F14 — Sprachumschalter + `lang`-Synchronisation (S) ✅ umgesetzt (Flaggen im Footer mittig, Wahl persistiert und überschreibt den Detector, `<html lang>` synchron)
 20. F22 — Spieler-Reihenfolge per Drag & Drop (M) — Nachfolger von F9 ✅ umgesetzt (`GripVertical`-Greifer, Pointer-Events via `useDragReorder`-Hook, Touch-tauglich)
 21. F23 — Overlay-Dialoge mit `role`/Fokus-Trap/Escape (S–M) — Folge von F12
-22. F18/F20 — Code-Hygiene & Kleinigkeiten (S)
+22. F18/F20 — Code-Hygiene & Kleinigkeiten (S) — F18 ✅ umgesetzt (ein `useEffect` mit Cleanup, Sentinel in `useRef`, Lock nur während eines laufenden Spiels); F20 offen
 23. F24 — Zentrierung der ganzen Seite (S) ✅ umgesetzt (Brett, Primäraktion, Winner-Karte)
 
 > F12 ist auf den Bestätigungs-Dialog und die Regel-Erklärung geschrumpft: der
@@ -844,7 +856,9 @@ F11 und die Spaltenbreiten-Assertion aus F2 bleiben grün.
   - Dialog-A11y (F12, ✅ umgesetzt): [`src/hooks/useDialogA11y.ts`](./src/hooks/useDialogA11y.ts)
     (Fokus-Falle, Escape, Fokus-Rückgabe) — genutzt vom Confirm-Dialog in
     [`App.tsx`](./src/App.tsx) und von [`InfoTooltip.tsx`](./src/components/InfoTooltip.tsx)
-  - Wake-Lock im Render: [`App.tsx` L56–77](./src/App.tsx)
+  - Wake-Lock (F18, ✅ umgesetzt): [`App.tsx`](./src/App.tsx) — `wakeLockRef` plus ein
+    `useEffect` mit deps `[gameStarted, isGameOver]`, das Request und
+    `visibilitychange`-Listener samt Cleanup verwaltet
   - Splash: [`LoadingScreen.tsx` L8–14](./src/components/LoadingScreen.tsx)
   - `lang="de"` fix (F13, ✅ dynamisch synchronisiert): [`index.html` L2](./index.html) bleibt der
     Startwert; [`i18n.ts`](./src/i18n/i18n.ts) setzt `document.documentElement.lang` bei Init und
