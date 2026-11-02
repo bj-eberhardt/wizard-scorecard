@@ -59,6 +59,7 @@
   "footer": {
     "copy": "© {{year}} - Version: {{version}}",
     "langGroup": "Sprache",
+    "langSwitch": "Sprache wechseln",
     "langDe": "Deutsch",
     "langEn": "Englisch"
   },

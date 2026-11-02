@@ -99,6 +99,10 @@ test.describe('Localization safety', () => {
           expect(box?.height).toBeGreaterThanOrEqual(44);
         }
       });
+      await test.step('Desktop shows flags + copyright and hides the mobile chip', async () => {
+        await expect(game.getByTestId(T.footer.langToggle)).toBeHidden();
+        await expect(game.getByTestId(T.footer.copyright)).toBeVisible();
+      });
       await test.step('Click the British flag -> UI and <html lang> switch to English', async () => {
         await game.getByTestId(T.footer.langButton('en')).click();
         await expectActive(game, 'en');
@@ -123,6 +127,33 @@ test.describe('Localization safety', () => {
       });
     });
 
+    test('Mobile: the footer collapses to one compact language chip @mobile', async ({ game }) => {
+      await test.step('Chip is visible; flags and copyright are not', async () => {
+        await openApp(game);
+        const chip = game.getByTestId(T.footer.langToggle);
+        await expect(chip).toBeVisible();
+        await expect(game.getByTestId(T.footer.langButton('de'))).toBeHidden();
+        await expect(game.getByTestId(T.footer.copyright)).toBeHidden();
+      });
+      await test.step('The footer flows after the content instead of pinning to the bottom', async () => {
+        const footer = game.getByTestId(T.footer.root);
+        await expect(footer).toHaveCSS('position', 'static');
+        const box = await footer.boundingBox();
+        expect(box).not.toBeNull();
+        expect(box!.height).toBeLessThan(70);
+      });
+      await test.step('One tap cycles to the other language and persists', async () => {
+        const chip = game.getByTestId(T.footer.langToggle);
+        const before = (await chip.getAttribute('data-lang')) as 'de' | 'en';
+        const after = before === 'de' ? 'en' : 'de';
+        await chip.click();
+        await expect(chip).toHaveAttribute('data-lang', after);
+        await expectActive(game, after);
+        const stored = await game.evaluate((key) => localStorage.getItem(key), SETTINGS_KEY);
+        expect(JSON.parse(stored ?? '{}')?.state?.language).toBe(after);
+      });
+    });
+
     test('Stored choice overrides the browser-detected language', async ({ game }) => {
       // i18nextLng is explicitly set to en by openApp, but the persisted
       // explicit choice (de) must win — the override path.
@@ -144,10 +175,12 @@ test.describe('Localization safety', () => {
 
     test('Footer is always visible and switches on every screen', async ({ game }) => {
       /**
-       * The footer is a fixed bar rendered above the round overlays (z-30 over z-20),
-       * so the language is reachable mid-round without ever navigating away. The
-       * overlays must NOT host their own switcher — there is exactly one, in the
-       * footer — and it stays visible and clickable while a modal overlay is open.
+       * On desktop the footer is a fixed bar rendered above the round overlays
+       * (z-30 over z-20), so the language is reachable mid-round without ever
+       * navigating away. The overlays must NOT host their own switcher — there is
+       * exactly one, in the footer — and it stays visible and clickable while a
+       * modal overlay is open. (On mobile the footer instead flows after the
+       * content; that path is covered by the @mobile chip test above.)
        */
       const expectOverlayWithoutOwnSwitcher = async (overlayTestId: string) => {
         await expect(game.getByTestId(overlayTestId)).toBeVisible();
@@ -158,10 +191,11 @@ test.describe('Localization safety', () => {
         await expect(game.getByTestId(T.footer.langButton('de'))).toBeVisible();
       };
 
-      await test.step('Start screen shows the footer', async () => {
+      await test.step('Start screen shows the footer (fixed on desktop)', async () => {
         await openApp(game);
         await expect(game.getByTestId(T.config.root)).toBeVisible();
         await expect(game.getByTestId(T.footer.langButton('de'))).toBeVisible();
+        await expect(game.getByTestId(T.footer.root)).toHaveCSS('position', 'fixed');
       });
       await test.step('Prediction overlay: footer on top, no own switcher', async () => {
         await startGame(game, { players: ['Anna', 'Ben', 'Cia'] });

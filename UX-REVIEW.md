@@ -448,6 +448,15 @@ Das Produkt richtet sich an eine klare Kernsituation: **Wizard-Runde am Tisch, e
 > Ohne explizite Wahl entscheidet wie bisher der Detector (fallback `de`).
 > F13: `document.documentElement.lang` wird nach `init` und bei jedem `languageChanged`
 > auf die aktive Sprache gesetzt — `index.html` bleibt nur der Startwert.
+> **Nachschub (Sichtbarkeit):** Der Footer ist jetzt eine **immer sichtbare, fixierte Leiste**
+> (`fixed bottom-0 z-30`, über den Runden-Overlays, unter Modal/Splash), damit die Sprache auch
+> mitten in einer Runde erreichbar ist. **Mobil** (unterhalb des `md`-Breaks) ist er bewusst
+> reduziert: Flaggen-Zeile und Copyright entfallen, stattdessen **ein einziger kompakter Chip**
+> (lucide `Globe` + aktueller Code), der per Antippen direkt `de`↔`en` umschaltet — so nimmt die
+> Leiste kaum Höhe von der Runden-Tabelle weg (reservierte Höhe pro Breakpoint: `pb-16 md:pb-28`,
+> Sticky-Button `bottom-16 md:bottom-24`). Das mobile Layout ersetzt die früheren Mobil-Screenshots
+> [22]; das Verhalten deckt der `@mobile`-Test in `e2e/i18n.spec.ts` ab (Chip sichtbar, Flaggen +
+> Copyright versteckt, Leiste < 70 px, ein Tap kippt die Sprache).
 > Belege: `e2e/i18n.spec.ts` (Umschalten, Persistenz über Reload, Override gegen den
 > Detector, `lang`-Attribut) und `ux-shots/capture-lang.mjs` →
 > [20](./ux-shots/20-lang-footer-desktop-de.png) (de, persistiert gegen einen en-US-Browser),

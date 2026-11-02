@@ -126,7 +126,7 @@ export function ResultOverlay({ close }: { close: () => void }) {
 
   return (
     <div
-      className="fixed inset-0 bg-black/60 flex  xs:items-[normal] items-center justify-center overflow-y-auto z-20 px-4 py-6 pb-28"
+      className="fixed inset-0 bg-black/60 flex  xs:items-[normal] items-center justify-center overflow-y-auto z-20 px-4 py-6 md:pb-28"
       data-testid={T.result.overlay}
     >
       <form

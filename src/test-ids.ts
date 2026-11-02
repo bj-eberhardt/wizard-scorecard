@@ -73,8 +73,11 @@ export const T = {
   },
   footer: {
     root: 'footer',
-    // language switcher: one button per supported language, indexed by the i18n code
+    // desktop: one flag button per supported language, indexed by the i18n code
     langButton: (lng: 'de' | 'en') => `footer-lang-${lng}`,
+    // mobile: one compact chip that cycles between the two supported languages
+    langToggle: 'footer-lang-toggle',
+    copyright: 'footer-copyright',
   },
   infoModal: {
     dialog: 'info-modal-dialog',
