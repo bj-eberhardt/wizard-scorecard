@@ -37,6 +37,7 @@ interface GameState {
   setOverlay: (o: OverlayState) => void;
   saveToStorage: () => void;
   getCurrentStartPlayerIndex: () => number;
+  getCurrentDealerIndex: () => number;
 }
 
 const STORAGE_KEY = 'wizard_state_v1';
@@ -53,6 +54,18 @@ export function roundsForCount(n: number) {
 // helper to get the starting player index for the current round
 function getStartPlayerIndex(round: number, playerCount: number): number {
   return (round - 1) % playerCount;
+}
+
+/**
+ * Helper to get the dealer (shuffler) index for the current round. Wizard rule: the
+ * player to the LEFT of the dealer opens the round, so the dealer is the seat directly
+ * before the start player — which is the LAST row of the rotated overlay order and, in
+ * that order, also the player who predicts last (`errors.predictionNotEqualLast`).
+ * Derived on demand, never stored: it adds nothing to the persisted game state.
+ */
+function getDealerIndex(round: number, playerCount: number): number {
+  if (playerCount < 1) return 0;
+  return (getStartPlayerIndex(round, playerCount) - 1 + playerCount) % playerCount;
 }
 
 function loadFromStorage(): Partial<GameState> | null {
@@ -189,6 +202,9 @@ export const useGameStore = create<GameState>((set, get) => {
     saveToStorage: save,
     getCurrentStartPlayerIndex: () => {
       return getStartPlayerIndex(get().currentRound, get().players.length);
+    },
+    getCurrentDealerIndex: () => {
+      return getDealerIndex(get().currentRound, get().players.length);
     },
   };
 });

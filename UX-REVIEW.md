@@ -36,7 +36,7 @@ Das Produkt richtet sich an eine klare Kernsituation: **Wizard-Runde am Tisch, e
 | F5 | Pulse-Animation auf allen Vorhersage-Zellen feuert bei jedem Render neu | Design | 🟠 Mittel · ✅ |
 | F6 | Touch-Targets zu klein (Zahleneingaben ~36 px, Checkboxen, ×-Button) | Bedienung | 🟠 Mittel |
 | F7 | Modal auf Mobile top-bündig mit großer schwarzer Fläche; Vollbild-Button überlagert Logo | Design | 🟠 Mittel |
-| F8 | Startspieler-Rotation im Overlay ohne Kennzeichnung ("wer ist dran") | UX | 🟠 Mittel |
+| F8 | Startspieler-Rotation im Overlay ohne Kennzeichnung ("wer ist dran") | UX | 🟠 Mittel · ✅ |
 | F9 | Konfiguration: 6 freie Eingabefelder + "Anzahl Runden: 0 / Standard: 0" vor Spielstart | UX | 🟠 Mittel |
 | F10 | Kein Rückschritt/Korrektur einer bereits beendeten Runde | Bedienung | 🟠 Mittel |
 | F11 | "Neues Spiel" (rot) dauerhaft neben Haupt-Action knopfgleich erreichbar | Bedienung | 🟠 Mittel |
@@ -215,7 +215,51 @@ Das Produkt richtet sich an eine klare Kernsituation: **Wizard-Runde am Tisch, e
 
 ---
 
-### F8 · Startspieler-Rotation ist unsichtbar 🟠
+### F8 · Startspieler-Rotation ist unsichtbar 🟠 ✅ umgesetzt (bewusst teilumgesetzt)
+
+> **Status:** umgesetzt im **Schätz-Overlay** — und dort nicht als Badge an der Zeile, sondern als
+> **ein Info-Kasten direkt unter dem Titel**, in dem beide Rollen zu **einem Fließtext** laufen:
+> die Handlungsaufforderung an den Geber („{{name}} mischt und verteilt {{cards}} Karten an jeden
+> Spieler“), dann ein Punkt-Trenner, dann die Feststellung („Startspieler: {{name}}“). Es bleiben
+> **zwei i18n-Keys** (`dealerInfo*`, `startPlayerInfo`), die erst in der Komponente zusammengesetzt
+> werden — ein kombinierter Key hätte beide Sprachen in dieselbe Reihenfolge gezwungen. Der
+> Trenner ist Interpunktion, kein lokalisierter String (§7). `{{cards}}` ist die **Rundenzahl pro Spieler** (Wizard-Regel:
+> Runde n = n Karten auf jeder Hand), nicht die Gesamtzahl — das steht so im Satz, weil die
+> Kurzform „x Karten an alle Spieler“ als Gesamtmenge lesbar wäre. Weil genau diese Zahl im
+> ersten Satz **grammatikalisch** zählt, liegt der Text als `dealerInfo_one|_other` vor
+> (i18next-`count`): mit einem einzigen Key hätte Runde 1 „1 Karten“ ergeben — der Fehler ist
+> erst im Screenshot aufgefallen, die Tests sehen ihn nicht (sie asserten bewusst keinen Text).
+> Belege: [16a](./ux-shots/16a-round1-singular.png) (de, Einzahl),
+> [16b](./ux-shots/16b-round5-plural.png) (de, Mehrzahl, Runde 5 → Geber = Index 0),
+> [16c](./ux-shots/16c-round1-english.png) (en),
+> [16d](./ux-shots/16d-mobile-6-player-roles.png) (Mobile 390 px, 6 Spieler).
+>
+> **Neu im Modell — der Geber:** `getDealerIndex(round, playerCount) = (startIndex - 1 +
+> playerCount) % playerCount`, also der Sitz **links neben dem Startspieler**. Die Regel war
+> vorher nirgends abgebildet (kein Store-Feld, kein Key, keine Doku) und ist jetzt **nur
+> abgeleitet**, nie persistiert — kein neuer Zustand, keine Storage-Migration. Zwei unabhängige
+> Stellen im Bestand stützen sie: die Rotationsformel und `errors.predictionNotEqualLast`, das
+> bereits „den zuletzt vorhersagenden Spieler“ benennt — das ist indexgleich genau dieser Geber
+> (letzte Zeile der Rotation).
+>
+> **Bewusst nicht gebaut:** (1) **Scoreboard-Header-Historie** („wer war in Runde 9 Startspieler“) —
+> abgelehnt, weil die feste 48-px-Zelle aus F2 keinen weiteren Marker zulässt; die Information ist
+> rechnerisch über `(round-1) % spieler` ermittelbar. (2) **Kennzeichnung im Ergebnis-Overlay** —
+> abgelehnt, die Rotation ist dort bereits durch die Schätz-Reihenfolge erklärt, und ein zweiter
+> Ort für dieselbe Rolle erhöht nur das Raten, welcher Marker gerade gilt. (3) **Toggle „Sortierung
+> abschaltbar“** aus dem ursprünglichen Vorschlag — nicht gebaut; die Sortierung *ist* die Regel,
+> sie wegzulassen würde den Startspieler unkenntlicher machen, als der Findungstext erlaubt.
+> (4) **Hausregel-Toggle** für die Geber-Rolle („Geber startet selbst statt linker Nachbar“) — wäre
+> nötig, falls an einem Tisch die andere Variante gilt; bewusst eigenes Finding, nicht Teil von F8.
+>
+> **Mobile-Höhe:** der Text steht über den Spieler-Rows und ist an jedem Breakpoint sichtbar.
+> Ursprünglich waren es **zwei Kästchen mit je einer Zeile**; doppelte Padding-/Margin-Zone plus
+> ein unnötiger harter Umbruch schoben die Eingaben auf dem 390-px-Screen weit nach unten. Jetzt
+> ein Kasten, zwei Inline-Spans, natürlicher Umbruch — die zwei Testids und `data-*`-Attribute
+> sitzen an den Spans, die Tests haben sich dadurch nicht verändert. Eine versteckte
+> Mobil-Variante wurde verworfen, weil sie ausgerechnet die neue
+> Erklärung entfernen würde — das Layout-Problem gehört in F7 (Bottom-Sheet) und nicht in eine
+> Sonderlogik pro Inhalt.
 
 **Beobachtung:** Beide Overlays sortieren Spieler nach Startspieler (korrekt!), aber die Reihenfolge ändert sich ohne Kennzeichnung. Wer den Wizard-Kontext nicht im Kopf, irritiert die "springende" Reihenfolge Runde für Runde.
 
@@ -391,7 +435,7 @@ Das Produkt richtet sich an eine klare Kernsituation: **Wizard-Runde am Tisch, e
 7. F7 — Bottom-Sheet-Overlays, Header-Zeile für Vollbild-Button (S–M)
 8. F9 — Spieler-Hinzufügen-Flow statt 6 leerer Felder (M)
 9. F5 — Pulse entfernen (S) ✅ umgesetzt (vollständig entfernt statt entschärft)
-10. F8 — Startspieler-Kennzeichnung (S)
+10. F8 — Startspieler-Kennzeichnung (S) ✅ umgesetzt (nur Schätz-Overlay, als Info-Zeilen inkl. Geber)
 11. F11 — Destruktiven Button aus der Hauptaktion nehmen (S)
 12. F21 — Mobile: Punkte-Zeile am Tabellenende statt rechtspunktiger Punkte-Spalte (M)
 
@@ -419,6 +463,10 @@ Das Produkt richtet sich an eine klare Kernsituation: **Wizard-Runde am Tisch, e
     rendert ein statisches `<span>`
   - Punktekette/`setResult`: [`gameStore.ts` L134–153](./src/store/gameStore.ts)
   - Wolke eingetragen/gewertet: [`Scoreboard.tsx`](./src/components/Scoreboard.tsx) (`tricksText()`) — der alte Tooltip samt F19-Fehlerzeile ist entfernt
+  - Startspieler/Geber (F8, ✅ umgesetzt): [`PredictionOverlay.tsx`](./src/components/PredictionOverlay.tsx)
+    (die zwei Info-Zeilen unter dem Titel) und [`gameStore.ts`](./src/store/gameStore.ts)
+    (`getStartPlayerIndex` / `getDealerIndex`) — nur der Geber-Anteil ist neu, die Rotation selbst
+    war schon vorher korrekt
   - Wake-Lock im Render: [`App.tsx` L56–77](./src/App.tsx)
   - Splash: [`LoadingScreen.tsx` L8–14](./src/components/LoadingScreen.tsx)
   - `lang="de"` fix: [`index.html` L2](./index.html)

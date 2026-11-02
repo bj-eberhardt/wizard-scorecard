@@ -33,6 +33,9 @@ export const T = {
     input: (i: number) => `prediction-input-${i}`,
     submit: 'prediction-submit',
     error: 'prediction-error',
+    // the two info lines under the title: dealer (shuffles & deals) and start player
+    dealerInfo: 'prediction-dealer-info',
+    startPlayerInfo: 'prediction-start-player-info',
   },
   result: {
     overlay: 'result-overlay',

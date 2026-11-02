@@ -2,6 +2,9 @@
   "predictionOverlay": {
     "title": "Predict tricks for round {{round}}",
     "points": "({{points}} points)",
+    "dealerInfo_one": "{{name}} shuffles and deals {{cards}} card to each player",
+    "dealerInfo_other": "{{name}} shuffles and deals {{cards}} cards to each player",
+    "startPlayerInfo": "Start player: {{name}}",
     "startRound": "Start round"
   },
   "errors": {

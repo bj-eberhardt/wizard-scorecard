@@ -2,6 +2,9 @@
   "predictionOverlay": {
     "title": "Stiche schätzen für Runde {{round}}",
     "points": "({{points}} Punkte)",
+    "dealerInfo_one": "{{name}} mischt und verteilt {{cards}} Karte an jeden Spieler",
+    "dealerInfo_other": "{{name}} mischt und verteilt {{cards}} Karten an jeden Spieler",
+    "startPlayerInfo": "Startspieler: {{name}}",
     "startRound": "Runde starten"
   },
   "errors": {

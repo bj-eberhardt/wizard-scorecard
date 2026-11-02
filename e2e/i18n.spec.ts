@@ -29,6 +29,10 @@ test.describe('Localization safety', () => {
         await expect(game.getByTestId(T.prediction.overlay)).toBeVisible();
         await expect(game.getByTestId(T.prediction.input(0))).toBeVisible();
         await expect(game.getByTestId(T.prediction.submit)).toBeVisible();
+        // dealer / start-player info lines exist in BOTH locales — their sentences differ,
+        // so only the ids are asserted, never the text
+        await expect(game.getByTestId(T.prediction.dealerInfo)).toBeVisible();
+        await expect(game.getByTestId(T.prediction.startPlayerInfo)).toBeVisible();
       });
       await test.step('Scoreboard header keeps its three column labels per player', async () => {
         // the scoreboard renders behind the overlay, so the header is measurable

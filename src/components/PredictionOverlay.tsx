@@ -5,8 +5,14 @@ import { T } from '../test-ids';
 
 export function PredictionOverlay({ close }: { close: () => void }) {
   const { t } = useTranslation();
-  const { players, setPrediction, currentRound, getCurrentStartPlayerIndex, useNotEqual } =
-    useGameStore();
+  const {
+    players,
+    setPrediction,
+    currentRound,
+    getCurrentStartPlayerIndex,
+    getCurrentDealerIndex,
+    useNotEqual,
+  } = useGameStore();
   const [predictions, setPredictions] = useState<number[]>(Array(players.length).fill(0));
   const [error, setError] = useState<string>('');
   // raw i18n key of the current error, exposed via data-error-key for E2E
@@ -18,6 +24,8 @@ export function PredictionOverlay({ close }: { close: () => void }) {
   };
 
   const startPlayerIndex = getCurrentStartPlayerIndex();
+  // seat to the left of the start player: shuffles and deals this round
+  const dealerIndex = getCurrentDealerIndex();
 
   useEffect(() => {
     const r = currentRound - 1;
@@ -90,6 +98,33 @@ export function PredictionOverlay({ close }: { close: () => void }) {
         <h2 className="text-lg font-bold mb-2">
           {t('predictionOverlay.title', { round: currentRound })}
         </h2>
+        {/* ONE running sentence naming both roles (who shuffles/deals, who opens the round).
+            Two separate keys — not one combined string — so each language keeps its own word
+            order; they are joined here with a middot, which is punctuation and therefore not a
+            localized string (AGENTS.md §7). Each part keeps its own test id and carries the
+            ORIGINAL roster index (not the visible row) plus the cards-per-player number as
+            `data-*`, so the E2E suite can assert the roles without reading the text.
+            Cards per player = round number, the Wizard dealing rule. */}
+        <div className="text-sm text-gray-700 bg-gray-50 p-2 rounded mb-2 leading-snug">
+          <span
+            data-testid={T.prediction.dealerInfo}
+            data-dealer-index={dealerIndex}
+            data-cards={currentRound}
+          >
+            {t('predictionOverlay.dealerInfo', {
+              name: players[dealerIndex]?.name ?? '',
+              cards: currentRound,
+              // drives i18next's `_one`/`_other` lookup: round 1 reads "1 Karte", not "1 Karten"
+              count: currentRound,
+            })}
+          </span>
+          <span aria-hidden="true"> · </span>
+          <span data-testid={T.prediction.startPlayerInfo} data-start-index={startPlayerIndex}>
+            {t('predictionOverlay.startPlayerInfo', {
+              name: players[startPlayerIndex]?.name ?? '',
+            })}
+          </span>
+        </div>
         {rotatedPlayers.map((p, i) => (
           <div
             key={p.name}

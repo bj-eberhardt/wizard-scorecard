@@ -125,6 +125,13 @@ Key rules (all implemented in `gameStore.ts` / `ResultOverlay.tsx`):
 - **Start-player rotation:** `startIndex = (round - 1) % playerCount`. Overlay rows
   are rotated so row 0 is the current start player. Predictions/results map
   row-index → original player via `(i + startPlayerIndex) % playerCount`.
+- **Dealer (shuffler):** derived only, never persisted — `dealerIndex = (startIndex - 1 +
+  playerCount) % playerCount`, the seat to the LEFT of the start player (`getCurrentDealerIndex()`
+  in `gameStore.ts`). That is also the LAST row of the rotated overlay order and therefore the
+  player who predicts last (the `predictionNotEqualLast` case). `PredictionOverlay` names both
+  roles in one info box under its title, as a single running sentence joined by a middot
+  (two i18n keys, so each language keeps its own word order; cards per player = `currentRound`);
+  the `ResultOverlay` and the scoreboard deliberately show nothing (UX-REVIEW F8, teilumgesetzt).
 - **Default rounds by player count** (`roundsForCount`): 3→20, 4→15, 5→12, ≥6→10.
 - **Points formula** (per round, cumulative):
   - prediction correct → `+ (20 + value * 10)`
@@ -167,7 +174,10 @@ E2E fixtures clear both game/settings keys before every test. See §8.
   a missing key in either is a bug. Add every new string to BOTH files.
 - Namespace is the default `translation`; access with `useTranslation()` → `t('a.b.c')`.
 - Interpolation uses `{{var}}`; pluralization in `winnerView` uses suffixed keys
-  (`announcement_single|two|multiple`) chosen in code, not i18next plurals.
+  (`announcement_single|two|multiple`) chosen in code, not i18next plurals. The one
+  exception is `predictionOverlay.dealerInfo_one|_other`: the dealt-card count is a plain
+  grammatical number, so it goes through i18next's `count` mechanism — a single key would
+  render the wrong German "1 Karten" in round 1.
 - **Rule for agents:** never hardcode a UI string in a component — add a key and use
   `t(...)`. And never assert a UI string in tests — use `data-*` (§8).
 
@@ -187,7 +197,12 @@ E2E fixtures clear both game/settings keys before every test. See §8.
    ever become a word stays attribute-only. Attributes in use:
    - `data-error-key` on error banners → the i18n key, e.g. `configureGame.errors.minPlayers`, `errors.wolkeMinOne`
    - `data-submit-ready="true|false"` on the result submit button
-   - `data-start-player="true"` on the first (rotated) prediction/result row
+   - `data-start-player="true"` on the first (rotated) **prediction** row only — the
+     result overlay has no role marker and no such attribute
+   - `data-dealer-index` / `data-cards` on the dealer line and `data-start-index` on the
+     start-player line (both inside the prediction overlay's single role info box) — the
+     indices are ORIGINAL roster indices, not visible row numbers, so a rotation change
+     cannot silently re-label them
    - winner container: `data-winner-count`, `data-points`, `data-winner-names="a|b"`
    - scoreboard cells: `data-prediction`, `data-tricks`, `data-received-tricks`,
      `data-points`, `data-wolke="true|false"`; header cells via
@@ -242,7 +257,8 @@ map to the rotated players, not the roster order.
 
 ### 8.5 Coverage map (specs → area)
 - `configure-game.spec.ts` — names/rounds/rules/validation, `roundsForCount`, info dialogs
-- `prediction.spec.ts` — submit, prefill, start-player rotation, too-small/large, not-equal
+- `prediction.spec.ts` — submit, prefill, start-player rotation, dealer/start-player info
+  lines (round-1 wrap-around + one-seat-on), too-small/large, not-equal
 - `result.spec.ts` — points formula, all-zero confirm, Wolke rules, revert
 - `scoreboard.spec.ts` — two-row header, the full cell matrix (all players × all rounds,
   incl. both Wolke branches), point sums/deltas, and that no prediction cell carries an
