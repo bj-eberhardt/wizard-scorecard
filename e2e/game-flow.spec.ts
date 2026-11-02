@@ -79,6 +79,33 @@ test.describe('Game flow (integration)', () => {
       await submitPredictions(game, [1, 0, 0]);
       await submitResults(game, [1, 0, 0]);
     });
+    await test.step('Destructive link is spatially apart from the primary action', async () => {
+      const link = await game.getByTestId(T.app.newGame).boundingBox();
+      const primary = await game.getByTestId(T.app.nextRound).boundingBox();
+      expect(link).not.toBeNull();
+      expect(primary).not.toBeNull();
+      expect(link!.y + link!.height).toBeLessThanOrEqual(primary!.y - 24);
+    });
+    await test.step('Confirm dialog is a modal and focuses the safe action', async () => {
+      await game.getByTestId(T.app.newGame).click();
+      const dialog = game.getByTestId(T.app.confirmDialog);
+      await expect(dialog).toBeVisible();
+      await expect(dialog).toHaveAttribute('role', 'dialog');
+      await expect(dialog).toHaveAttribute('aria-modal', 'true');
+      await expect(game.getByTestId(T.app.confirmCancel)).toBeFocused();
+      await game.keyboard.press('Tab');
+      await expect(game.getByTestId(T.app.confirmYes)).toBeFocused();
+      await game.keyboard.press('Tab');
+      await expect(game.getByTestId(T.app.confirmCancel)).toBeFocused();
+      await game.keyboard.press('Shift+Tab');
+      await expect(game.getByTestId(T.app.confirmYes)).toBeFocused();
+    });
+    await test.step('Escape cancels and hands focus back to the trigger', async () => {
+      await game.keyboard.press('Escape');
+      await expect(game.getByTestId(T.app.confirmDialog)).toHaveCount(0);
+      await expect(game.getByTestId(T.app.newGame)).toBeFocused();
+      await expect(game.getByTestId(T.scoreboard.table)).toBeVisible();
+    });
     await test.step('Cancel leaves the game untouched', async () => {
       await game.getByTestId(T.app.newGame).click();
       await expect(game.getByTestId(T.app.confirmDialog)).toBeVisible();

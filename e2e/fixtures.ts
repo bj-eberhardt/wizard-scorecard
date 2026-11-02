@@ -92,7 +92,7 @@ export async function startGame(
   const { players, rounds, wolke = false, notEqual = false } = opts;
   await expect(page.getByTestId(T.config.root)).toBeVisible();
 
-  // F9 flow: the config starts with 3 rows (localStorage is cleared per test);
+  // The config starts with 3 rows (localStorage is cleared per test);
   // every further player needs a click on the "+" button first.
   for (let i = 3; i < players.length; i++) {
     await page.getByTestId(T.config.addPlayer).click();

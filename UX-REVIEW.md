@@ -39,8 +39,9 @@ Das Produkt richtet sich an eine klare Kernsituation: **Wizard-Runde am Tisch, e
 | F8 | Startspieler-Rotation im Overlay ohne Kennzeichnung ("wer ist dran") | UX | 🟠 Mittel · ✅ |
 | F9 | Konfiguration: 6 freie Eingabefelder + "Anzahl Runden: 0 / Standard: 0" vor Spielstart | UX | 🟠 Mittel · ✅ |
 | F10 | Kein Rückschritt/Korrektur einer bereits beendeten Runde | Bedienung | 🟠 Mittel |
-| F11 | "Neues Spiel" (rot) dauerhaft neben Haupt-Action knopfgleich erreichbar | Bedienung | 🟠 Mittel |
-| F12 | Tooltip nicht tastaturbedienbar; Bestätigungsdialog ohne Fokus-Handling/Escape | A11y | 🟠 Mittel |
+| F11 | "Neues Spiel" (rot) dauerhaft neben Haupt-Action knopfgleich erreichbar | Bedienung | 🟠 Mittel · ✅ |
+| F12 | Bestätigungsdialog ohne Fokus-Handling/Escape (Tooltip-Teil entfiel mit F2) | A11y | 🟠 Mittel · ✅ |
+| F23 | Schätz- und Ergebnis-Overlay ohne Dialog-Semantik (Fokus, Escape, `aria-modal`) | A11y | 🟡 Gering |
 | F13 | `lang="de"` fix im HTML, aber Sprache wird per Browser-Detector gewählt → gemischte Sprachen | i18n | 🟡 Gering |
 | F14 | Kein Sprachumschalter im UI, obwohl EN vorhanden | i18n | 🟡 Gering |
 | F15 | Design ohne eigene Sprache: weißer Hintergrund, harte schwarze Rahmen, Standard-Tailwind-Farben | Design | 🟡 Gering |
@@ -333,11 +334,44 @@ Das Produkt richtet sich an eine klare Kernsituation: **Wizard-Runde am Tisch, e
 
 ---
 
-### F11 · Destruktiver Button in Hauptaktionnähe 🟠
+### F11 · Destruktiven Button aus der Hauptaktion nehmen 🟠 ✅ umgesetzt
+
+> **Status:** umgesetzt — bewusst **ohne** das vorgeschlagene ⋮-Menü und **ohne** volle Breite der
+> Primäraktion. Ein Menü mit genau einem Eintrag wäre toter UI-Platz für eine Aktion, die pro
+> Spielabend einmal gebraucht wird; und ein sticky über der Tabelle schwebender Knopf soll nicht
+> breiter sein als nötig. Erreicht wird die Trennung stattdessen über Raum **und** Form:
+>
+> - **Räumlich:** "Neues Spiel" verlässt die Action-Bar und sitzt jetzt als rechtsbündige Zeile
+>   über der Tabelle ([`App.tsx`](./src/App.tsx)) — anderes Screen-Ende, andere Daumenposition.
+> - **Form:** Ghost-Link (kein Hintergrund, kein Rahmen, `text-sm text-gray-500`, lucide
+>   `RotateCcw` 14 px) statt Flächen-Button; Rot erscheint erst als Reaktion (`hover:text-red-600`).
+>   Das Touch-Ziel bleibt dank `min-h-11` ≥ 44 px.
+> - Die Primäraktion bleibt in der Form, die sie hat: grün, **Inhaltsbreite**, `sticky bottom-2`,
+>   zusätzlich `min-h-11` + `shadow-lg` (liest sich als schwebend über der Tabelle) und
+>   `cursor-pointer` (Tailwind v4 hat keinen Default mehr).
+> - **Bestätigungs-Dialog:** die sichere Handlung ist die laute — `autoFocus` plus Flächenfüllung
+>   auf "Abbrechen", "Ja, beenden" nur noch outline. Die Reihenfolge bleibt Ja-links /
+>   Abbrechen-rechts (DE-Muskelmemory). Fokus-Trap, Escape und `role="dialog"` bleiben bei F12.
+> - **Winner-View:** dort ist "Neues Spiel" die intendierte Next-Best-Action (Runde vorbei, kein
+>   Versehens-Risiko) → Primär-Stil grün, weiterhin ohne Confirm-Dialog.
+>
+> Bewacht wird die Trennung von einem Schritt in [`e2e/game-flow.spec.ts`](./e2e/game-flow.spec.ts),
+> der die Bounding-Boxes von `T.app.nextRound` und `T.app.newGame` vergleicht (der Link muss
+> ≥ 24 px über dem Knopf enden) — damit wandert der destruktive Button nicht in zwei Monaten
+> zurück in die Action-Bar. Screenshots (Mid-Game, 4 Spieler, Runde 5/15, Wolke in Runde 3;
+> erzeugt mit [`ux-shots/capture-f11.mjs`](./ux-shots/capture-f11.mjs)):
+>
+> ![F11 Desktop](./ux-shots/18-f11-scoreboard-desktop.png)
+> ![F11 Mobile](./ux-shots/18-f11-scoreboard-mobile.png)
+> ![F11 Confirm-Dialog](./ux-shots/18-f11-confirm-mobile.png)
+>
+> Offen über F11 hinaus: der Fokus-Ring selbst ist weiterhin unsichtbar (programmiertes
+> `autoFocus` zeigt Chromium keinen `:focus-visible`-Ring) — Sichtbarkeit von Fokus gehört
+> in F12, zusammen mit `role="dialog"`, Escape und Fokus-Trap.
 
 **Beobachtung:** "Neues Spiel starten" (rot) sitzt direkt unter "Nächste Runde starten" (grün), gleiche Größe, gleicher Abstand — ein Tap mit dem Daumen entscheidet versehentlich "rot". Der Confirm-Dialog fängt es ab, aber die Situation erzwingt ihn ständig.
 
-**Änderung im Detail:**
+**Änderung im Detail** (Ursprungsvorschlag; Menü und volle Breite wurden bewusst verworfen, siehe Status):
 
 - Primäraktion (Runde) hervorheben (volle Breite in der Sticky-Bar), "Neues Spiel" in ein ⋮-Menü oder als dezenten Textlink am Zeilenende.
 - Im Confirm-Dialog die **sichere** Handlung betonen: "Abbrechen" als Default-Fokus, destruktive Aktion rechts und inoutline statt solid (heutige Reihenfolge: Ja-links/Abbrechen-rechts ist für DE-Muskelmemory ok, aber Fokus sollte auf "Abbrechen" liegen — siehe F12).
@@ -346,13 +380,50 @@ Das Produkt richtet sich an eine klare Kernsituation: **Wizard-Runde am Tisch, e
 
 ---
 
-### F12 · Tastatur & Screenreader: Tooltip und Dialoge 🟠
+### F12 · Tastatur & Screenreader: Dialoge 🟠 ✅ umgesetzt
+
+> **Status:** umgesetzt. Zwei der drei Beobachtungen waren schon vorher gegenstandslos: der
+> Scoreboard-Zellen-Tooltip ist mit F2 entfernt worden (seine Zellen müssen damit nicht
+> fokussierbar werden, `aria-describedby` entfällt), und die duplizierte Modal-`id` des
+> `InfoTooltip` war mit `useId()` bereits behoben (F17). Übrig blieb der Fokus-Pfad — und der
+> ist jetzt für **beide** echten Dialoge identisch:
+>
+> - Gemeinsame Logik in [`src/hooks/useDialogA11y.ts`](./src/hooks/useDialogA11y.ts):
+>   beim Öffnen wandert der Fokus in den Dialog (auf das Element mit `data-autofocus`, sonst auf
+>   das erste fokussierbare), Tab/Shift-Tab zyklisieren darin, ein entkommener Fokus wird
+>   zurückgeholt, Escape ruft den **sicheren** Schlusspfad auf, und beim Schließen bekommt der
+>   Auslöser den Fokus zurück — aber nur, wenn er noch im Dokument hängt (nach "Ja, beenden"
+>   folgt die Konfigurationsansicht, der Link existiert dann nicht mehr).
+> - Confirm-Dialog: `role="dialog"`, `aria-modal="true"`, `aria-labelledby` mit `useId()`-ID,
+>   `data-autofocus` auf "Abbrechen".
+> - `InfoTooltip`: sein bisheriges Escape-only-`useEffect` ist durch dieselbe Hook ersetzt
+>   (damit erstmals Fokus-Trap + Fokus-Rückgabe), `data-autofocus` auf "Schließen".
+> - Sichtbarer Fokus-Ring (`focus-visible:ring-2 ring-blue-500 ring-offset-2`) auf den
+>   Dialog-Buttons und dem "Neues Spiel"-Link.
+>
+> **Sichtbarkeit des Anfangsfokus:** `data-autofocus` fokussiert programmatisch, und Chromium
+> zeigt darauf **keinen** Ring — der Browser weiß, dass die letzte Interaktion ein Mausklick
+> war, und `:focus-visible` greift erst ab der ersten Tastaturbewegung. Das ist Standard-
+> Verhalten (dasselbe macht ein natives `<dialog>`), deshalb ist der Beweis-Screenshot mit
+> Tastatur-Navigation erzeugt ([`ux-shots/capture-f12.mjs`](./ux-shots/capture-f12.mjs)):
+>
+> ![F12 Confirm-Dialog per Tastatur, Ring auf "Abbrechen"](./ux-shots/19-f12-confirm-keyboard.png)
+> ![F12 Regel-erklaerung per Tastatur, Ring auf "Schließen"](./ux-shots/19-f12-info-keyboard.png)
+>
+> **Abgesichert** in [`e2e/game-flow.spec.ts`](./e2e/game-flow.spec.ts) (Dialog-Attribute,
+> Anfangsfokus auf der sicheren Aktion, Tab-Zyklus inklusive Wrap an beiden Enden, Escape =
+> Abbrechen + Fokus zurück auf den Link) und
+> [`e2e/configure-game.spec.ts`](./e2e/configure-game.spec.ts) (derselbe Pfad für den
+> Regel-Dialog). Assertet wird über `role`/`aria-*`-Attribute und `toBeFocused()`, nie über Text.
+>
+> **Nicht Teil von F12:** die Schätz- und Ergebnis-Overlays sind weiterhin einfache
+> Vollflächen-Overlays ohne Dialog-Semantik — siehe neu angelegtes F23.
 
 **Beobachtung:**
 
-- Scoreboard-Tooltip nur per `mouseenter`/Long-Press; keine Fokuspfade, Zellen sind nicht fokussierbar.
+- Scoreboard-Tooltip nur per `mouseenter`/Long-Press; keine Fokuspfade, Zellen sind nicht fokussierbar. *(entfällt mit F2)*
 - Confirm-Dialog: kein Fokus-Trap, Escape schließt ihn nicht, kein `role="dialog"`/`aria-modal` (InfoTooltip hat es dagegen korrekt).
-- `InfoTooltip` setzt die `id="info-modal-title"` hart — bei zwei Instanzen duplizierte ID.
+- `InfoTooltip` setzt die `id="info-modal-title"` hart — bei zwei Instanzen duplizierte ID. *(war schon vor F12 mit `useId()` behoben, F17)*
 
 **Änderung im Detail:**
 
@@ -462,6 +533,35 @@ fehleranfällig; Fokus/Screenreader-Pfad mitsdenken.
 
 ---
 
+### F23 · Schätz- und Ergebnis-Overlay ohne Dialog-Semantik 🟡
+
+**Beobachtung:** F12 hat nur die beiden echten Dialoge (Bestätigung, Regel-Erklärung) erwischt.
+`PredictionOverlay` und `ResultOverlay` sind Vollflächen-Overlays ohne `role="dialog"`, ohne
+`aria-modal`, ohne Fokus-Trap und ohne Escape: wer mit Tastatur arbeitet, tabt durch das
+verdeckte Scoreboard hindurch, und Escape tut nichts — obwohl das Overlay visuell alles andere
+blockiert. Der ↶-Knopf ("Zurück") ist der einzige Ausweg.
+
+**Warum das stört:** Auf dem geteilten Telefon am Tisch ist die Tastatur selten — aber ein
+Screenreader-Nutzer oder jemand, der das Spiel auf dem Laptop nachträgt, bekommt nicht mit, dass
+sich der Kontext geändert hat.
+
+**Änderung im Detail (bewusst noch nicht gebaut — aus F12 herausgelöst):**
+
+- Beide Overlays mit `ref` + `role="dialog"` + `aria-modal="true"` + `aria-labelledby` auf den
+  bestehenden Titel; Fokus-Verhalten über dieselbe
+  [`useDialogA11y`](./src/hooks/useDialogA11y.ts)-Hook, `data-autofocus` auf das erste Eingabefeld.
+- Escape = der bestehende weiche Abbruch (zurück eine Stufe), **nicht** verwerfen: im
+  Schätz-Overlay gibt es keinen Rückweg, dort müsste Escape also die Eingaben unverändert lassen
+  und das Overlay nur schließen — das ist eine Produktentscheidung, keine Technikfrage.
+- Kosten: die Overlays werden bei jedem Rundenschritt neu gemountet, der Fokus sprang dann
+  automatisch ins Feld — erwünscht, aber die E2E-Suite füllt Felder aktuell per `fill()`, was den
+  Fokus nicht braucht; beide Pfade bleiben also grün.
+
+**Aufwand:** S–M (~2 h inkl. Escape-Entscheidung). **Risiko:** gering — dieselbe Hook, keine
+Store-Logik.
+
+---
+
 ### F17–F20 · Weitere Beobachtungen (kurz)
 
 - **F17 · Info-Icon passt nicht zur Frage: ✅ umgesetzt.** Der Titel lautet "Was bedeutet 'Nicht Gleich'?" — das Icon zeigte ein "!" (SVG-Pfad `M11.5 6h1v7h-1z` + Punkt). Ersetzt durch das lucide-Icon **`CircleHelp`** ("?" im Kreis); die doppelte Modal-`id` war zuvor schon per `useId()` behoben.
@@ -488,20 +588,23 @@ fehleranfällig; Fokus/Screenreader-Pfad mitsdenken.
 8. F9 — Spieler-Hinzufügen-Flow statt 6 leerer Felder (M) ✅ umgesetzt
 9. F5 — Pulse entfernen (S) ✅ umgesetzt (vollständig entfernt statt entschärft)
 10. F8 — Startspieler-Kennzeichnung (S) ✅ umgesetzt (nur Schätz-Overlay, als Info-Zeilen inkl. Geber)
-11. F11 — Destruktiven Button aus der Hauptaktion nehmen (S)
+11. F11 — Destruktiven Button aus der Hauptaktion nehmen (S) ✅ umgesetzt (Ghost-Link oben statt ⋮-Menü, Primäraktion bleibt Inhaltsbreite)
 12. F21 — Mobile: Punkte-Zeile am Tabellenende statt rechtspunktiger Punkte-Spalte (M)
 
 **P2 — Politur & Identität:**
 
 13. F15 — Design-Tokens/Dark-Theme schrittweise (M)
 14. F16 — Winner-View mit Rangliste & Teilen (M)
-15. F12/F17 — A11y: Dialoge, Fokus, Tooltip-Tastatur (M) — F17 ✅ umgesetzt (Lucide `CircleHelp`)
+15. F12/F17 — A11y: Dialoge, Fokus (M) ✅ umgesetzt (beide Dialoge über `useDialogA11y`; der
+    Tooltip-Teil entfiel mit F2) — F17 ✅ umgesetzt (Lucide `CircleHelp`)
 16. F13/F14 — Sprachumschalter + `lang`-Synchronisation (S)
 17. F22 — Spieler-Reihenfolge per Drag & Drop (M) — Nachfolger von F9
-18. F18/F20 — Code-Hygiene & Kleinigkeiten (S)
+18. F23 — Overlay-Dialoge mit `role`/Fokus-Trap/Escape (S–M) — Folge von F12
+19. F18/F20 — Code-Hygiene & Kleinigkeiten (S)
 
-> F12 betrifft nur noch den Bestätigungs-Dialog: der Scoreboard-Zellen-Tooltip ist mit F2
-> entfernt worden, damit entfällt auch der dortige Tastatur-Pfad.
+> F12 ist auf den Bestätigungs-Dialog und die Regel-Erklärung geschrumpft: der
+> Scoreboard-Zellen-Tooltip war mit F2 schon entfernt, damit entfiel auch der dortige
+> Tastatur-Pfad. Was von F12 offen blieb (die beiden Spiel-Overlays), steht jetzt als F23.
 
 ---
 
@@ -520,6 +623,11 @@ fehleranfällig; Fokus/Screenreader-Pfad mitsdenken.
     (die zwei Info-Zeilen unter dem Titel) und [`gameStore.ts`](./src/store/gameStore.ts)
     (`getStartPlayerIndex` / `getDealerIndex`) — nur der Geber-Anteil ist neu, die Rotation selbst
     war schon vorher korrekt
+  - Destruktiver Link + Primäraktion (F11, ✅ umgesetzt): [`App.tsx`](./src/App.tsx) — Ghost-Link
+    über der Tabelle, grüner Knopf in Inhaltsbreite `sticky bottom-2`
+  - Dialog-A11y (F12, ✅ umgesetzt): [`src/hooks/useDialogA11y.ts`](./src/hooks/useDialogA11y.ts)
+    (Fokus-Falle, Escape, Fokus-Rückgabe) — genutzt vom Confirm-Dialog in
+    [`App.tsx`](./src/App.tsx) und von [`InfoTooltip.tsx`](./src/components/InfoTooltip.tsx)
   - Wake-Lock im Render: [`App.tsx` L56–77](./src/App.tsx)
   - Splash: [`LoadingScreen.tsx` L8–14](./src/components/LoadingScreen.tsx)
   - `lang="de"` fix: [`index.html` L2](./index.html)

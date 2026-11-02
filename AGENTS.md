@@ -80,6 +80,8 @@ src/
     WinnerView.tsx      # end screen incl. tie handling
     Header.tsx / Footer.tsx / FullscreenButton.tsx / LoadingScreen.tsx
     InfoTooltip.tsx     # rule explainer modal (Wolke / NotEqual)
+  hooks/
+    useDialogA11y.ts    # shared modal focus behaviour (trap, Escape, focus restore)
   store/
     gameStore.ts        # the running game (zustand, manual localStorage save)
     settingsStore.ts    # remembered names/rules across games (zustand persist)
@@ -216,6 +218,10 @@ E2E fixtures clear both game/settings keys before every test. See §8.
    - scoreboard cells: `data-prediction`, `data-tricks`, `data-received-tricks`,
      `data-points`, `data-wolke="true|false"`; header cells via
      `headerPlayer(i)` / `headerLabel(i, kind)` (kind: `prediction|tricks|points`)
+   - `data-autofocus` marks the control that receives initial focus inside a modal dialog
+     (consumed by `useDialogA11y`; asserted with `toBeFocused()`, never via text)
+   **Accessibility state is asserted the same way** — `role`/`aria-*` attributes and
+   `toBeFocused()`/`keyboard.press(...)` — so a locale change can never break those tests.
 3. **Keep it fast.** Advanced states are *seeded*, not clicked through; artificial
    delays are bypassed (except in `waiting.spec.ts`).
 4. **Rich `test.step` descriptions** in English, one `await test.step('…', async () …)`
@@ -265,7 +271,8 @@ Row order note: inputs are indexed by **visible row** (rotated), so helper `valu
 map to the rotated players, not the roster order.
 
 ### 8.5 Coverage map (specs → area)
-- `configure-game.spec.ts` — names/rounds/rules/validation, `roundsForCount`, info dialogs;
+- `configure-game.spec.ts` — names/rounds/rules/validation, `roundsForCount`, info dialogs incl.
+  their keyboard path (modal attributes, focus trap, Escape, focus return — F12);
   F9 flow: add/remove player rows (gap-free by construction), standard/custom rounds segments
 - `prediction.spec.ts` — submit, prefill, start-player rotation, dealer/start-player info
   lines (round-1 wrap-around + one-seat-on), too-small/large, not-equal
@@ -273,7 +280,9 @@ map to the rotated players, not the roster order.
 - `scoreboard.spec.ts` — two-row header, the full cell matrix (all players × all rounds,
   incl. both Wolke branches), point sums/deltas, and that no prediction cell carries an
   animation/highlight class (the old F5 pulse must not come back)
-- `game-flow.spec.ts` — integration: persistence across reload, round advance, reset, last round → winner
+- `game-flow.spec.ts` — integration: persistence across reload, round advance, reset, last round
+  → winner; plus the F11 action separation (bounding-box distance of the destructive link from
+  the primary button) and the F12 confirm-dialog keyboard path
 - `winner.spec.ts` — 1 / 2 / N winners via seeded finished games
 - `i18n.spec.ts` — same testid structure under `de` and `en` (proves locale-safety)
 - `responsive.spec.ts` — desktop vs mobile fullscreen button, mobile overlay input
@@ -343,7 +352,19 @@ E2E suite. Run `npm run format` and `npm run test:e2e` locally before pushing.
 - The scoreboard cells are **animation-free by decision** (UX-REVIEW F5): the pulse hint that
   once flagged the last played round is removed, so `Scoreboard.tsx` has no `useState`/`useEffect`,
   no timer and no `matchMedia` there. Do not re-introduce a highlight animation to indicate
-  clickability — make the affordance permanent instead (see F12 in `UX-REVIEW.md`).
+  clickability — the cells are not clickable at all; the way into the next round is the sticky
+  primary button (see F11 in `UX-REVIEW.md`).
+- **Action layout of the scoreboard screen** (UX-REVIEW F11): the destructive "new game" action is
+  a right-aligned ghost link ABOVE the table, the primary "next round" button keeps its **content
+  width** and is `sticky bottom-2`. Do not move the destructive action back into the sticky bar and
+  do not widen the primary button to full width — `game-flow.spec.ts` measures the distance between
+  the two and will fail.
+- **Modal dialogs** (UX-REVIEW F12) share `src/hooks/useDialogA11y.ts`: `role="dialog"`,
+  `aria-modal="true"`, `aria-labelledby` with a `useId()` id (never a hard-coded one), the safe
+  control carrying `data-autofocus`, Escape bound to the **cancel** path, and focus returned to the
+  trigger on close. A new dialog gets the hook, not a copy of the effect. Note that a
+  programmatically focused element shows no `:focus-visible` ring in Chromium — the ring appears
+  from the first Tab on, which is also how the `ux-shots/capture-f12.mjs` proofs are produced.
 
 ---
 

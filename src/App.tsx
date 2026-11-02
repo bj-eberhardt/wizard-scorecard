@@ -1,5 +1,5 @@
 import { useGameStore } from './store/gameStore';
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useId, useRef } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Scoreboard } from './components/Scoreboard';
 import { PredictionOverlay } from './components/PredictionOverlay';
@@ -10,7 +10,13 @@ import Header from './components/Header';
 import Footer from './components/Footer';
 import FullscreenButton from './components/FullscreenButton';
 import { LoadingScreen } from './components/LoadingScreen';
+import { useDialogA11y } from './hooks/useDialogA11y';
+import { RotateCcw } from 'lucide-react';
 import { T } from './test-ids';
+
+/** Visible keyboard focus ring; Tailwind's default outline is too subtle on white. */
+const focusRing =
+  'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 focus-visible:ring-offset-2';
 
 export default function App() {
   const { t } = useTranslation();
@@ -27,6 +33,13 @@ export default function App() {
     resetGame,
   } = useGameStore();
   const [showConfirm, setShowConfirm] = useState(false);
+  const confirmTitleId = useId();
+  const confirmRef = useRef<HTMLDivElement>(null);
+  useDialogA11y({
+    open: showConfirm,
+    containerRef: confirmRef,
+    onClose: () => setShowConfirm(false),
+  });
 
   const handleStart = (
     names: string[],
@@ -103,49 +116,53 @@ export default function App() {
           </div>
         ) : (
           <>
+            {!isGameOver && (
+              <div className="flex justify-center -mt-2 mb-1">
+                <button
+                  onClick={() => setShowConfirm(true)}
+                  data-testid={T.app.newGame}
+                  className={`cursor-pointer inline-flex min-h-11 items-center gap-1.5 rounded px-2 text-sm text-gray-500 underline-offset-4 hover:text-red-600 hover:underline ${focusRing}`}
+                >
+                  <RotateCcw size={14} aria-hidden />
+                  {t('buttons.newGame')}
+                </button>
+              </div>
+            )}
             <Scoreboard />
             {!isGameOver && overlay === 'none' && (
               <button
                 onClick={() => setOverlay('prediction')}
                 data-testid={T.app.nextRound}
-                className="mt-4 bg-green-500 text-white px-4 py-2 rounded sticky bottom-2 z-[200]"
+                className="mt-4 bg-green-500 text-white px-5 py-2 rounded min-h-11 shadow-lg cursor-pointer sticky bottom-2 z-[200]"
               >
                 {t('buttons.startNextRound')}
               </button>
             )}
-            {/* Button für neues Spiel, nur wenn Spiel läuft */}
-            {!isGameOver && (
-              <div className="mt-2">
-                <button
-                  onClick={() => setShowConfirm(true)}
-                  data-testid={T.app.newGame}
-                  className="bg-red-500 text-white px-4 py-2 rounded"
-                >
-                  {t('buttons.newGame')}
-                </button>
-              </div>
-            )}
 
-            {/* Confirm Dialog */}
             {showConfirm && (
               <div
+                ref={confirmRef}
+                role="dialog"
+                aria-modal="true"
+                aria-labelledby={confirmTitleId}
                 className="fixed inset-0 flex items-center justify-center bg-black/50 z-50"
                 data-testid={T.app.confirmDialog}
               >
                 <div className="bg-white p-6 rounded shadow-lg text-center">
-                  <p>{t('confirmDialog.title')}</p>
+                  <p id={confirmTitleId}>{t('confirmDialog.title')}</p>
                   <div className="mt-4 flex justify-center gap-4">
                     <button
                       onClick={handleNewGame}
                       data-testid={T.app.confirmYes}
-                      className="bg-red-600 text-white px-4 py-2 rounded"
+                      className={`cursor-pointer rounded border-2 border-red-600 px-4 py-2 text-red-600 min-h-11 hover:bg-red-50 ${focusRing}`}
                     >
                       {t('confirmDialog.yes')}
                     </button>
                     <button
                       onClick={() => setShowConfirm(false)}
                       data-testid={T.app.confirmCancel}
-                      className="bg-gray-300 px-4 py-2 rounded"
+                      data-autofocus
+                      className={`cursor-pointer rounded bg-gray-300 px-4 py-2 min-h-11 hover:bg-gray-200 ${focusRing}`}
                     >
                       {t('confirmDialog.cancel')}
                     </button>
@@ -161,7 +178,7 @@ export default function App() {
                 <button
                   onClick={() => handleNewGame()}
                   data-testid={T.app.newGame}
-                  className="bg-red-500 text-white px-4 py-2 rounded"
+                  className="bg-green-500 text-white px-5 py-2 rounded min-h-11 cursor-pointer hover:bg-green-600"
                 >
                   {t('buttons.newGame')}
                 </button>

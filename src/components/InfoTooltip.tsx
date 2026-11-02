@@ -1,6 +1,7 @@
-import React, { useEffect, useId, useRef, useState } from 'react';
+import React, { useId, useRef, useState } from 'react';
 import { CircleHelp } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
+import { useDialogA11y } from '../hooks/useDialogA11y';
 import { T } from '../test-ids';
 
 interface InfoTooltipProps {
@@ -13,22 +14,14 @@ interface InfoTooltipProps {
 export default function InfoTooltip({ title, content, className, testId }: InfoTooltipProps) {
   const { t } = useTranslation();
   const [open, setOpen] = useState(false);
-  const ref = useRef<HTMLButtonElement | null>(null);
-  // unique id per instance (fixes the previous duplicated hard-coded id)
+  const dialogRef = useRef<HTMLDivElement | null>(null);
   const titleId = useId();
 
-  useEffect(() => {
-    function onKey(e: KeyboardEvent) {
-      if (e.key === 'Escape') setOpen(false);
-    }
-    if (open) document.addEventListener('keydown', onKey);
-    return () => document.removeEventListener('keydown', onKey);
-  }, [open]);
+  useDialogA11y({ open, containerRef: dialogRef, onClose: () => setOpen(false) });
 
   return (
     <div className={`inline-block ${className ?? ''}`}>
       <button
-        ref={ref}
         type="button"
         aria-label={title}
         aria-expanded={open}
@@ -42,13 +35,12 @@ export default function InfoTooltip({ title, content, className, testId }: InfoT
         }`}
         title={title}
       >
-        {/* F17: the title is a question, so the icon shows a "?" in a circle
-            (lucide CircleHelp) instead of the previous hand-drawn "!". */}
         <CircleHelp size={16} strokeWidth={2.25} aria-hidden />
       </button>
 
       {open && (
         <div
+          ref={dialogRef}
           role="dialog"
           aria-modal="true"
           aria-labelledby={title ? titleId : undefined}
@@ -71,7 +63,8 @@ export default function InfoTooltip({ title, content, className, testId }: InfoT
                 type="button"
                 onClick={() => setOpen(false)}
                 data-testid={T.infoModal.close}
-                className="px-3 py-1 cursor-pointer bg-blue-600 text-white rounded hover:bg-blue-700"
+                data-autofocus
+                className="cursor-pointer rounded bg-blue-600 px-3 py-1 text-white hover:bg-blue-700 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 focus-visible:ring-offset-2"
               >
                 {t('buttons.close')}
               </button>

@@ -6,11 +6,11 @@ import { T } from '../src/test-ids';
  * ConfigureGame: player input, round defaults/bounds, rule toggles and validation.
  * All assertions use data-testid / data-error-key (never localized text).
  *
- * F9 flow: the screen starts with 3 rows and grows via the "+" button
- * (T.config.addPlayer) up to 6; a row can only be removed while more than 3
- * rows exist. Rounds use a segmented control — the standard segment carries
- * `data-default-rounds`, the manual number input (T.config.rounds) only appears
- * after activating the custom segment.
+ * The screen starts with 3 rows and grows via the "+" button (T.config.addPlayer)
+ * up to 6; a row can only be removed while more than 3 rows exist. Rounds use a
+ * segmented control — the standard segment carries `data-default-rounds`, the
+ * manual number input (T.config.rounds) only appears after activating the custom
+ * segment.
  */
 
 /** Grow the roster from 3 to `count` rows by clicking "+". */
@@ -158,6 +158,19 @@ test.describe('Configure game', () => {
       await expect(game.getByTestId(T.infoModal.dialog)).toBeVisible();
       await game.getByTestId(T.infoModal.close).click();
       await expect(game.getByTestId(T.infoModal.dialog)).toHaveCount(0);
+    });
+
+    await test.step('Info dialog is keyboard operable', async () => {
+      await game.getByTestId(T.config.infoNotEqual).click();
+      const dialog = game.getByTestId(T.infoModal.dialog);
+      await expect(dialog).toHaveAttribute('role', 'dialog');
+      await expect(dialog).toHaveAttribute('aria-modal', 'true');
+      await expect(game.getByTestId(T.infoModal.close)).toBeFocused();
+      await game.keyboard.press('Tab');
+      await expect(game.getByTestId(T.infoModal.close)).toBeFocused();
+      await game.keyboard.press('Escape');
+      await expect(dialog).toHaveCount(0);
+      await expect(game.getByTestId(T.config.infoNotEqual)).toBeFocused();
     });
   });
 

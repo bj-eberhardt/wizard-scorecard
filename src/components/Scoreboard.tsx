@@ -4,38 +4,26 @@ import { useTranslation } from 'react-i18next';
 import { T } from '../test-ids';
 
 /**
- * Scoreboard: one row per round and THREE columns per player — prediction, tricks,
- * points — so the board explains itself without any hover/long-press helper.
- *
- * Every value is mirrored into a `data-*` attribute (AGENTS.md §8.1) so the E2E
- * suite can assert the whole cell matrix without touching localized text.
- * A Wolke round shows entered → evaluated (`3→2`) plus the cloud marker, because
- * the anniversary rule rewrites the value that counts for the points.
- *
- * The cells carry no animation: the one-time pulse hint that used to flag the last
- * played round as clickable was removed (UX-REVIEW F5) — it fired on every render,
- * marked the finished round instead of the upcoming one, and all players at once.
+ * Scoreboard: one row per round, three columns per player — prediction, tricks, points.
+ * Every value is mirrored into a `data-*` attribute so the E2E suite can assert the whole
+ * cell matrix without touching localized text. A Wolke round shows `entered → evaluated`
+ * plus the cloud marker, because the anniversary rule rewrites the value that counts.
  */
 export function Scoreboard() {
   const { t } = useTranslation();
   const { players, totalRounds } = useGameStore();
   const rounds = Array.from({ length: totalRounds }, (_, i) => i);
 
-  // `w-12` on every sub-column: the table uses auto layout, so without a fixed width
-  // the widest cell content (a header label) would decide the column width and the
-  // three columns of a player group would end up differently sized. `px-0.5` keeps the
-  // widest unbreakable string (`4→2☁`) inside those 48 px — a larger padding would
-  // push the column past its own fixed width and make the group uneven again.
+  // The table is auto-layout, so `w-12` is what keeps the three sub-columns of a player group
+  // equally wide; `px-0.5` makes the longest cell content (`4→2☁`) still fit into those 48 px.
   const cellClass = 'border border-black w-12 px-0.5 py-0.5 text-xs text-center';
-  // no background here: `bg-white`/`bg-gray-50` are set per cell so two conflicting
-  // background utilities never end up on the same element
+  // Backgrounds are set per cell, never here, so no element carries two conflicting ones.
   const headerLabelClass =
     'w-12 px-0.5 py-0.5 text-xs font-normal text-gray-500 border-2 border-black text-center';
 
   /**
-   * Rendered text of the tricks cell: `3→2 ☁` for a Wolke round, else the value.
-   * The gap before the cloud is a narrow no-break space (U+202F) so the marker
-   * still fits inside the fixed 48 px column without wrapping the row.
+   * Rendered text of the tricks cell: `3→2 ☁` for a Wolke round, else the value. The narrow
+   * no-break space (U+202F) keeps the marker inside the fixed column without wrapping.
    */
   function tricksText(p: Player, roundIndex: number): string {
     const evaluated = p.results?.[roundIndex];
@@ -53,9 +41,8 @@ export function Scoreboard() {
   return (
     <div className="text-center flex justify-center w-full">
       <div className="overflow-x-auto w-full">
-        {/* No `w-full`: all data columns are fixed-width, so a full-width table would
-            give every leftover pixel to the "Runde" column and stretch it into an empty
-            block on wide screens. The table sizes to its content and stays left-aligned. */}
+        {/* No `w-full`: with fixed data columns a full-width table would hand every leftover
+            pixel to the round column and stretch it into an empty block. */}
         <table
           className="min-w-max border-separate border-spacing-0"
           data-testid={T.scoreboard.table}

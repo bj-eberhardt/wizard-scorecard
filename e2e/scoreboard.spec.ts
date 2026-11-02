@@ -213,9 +213,7 @@ test.describe('Scoreboard', () => {
     });
 
     await test.step('No prediction cell carries an animation highlight', async () => {
-      // UX-REVIEW F5: the one-time pulse on the last played round is gone — it
-      // re-fired on every render, marked the finished round instead of the upcoming
-      // one and lit up all players at once. No cell may ever animate or ring again.
+      // The cells are animation-free: no pulse, ring or scale marker on any of them.
       for (let player = 0; player < 3; player++) {
         for (let round = 0; round < TOTAL_ROUNDS; round++) {
           const span = game

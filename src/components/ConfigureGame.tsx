@@ -21,10 +21,9 @@ const ConfigureGame: React.FC<ConfigureGameProps> = ({ onStart }) => {
   const useNotEqualSetting = useSettingsStore((state) => state.useNotEqual);
   const setUseNotEqualSetting = useSettingsStore((state) => state.setUseNotEqual);
 
-  // F9: start with one row per remembered name (min 3, max 6) plus one empty
-  // row to type into, instead of six always-visible fields. Rows are kept
-  // gap-free by construction: "+" appends, "×" removes and shifts the rest up,
-  // so the old gapInNames validation is gone.
+  // One row per remembered name (min 3, max 6) plus one empty row to type into,
+  // instead of six always-visible fields. Rows stay gap-free: "+" appends, "×"
+  // removes and shifts the rest up, so no validation for empty rows in between.
   const initialCount = Math.min(
     MAX_PLAYERS,
     Math.max(MIN_PLAYERS, playerNames.filter((n) => n.trim() !== '').length)
