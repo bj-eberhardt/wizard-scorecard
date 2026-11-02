@@ -37,7 +37,7 @@ Das Produkt richtet sich an eine klare Kernsituation: **Wizard-Runde am Tisch, e
 | F6 | Touch-Targets zu klein (Zahleneingaben ~36 px, Checkboxen, ×-Button) | Bedienung | 🟠 Mittel |
 | F7 | Modal auf Mobile top-bündig mit großer schwarzer Fläche; Vollbild-Button überlagert Logo | Design | 🟠 Mittel |
 | F8 | Startspieler-Rotation im Overlay ohne Kennzeichnung ("wer ist dran") | UX | 🟠 Mittel · ✅ |
-| F9 | Konfiguration: 6 freie Eingabefelder + "Anzahl Runden: 0 / Standard: 0" vor Spielstart | UX | 🟠 Mittel |
+| F9 | Konfiguration: 6 freie Eingabefelder + "Anzahl Runden: 0 / Standard: 0" vor Spielstart | UX | 🟠 Mittel · ✅ |
 | F10 | Kein Rückschritt/Korrektur einer bereits beendeten Runde | Bedienung | 🟠 Mittel |
 | F11 | "Neues Spiel" (rot) dauerhaft neben Haupt-Action knopfgleich erreichbar | Bedienung | 🟠 Mittel |
 | F12 | Tooltip nicht tastaturbedienbar; Bestätigungsdialog ohne Fokus-Handling/Escape | A11y | 🟠 Mittel |
@@ -45,11 +45,12 @@ Das Produkt richtet sich an eine klare Kernsituation: **Wizard-Runde am Tisch, e
 | F14 | Kein Sprachumschalter im UI, obwohl EN vorhanden | i18n | 🟡 Gering |
 | F15 | Design ohne eigene Sprache: weißer Hintergrund, harte schwarze Rahmen, Standard-Tailwind-Farben | Design | 🟡 Gering |
 | F16 | Winner-View ist ein gelber Textkasten – kein Abschluss-Moment, keine Rangliste | Design | 🟡 Gering |
-| F17 | Info-Icon zeigt "!" obwohl Titel eine Frage ist; doppelte `id` im Modal | A11y/Design | 🟡 Gering |
+| F17 | Info-Icon zeigt "!" obwohl Titel eine Frage ist; doppelte `id` im Modal | A11y/Design | 🟡 Gering · ✅ |
 | F18 | `visibilitychange`-Listener wird in jedem Render neu angelegt (Wake-Lock leak) | Code/Robustheit | 🟡 Gering |
 | F19 | Wolke-Historie zeigt im Tooltip die korrigierten statt der eingetragenen Stiche (Label sagt "Eingetragene Stiche") | Korrektheit | 🟡 Gering |
 | F20 | 2 s Lade-Splash bei jedem Start, auch bei Fortsetzen eines gespeicherten Spiels | UX | 🟡 Gering |
 | F21 | Mobile-Breite: Gesamt-Punkte ausblenden, dafür eine "Punkte"-Zeile am Tabellenende | UX/Design | 🟠 Mittel |
+| F22 | Spieler-Reihenfolge in der Konfiguration nicht anpassbar (kein Drag & Drop) | UX | 🟠 Mittel |
 
 ---
 
@@ -272,7 +273,32 @@ Das Produkt richtet sich an eine klare Kernsituation: **Wizard-Runde am Tisch, e
 
 ---
 
-### F9 · Konfigurations-Screen: 6 offene Felder und "Runden: 0" 🟠
+### F9 · Konfigurations-Screen: 6 offene Felder und "Runden: 0" 🟠 ✅ umgesetzt
+
+> **Status:** umgesetzt. Der Screen startet mit **3 Feldern** (vorbelegt aus den gemerkten
+> Namen, min 3 / max 6) plus einem **"Spieler hinzufügen"**-Button (`Plus`-Icon, lucide) bis 6;
+> Entfernen per **`X`-Icon** rückt die folgenden Zeilen nach, sodass die Lücken-Validierung
+> (`gapInNames`, Key + Test entfernt) ersatzlos entfällt. Bei genau 3 Zeilen ist kein ×
+> sichtbar, unter 3 Spieler ist also nie erreichbar; `minPlayers` bleibt als Sicherheitsnetz am
+> Start. Jedes Feld trägt ein **Nummern-Badge** (`playerBadge`) statt nur eines Placeholder.
+> Das Runden-Feld erscheint **erst ab ≥3 Spielern** als **Segmented Control** "Standard (n)" /
+> "Eigene" — das Standard-Segment trägt `data-default-rounds` (E2E-Assert, kein Text), das
+> manuelle Number-Input (`config-rounds`) gibt es nur im "Eigene"-Modus. Ein "Runden: 0 /
+> Standard: 0" vor Spielstart ist damit nicht mehr darstellbar. Neue Test-Ids: `addPlayer`,
+> `roundsModeStandard`, `roundsModeCustom`. **Bewusst nicht gebaut:** der optionale
+> "Letzte Runde laden"-Chip — die gemerkten Namen werden direkt vorbelegt. **Neues Feature
+> (nicht Teil von F9):** Spieler-Reihenfolge per Drag & Drop ändern.
+>
+> **Gliederung:** Der Screen ist in drei leicht gerundete, umrandete Feldgruppen
+> (`<section>` mit `rounded-lg border`) geteilt — **Spieler**, **Runden**, **Optionen** — je mit
+> einheitlichem `<h2>`-Heading (Key `sectionPlayers|sectionRounds|sectionOptions`). Der
+> alte zentrierte Instructions-Text ist zur Unterzeile unter dem "Spieler"-Heading geworden
+> (einheitliche Formatierung statt Mischstil); die "Spiel starten"-Aktion ist volle Breite.
+>
+> **Belege:** [17-desktop](./ux-shots/17-config-desktop.png) (1280 px, Regel-Icons aligniert und
+> nicht am Rand), [17-mobile](./ux-shots/17-config-mobile.png) (390 px, beide blauen Icons
+> untereinander). Nachfolger F22 (Drag & Drop) ergänzt die Zeilen um einen Greif-Griff.
+
 
 **Beobachtung:** Beim Start stehen 6 leere Eingabefelder, "Anzahl Runden" zeigt `0` mit "Standard: 0", und der Hilfetext dazu erscheint erst nach Spielernamen:
 
@@ -410,9 +436,35 @@ Das Produkt richtet sich an eine klare Kernsituation: **Wizard-Runde am Tisch, e
 
 ---
 
+### F22 · Spieler-Reihenfolge per Drag & Drop anpassen 🟠
+
+**Beobachtung:** Die Konfiguration (F9) legt Spieler in der Reihenfolge ihrer Zeilen fest. Einmal
+falsch eingegeben oder in Tischreihenfolge (im Uhrzeigersinn) umsortieren ist nur möglich, indem
+man Namen löscht und neu tippt — die Startspieler-/Geber-Rotation (§5) hängt an genau dieser
+Reihenfolge, ist aber starr.
+
+**Warum das stört:** Am Tisch setzt man sich in einer festen Rundum-Reihenfolge; weicht die
+Roster-Reihenfolge davon ab, stimmt die rotierte Startspieler-Abbildung (§5) nicht mit der realen
+Sitzordnung überein. Umsortieren muss deshalb direkt möglich sein.
+
+**Änderung im Detail (bewusst noch nicht gebaut — neues Feature, Nachfolger von F9):**
+
+- Pro Zeile einen Greif-Griff (lucide `GripVertical`) links; Ziehen verschiebt die Zeile.
+- Umsetzung ohne neue Abhängigkeit denkbar (HTML5 Drag-and-Drop oder Pointer-Events); alternativ
+  eine kleine Library — Entscheidung vor Umsetzung nötig (Bundle vs. Touch-Qualität).
+- Touch: Long-Press-Grab + klare Einfüge-Markierung; reine Pfeil-Buttons (↑/↓) als mobile-
+  taugliche Fallback-Option abwägen.
+- Reihenfolge ist für `startGame`/E2E unsichtbar (Roster-Indices bleiben), aber `data-*`-Attribut
+  am Greifer für einen neuen Sortier-Test erwägen.
+
+**Aufwand:** M (~3–4 h inkl. Touch-Greiffall). **Risiko:** mittel — Drag & Drop auf Mobile ist
+fehleranfällig; Fokus/Screenreader-Pfad mitsdenken.
+
+---
+
 ### F17–F20 · Weitere Beobachtungen (kurz)
 
-- **F17 · Info-Icon passt nicht zur Frage:** Der Titel lautet "Was bedeutet 'Nicht Gleich'?" — das Icon zeigt ein "Ausrufezeichen" (SVG-Pfad `M11.5 6h1v7h-1z` + Punkt = "!"). Für Fragen ein "?" rendern; desgleichen fehlt im Tooltip-Titel ein Fragezeichen am Ende nicht, aber das Icon sollte die Absicht spiegeln.
+- **F17 · Info-Icon passt nicht zur Frage: ✅ umgesetzt.** Der Titel lautet "Was bedeutet 'Nicht Gleich'?" — das Icon zeigte ein "!" (SVG-Pfad `M11.5 6h1v7h-1z` + Punkt). Ersetzt durch das lucide-Icon **`CircleHelp`** ("?" im Kreis); die doppelte Modal-`id` war zuvor schon per `useId()` behoben.
 - **F18 · Wake-Lock-Listener im Render:** In `App.tsx` wird `document.addEventListener('visibilitychange', …)` direkt im Komponentenrumpf ausgeführt → bei jedem Render ein neuer Listener (Leak). In ein `useEffect` mit Cleanup verlagern; leeren `useEffect` (Zeile 52–54) entfernen. Zusätzlich: Wake-Lock nur bei `gameStarted` halten und bei Spielende releasen.
 - **F19 · Wolke-Tooltip zeigt falsche Zahl fürs Label:** Entfallen — der Scoreboard-Tooltip wurde mit F2 entfernt, die Unterscheidung eingetragen/gewertet zeigt die Stiche-Zelle (`4→2 ☁`). Siehe Detail-Abschnitt zu F19.
 - **F20 · 2-Sekunden-Splash bei jedem Start:** `LoadingScreen` blockiert fix 2 s + 1 s Fade — auch beim Fortsetzen eines gespeicherten Spiels. Splash nur beim ersten Laden der Session zeigen (`sessionStorage`-Flag) oder auf < 800 ms reduzieren; der Splash ist zudem `z-[1000]` und überlagert alles ohne Fortschrittsinformation.
@@ -433,7 +485,7 @@ Das Produkt richtet sich an eine klare Kernsituation: **Wizard-Runde am Tisch, e
 
 6. F6 — 44-px-Targets, Stepper-Inputs (M)
 7. F7 — Bottom-Sheet-Overlays, Header-Zeile für Vollbild-Button (S–M)
-8. F9 — Spieler-Hinzufügen-Flow statt 6 leerer Felder (M)
+8. F9 — Spieler-Hinzufügen-Flow statt 6 leerer Felder (M) ✅ umgesetzt
 9. F5 — Pulse entfernen (S) ✅ umgesetzt (vollständig entfernt statt entschärft)
 10. F8 — Startspieler-Kennzeichnung (S) ✅ umgesetzt (nur Schätz-Overlay, als Info-Zeilen inkl. Geber)
 11. F11 — Destruktiven Button aus der Hauptaktion nehmen (S)
@@ -443,9 +495,10 @@ Das Produkt richtet sich an eine klare Kernsituation: **Wizard-Runde am Tisch, e
 
 13. F15 — Design-Tokens/Dark-Theme schrittweise (M)
 14. F16 — Winner-View mit Rangliste & Teilen (M)
-15. F12/F17 — A11y: Dialoge, Fokus, Tooltip-Tastatur (M)
+15. F12/F17 — A11y: Dialoge, Fokus, Tooltip-Tastatur (M) — F17 ✅ umgesetzt (Lucide `CircleHelp`)
 16. F13/F14 — Sprachumschalter + `lang`-Synchronisation (S)
-17. F18/F20 — Code-Hygiene & Kleinigkeiten (S)
+17. F22 — Spieler-Reihenfolge per Drag & Drop (M) — Nachfolger von F9
+18. F18/F20 — Code-Hygiene & Kleinigkeiten (S)
 
 > F12 betrifft nur noch den Bestätigungs-Dialog: der Scoreboard-Zellen-Tooltip ist mit F2
 > entfernt worden, damit entfällt auch der dortige Tastatur-Pfad.

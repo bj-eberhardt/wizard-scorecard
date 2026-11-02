@@ -98,7 +98,9 @@ Dockerfile              # node:24-alpine build -> nginx:alpine serve
 ```
 
 **Tech stack:** React 18.3, TypeScript ~5.9 (`strict: true`, `noEmit`), Vite 8.3,
-Tailwind v4 (PostCSS via `@tailwindcss/postcss`), Zustand v5, i18next v17.
+Tailwind v4 (PostCSS via `@tailwindcss/postcss`), Zustand v5, i18next v17, lucide-react
+(all UI icons — `Plus`/`X` in ConfigureGame, `CircleHelp` in InfoTooltip, `Maximize`/
+`Minimize` in FullscreenButton — are lucide components, never a hand-drawn `<svg>`).
 
 **Type checking:** Vite/esbuild do NOT type-check. Use `npm run typecheck`
 (`tsc -p tsconfig.json --noEmit`, `strict: true`), which covers `src`, `e2e` and the
@@ -133,6 +135,11 @@ Key rules (all implemented in `gameStore.ts` / `ResultOverlay.tsx`):
   (two i18n keys, so each language keeps its own word order; cards per player = `currentRound`);
   the `ResultOverlay` and the scoreboard deliberately show nothing (UX-REVIEW F8, teilumgesetzt).
 - **Default rounds by player count** (`roundsForCount`): 3→20, 4→15, 5→12, ≥6→10.
+- **Config screen (F9):** starts with 3 player rows (prefilled from remembered names, min 3 /
+  max 6); `+` (lucide `Plus`) appends a row, `×` (lucide `X`) removes one and shifts the rest up,
+  so rows are always gap-free and the old `gapInNames` validation is gone. No `×` is rendered at
+  exactly 3 rows. The rounds block shows only at ≥3 players as a segmented control "Standard (n)"
+  (carries `data-default-rounds`) / "Eigene" (the manual `config-rounds` number input).
 - **Points formula** (per round, cumulative):
   - prediction correct → `+ (20 + value * 10)`
   - prediction wrong → `- (|prediction - value| * 10)`
@@ -196,6 +203,8 @@ E2E fixtures clear both game/settings keys before every test. See §8.
    `toHaveText('30')`, which proves attribute and visible value agree. Anything that can
    ever become a word stays attribute-only. Attributes in use:
    - `data-error-key` on error banners → the i18n key, e.g. `configureGame.errors.minPlayers`, `errors.wolkeMinOne`
+   - `data-default-rounds` on the config's "standard" rounds segment → the auto round count
+     for the current player count (the manual `config-rounds` input only exists in "custom" mode)
    - `data-submit-ready="true|false"` on the result submit button
    - `data-start-player="true"` on the first (rotated) **prediction** row only — the
      result overlay has no role marker and no such attribute
@@ -256,7 +265,8 @@ Row order note: inputs are indexed by **visible row** (rotated), so helper `valu
 map to the rotated players, not the roster order.
 
 ### 8.5 Coverage map (specs → area)
-- `configure-game.spec.ts` — names/rounds/rules/validation, `roundsForCount`, info dialogs
+- `configure-game.spec.ts` — names/rounds/rules/validation, `roundsForCount`, info dialogs;
+  F9 flow: add/remove player rows (gap-free by construction), standard/custom rounds segments
 - `prediction.spec.ts` — submit, prefill, start-player rotation, dealer/start-player info
   lines (round-1 wrap-around + one-seat-on), too-small/large, not-equal
 - `result.spec.ts` — points formula, all-zero confirm, Wolke rules, revert

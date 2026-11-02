@@ -92,10 +92,18 @@ export async function startGame(
   const { players, rounds, wolke = false, notEqual = false } = opts;
   await expect(page.getByTestId(T.config.root)).toBeVisible();
 
+  // F9 flow: the config starts with 3 rows (localStorage is cleared per test);
+  // every further player needs a click on the "+" button first.
+  for (let i = 3; i < players.length; i++) {
+    await page.getByTestId(T.config.addPlayer).click();
+  }
   for (let i = 0; i < players.length; i++) {
     await page.getByTestId(T.config.playerName(i)).fill(players[i]);
   }
   if (typeof rounds === 'number') {
+    // rounds default to the segmented "standard" mode; the manual input only
+    // exists after switching to "custom"
+    await page.getByTestId(T.config.roundsModeCustom).click();
     await page.getByTestId(T.config.rounds).fill(String(rounds));
   }
   if (wolke) await page.getByTestId(T.config.anniversary).check();

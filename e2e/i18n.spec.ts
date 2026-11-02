@@ -16,7 +16,9 @@ test.describe('Localization safety', () => {
       await test.step('Core elements are findable by their test ids', async () => {
         await expect(game.getByTestId(T.config.root)).toBeVisible();
         await expect(game.getByTestId(T.config.playerName(0))).toBeVisible();
-        await expect(game.getByTestId(T.config.rounds)).toBeVisible();
+        // at boot no names are entered yet, so the rounds block is hidden; the
+        // "+" add-player button is the locale-independent element present here
+        await expect(game.getByTestId(T.config.addPlayer)).toBeVisible();
         await expect(game.getByTestId(T.config.anniversary)).toBeVisible();
         await expect(game.getByTestId(T.config.notEqual)).toBeVisible();
         await expect(game.getByTestId(T.config.startButton)).toBeVisible();
