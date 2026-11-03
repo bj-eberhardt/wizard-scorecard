@@ -9,3 +9,25 @@ updates:
     directory: "/" # Location of package manifests
     schedule:
       interval: "weekly"
+    # All minor + patch updates arrive as ONE pull request instead of one per
+    # dependency, so they cannot queue up and conflict with each other. Major updates
+    # are deliberately left out of the group: they keep coming as individual PRs that a
+    # human has to merge (see the semver-major gate in dependabot-automerge.yml).
+    groups:
+      npm-minor-and-patch:
+        applies-to: version-updates
+        update-types:
+          - "minor"
+          - "patch"
+  # Keeps the workflow pins (actions/checkout & co.) current, so the runners never
+  # fall back onto a deprecated Node.js runtime.
+  - package-ecosystem: "github-actions"
+    directory: "/"
+    schedule:
+      interval: "weekly"
+    groups:
+      actions-minor-and-patch:
+        applies-to: version-updates
+        update-types:
+          - "minor"
+          - "patch"
