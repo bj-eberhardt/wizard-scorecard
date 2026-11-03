@@ -53,10 +53,10 @@ test.describe('Game flow (integration)', () => {
       );
       // Rows follow start index 1 -> B,C,A. Predictions are row-based:
       await submitPredictions(game, [1, 1, 0]); // B=1, C=1, A=0
-      await submitResults(game, [1, 0, 0]); // B=1(correct), C=0(wrong), A=0(correct)
+      await submitResults(game, [1, 1, 0]); // B,C,A all correct
     });
     await test.step('Cumulative points after round 2 are correct', async () => {
-      // A: 30 + 20 = 50, B: 20 + 30 = 50, C: 20 - 10 = 10
+      // A: 30 + 20 = 50, B: 20 + 30 = 50, C: 20 + 30 = 50
       await expect(game.getByTestId(T.scoreboard.cell(0, 1, 'points'))).toHaveAttribute(
         'data-points',
         '50'
@@ -67,7 +67,39 @@ test.describe('Game flow (integration)', () => {
       );
       await expect(game.getByTestId(T.scoreboard.cell(2, 1, 'points'))).toHaveAttribute(
         'data-points',
-        '10'
+        '50'
+      );
+    });
+  });
+
+  test('Last completed round can be corrected without losing its entries', async ({ game }) => {
+    await test.step('Finish the first round', async () => {
+      await openApp(game);
+      await startGame(game, { players: ['Anna', 'Ben', 'Cia'] });
+      await submitPredictions(game, [1, 0, 0]);
+      await submitResults(game, [1, 0, 0]);
+    });
+
+    await test.step('Reopen the completed round with a quiet correction action', async () => {
+      await expect(game.getByTestId(T.app.correctLastRound)).toBeVisible();
+      await game.getByTestId(T.app.correctLastRound).click();
+      await expect(game.getByTestId(T.result.overlay)).toBeVisible();
+      await expect(game.getByTestId(T.result.submit)).toHaveAttribute('data-submit-ready', 'true');
+      await expect(game.getByTestId(T.result.input(0))).toHaveValue('1');
+      await expect(game.getByTestId(T.result.input(1))).toHaveValue('0');
+    });
+
+    await test.step('Submit corrected values and return to the scoreboard', async () => {
+      await game.getByTestId(T.result.input(0)).fill('0');
+      await game.getByTestId(T.result.input(1)).fill('1');
+      await submitResults(game, [0, 1, 0]);
+      await expect(game.getByTestId(T.scoreboard.cell(0, 0, 'points'))).toHaveAttribute(
+        'data-points',
+        '-10'
+      );
+      await expect(game.getByTestId(T.scoreboard.cell(1, 0, 'points'))).toHaveAttribute(
+        'data-points',
+        '-10'
       );
     });
   });
@@ -138,7 +170,14 @@ test.describe('Game flow (integration)', () => {
       await expect(game.getByTestId(T.result.overlay)).toBeVisible();
     });
     await test.step('Finish the round -> game over, winner view appears', async () => {
-      await submitResults(game, [1, 1, 1]);
+      await submitResults(game, [5, 5, 5]);
+      await expect(game.getByTestId(T.winner.container)).toBeVisible();
+    });
+    await test.step('The last round can also be corrected from the winner view', async () => {
+      await game.getByTestId(T.winner.correctLastRound).click();
+      await expect(game.getByTestId(T.result.overlay)).toBeVisible();
+      await expect(game.getByTestId(T.result.input(0))).toHaveValue('5');
+      await submitResults(game, [5, 5, 5]);
       await expect(game.getByTestId(T.winner.container)).toBeVisible();
     });
   });

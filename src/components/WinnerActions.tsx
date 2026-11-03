@@ -21,8 +21,15 @@ interface WinnerActionsProps {
  */
 export default function WinnerActions({ ranked, winners }: WinnerActionsProps) {
   const { t } = useTranslation();
-  const { players, totalRounds, useAnniversaryRules, useNotEqual, rematch, resetGame } =
-    useGameStore();
+  const {
+    players,
+    totalRounds,
+    useAnniversaryRules,
+    useNotEqual,
+    rematch,
+    resetGame,
+    correctLastRound,
+  } = useGameStore();
   const setPlayerNames = useSettingsStore((s) => s.setPlayerNames);
 
   const [exportState, setExportState] = useState<'idle' | 'ready' | 'error'>('idle');
@@ -100,6 +107,17 @@ export default function WinnerActions({ ranked, winners }: WinnerActionsProps) {
           className="btn-secondary px-3 text-sm"
         >
           {t('buttons.copyText')}
+        </button>
+      </div>
+
+      <div className="flex justify-center">
+        <button
+          type="button"
+          onClick={correctLastRound}
+          data-testid={T.winner.correctLastRound}
+          className="btn-ghost inline-flex items-center px-2 text-xs text-ink-soft"
+        >
+          {t('buttons.correctLastRound')}
         </button>
       </div>
 

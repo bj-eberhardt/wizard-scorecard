@@ -3,6 +3,7 @@ import React, { useState, useEffect, useRef } from 'react';
 import { useTranslation } from 'react-i18next';
 import { T } from '../test-ids';
 import { isE2E } from '../e2eFlag';
+import { NumberStepper } from './NumberStepper';
 
 export function ResultOverlay({ close }: { close: () => void }) {
   const { t } = useTranslation();
@@ -23,8 +24,14 @@ export function ResultOverlay({ close }: { close: () => void }) {
   // prevent immediate submit: disable OK for a short time after the overlay opens
   const [submitDisabled, setSubmitDisabled] = useState<boolean>(true);
   const timerRef = useRef<number | null>(null);
-  // confirmation for all-zero inputs (not allowed accidentally for rounds > 1)
-  const [confirmZero, setConfirmZero] = useState<boolean>(false);
+
+  // A correction reopens a round that already has stored result data. It should be
+  // immediately submittable; the short anti-accidental-submit lock is for new rounds.
+  const isCorrection = players.some(
+    (player) =>
+      typeof player.receivedResults?.[currentRound - 1] === 'number' ||
+      typeof player.results?.[currentRound - 1] === 'number'
+  );
 
   const showError = (key: string, options?: Record<string, unknown>) => {
     setError(t(key, options));
@@ -33,20 +40,31 @@ export function ResultOverlay({ close }: { close: () => void }) {
 
   useEffect(() => {
     // enable submit after 2 seconds (immediately in e2e runs to keep tests fast)
-    setSubmitDisabled(true);
+    setSubmitDisabled(!isCorrection);
     if (timerRef.current) {
       window.clearTimeout(timerRef.current);
     }
+    if (isCorrection) return;
     timerRef.current = window.setTimeout(() => setSubmitDisabled(false), isE2E() ? 0 : 2000);
     return () => {
       if (timerRef.current) window.clearTimeout(timerRef.current);
       timerRef.current = null;
     };
-  }, []);
+  }, [isCorrection]);
 
-  // reset confirmation if user changes any input
+  // Reopen the last completed round with its raw entries and Wolke choices intact.
   useEffect(() => {
-    if (confirmZero) setConfirmZero(false);
+    const roundIndex = currentRound - 1;
+    const correctedResults = players.map(
+      (player) => player.receivedResults?.[roundIndex] ?? player.results?.[roundIndex] ?? 0
+    );
+    const correctedWolkeFlags = players.map((player) => !!player.wolkeUsed?.[roundIndex]);
+    setResults(correctedResults);
+    setWolkeFlags(correctedWolkeFlags);
+  }, [currentRound, players]);
+
+  // reset error if user changes any input
+  useEffect(() => {
     if (error) setError('');
   }, [results, wolkeFlags]);
 
@@ -60,13 +78,6 @@ export function ResultOverlay({ close }: { close: () => void }) {
   const submit = (e?: React.SyntheticEvent) => {
     e?.preventDefault();
     if (submitDisabled) return;
-
-    // If not first round and all results are zero, require an explicit confirm click
-    const allZero = results.every((v) => v === 0);
-    if (currentRound !== 1 && allZero && !confirmZero) {
-      setConfirmZero(true);
-      return;
-    }
 
     const tooSmallInputPlayerIndex = results
       .map((val, i) => (val < 0 ? i : -1))
@@ -102,6 +113,16 @@ export function ResultOverlay({ close }: { close: () => void }) {
       return;
     }
 
+    const totalResults = results.reduce((sum, value) => sum + value, 0);
+    const validResultSums = useAnniversaryRules ? [currentRound - 1, currentRound] : [currentRound];
+    if (!validResultSums.includes(totalResults)) {
+      showError(useAnniversaryRules ? 'errors.resultSumAnniversary' : 'errors.resultSum', {
+        round: currentRound,
+        roundMinusOne: currentRound - 1,
+      });
+      return;
+    }
+
     results.forEach((val, i) => {
       const originalIndex = (i + startPlayerIndex) % players.length;
       let actualResult = val;
@@ -118,19 +139,17 @@ export function ResultOverlay({ close }: { close: () => void }) {
       // pass the raw entered value (received tricks) so it can be shown in the tooltip
       setResult(originalIndex, actualResult, { wolkeUsed: wolkeApplied, receivedTricks: val });
     });
-    // clear confirm state and proceed
-    setConfirmZero(false);
     advanceRound();
     close();
   };
 
   return (
     <div
-      className="fixed inset-0 bg-black/60 flex  xs:items-[normal] items-center justify-center overflow-y-auto z-20 px-4 py-6 md:pb-28"
+      className="fixed inset-0 bg-black/60 flex items-start md:items-center justify-center overflow-y-auto z-20 px-4 py-4 md:py-6 md:pb-28"
       data-testid={T.result.overlay}
     >
       <form
-        className="relative bg-panel border border-line p-4 rounded-lg shadow-2xl w-96"
+        className="relative bg-panel border border-line p-4 rounded-lg shadow-2xl w-96 max-w-full max-h-[calc(100dvh-2rem)] overflow-y-auto"
         noValidate
         onSubmit={(e) => submit(e)}
       >
@@ -141,34 +160,51 @@ export function ResultOverlay({ close }: { close: () => void }) {
           <div
             key={p.name}
             data-testid={T.result.playerRow(i)}
-            className="flex justify-between mb-2"
+            className="flex min-w-0 flex-col gap-2 mb-2 xs:flex-row xs:items-center xs:justify-between"
           >
-            <div>
-              <span>{p.name}</span>
+            <div className="min-w-0 flex-1">
+              <span className="break-words">{p.name}</span>
               <span className="italic">
                 &nbsp;{t('resultOverlay.tip', { tip: p.predictions[currentRound - 1] })}
               </span>
             </div>
-            <div>
+            <div className="flex shrink-0 items-center gap-2 self-end xs:self-auto">
               {/* No `max` attribute: the browser would block submission with a native,
                   unlocalized bubble before our app validation can run. Range checks are
                   owned by `valueTooSmall` / `valueTooLarge` below. */}
-              <input
-                autoFocus={i == 0}
-                type="number"
-                min={0}
-                value={results[i]}
-                data-testid={T.result.input(i)}
-                onFocus={(e) => e.target.select()}
-                onChange={(e) => {
-                  const copy = [...results];
-                  copy[i] = parseInt(e.target.value);
-                  setResults(copy);
-                }}
-                className="border border-line bg-surface text-ink rounded p-1 w-16 text-right tabular-nums"
-              />
+              <div className="hidden md:block">
+                <input
+                  autoFocus={i == 0}
+                  type="number"
+                  min={0}
+                  value={results[i]}
+                  data-testid={T.result.input(i)}
+                  onFocus={(e) => e.target.select()}
+                  onChange={(e) => {
+                    const copy = [...results];
+                    copy[i] = parseInt(e.target.value);
+                    setResults(copy);
+                  }}
+                  className="border border-line bg-surface text-ink rounded p-1 w-16 text-right tabular-nums"
+                />
+              </div>
+              <div className="md:hidden">
+                <NumberStepper
+                  value={results[i]}
+                  min={0}
+                  max={currentRound}
+                  onChange={(value) => {
+                    const copy = [...results];
+                    copy[i] = value;
+                    setResults(copy);
+                  }}
+                  decreaseLabel={t('numberStepper.decrease')}
+                  increaseLabel={t('numberStepper.increase')}
+                  testId={T.result.stepper(i)}
+                />
+              </div>
               {useAnniversaryRules && (
-                <label className="text-xs ml-2 self-center">
+                <label className="text-xs shrink-0 self-center whitespace-nowrap">
                   <input
                     tabIndex={-1}
                     type="checkbox"
@@ -196,14 +232,6 @@ export function ResultOverlay({ close }: { close: () => void }) {
             {error}
           </div>
         )}
-        {confirmZero && (
-          <div
-            className="bg-warn-soft text-yellow-200 p-2 mb-2 rounded"
-            data-testid={T.result.confirmZero}
-          >
-            {t('resultOverlay.confirmAllZero')}
-          </div>
-        )}
         {/* single info line above the buttons, shown once if any wolke is selected */}
         {anyWolkeSelected && (
           <div
@@ -218,7 +246,6 @@ export function ResultOverlay({ close }: { close: () => void }) {
             type="button"
             tabIndex={-1}
             onClick={() => {
-              setConfirmZero(false);
               setError('');
               setErrorKey('');
               setOverlay('prediction');

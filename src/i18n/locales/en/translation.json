@@ -15,9 +15,12 @@
     "onlyOneWolke": "Only one cloud per round is allowed",
     "predictionTooSmall": "Prediction too small for player {{playerNames}}",
     "predictionTooLarge": "Prediction too large for player {{playerNames}}",
+    "resultSum": "The total number of tricks must be {{round}}.",
+    "resultSumAnniversary": "The total number of tricks must be {{roundMinusOne}} or {{round}}.",
     "predictionNotEqualLast": "The sum of all predictions would equal {{round}}. The last player to predict ({{playerName}}) must not choose that value — please adjust the input."
   },
   "buttons": {
+    "correctLastRound": "Correct last round",
     "close": "Close",
     "submit": "Submit",
     "startNextRound": "Start next round",
@@ -26,6 +29,10 @@
     "rematch": "Rematch",
     "saveImage": "Save result",
     "copyText": "Copy as text"
+  },
+  "numberStepper": {
+    "decrease": "Decrease",
+    "increase": "Increase"
   },
   "labels": {
     "prediction": "Bid",
@@ -46,7 +53,6 @@
     "wolke": "Cloud",
     "submitButton": "Finish round",
     "submitButtonDisabled": "Finish round",
-    "confirmAllZero": "All results are 0. Click again to confirm.",
     "wolkeInfo": "Enter the received tricks and mark the cloud for this user — we'll do the calculation.",
     "revertButton": "Revert"
   },

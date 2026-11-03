@@ -27,6 +27,7 @@ export default function App() {
     setUseAnniversaryRules,
     setUseNotEqual,
     resetGame,
+    correctLastRound,
   } = useGameStore();
   const [showConfirm, setShowConfirm] = useState(false);
   // Compact view: the default follows the viewport once at mount (narrow screen =
@@ -153,15 +154,29 @@ export default function App() {
         </div>
       )}
       {!isGameOver && overlay === 'none' && (
-        <div className="mt-4 flex justify-center sticky bottom-2 md:bottom-24 z-[200]">
-          <button
-            onClick={() => setOverlay('prediction')}
-            data-testid={T.app.nextRound}
-            className="btn-primary px-5 shadow-lg"
-          >
-            {t('buttons.startNextRound')}
-          </button>
-        </div>
+        <>
+          <div className="mt-4 flex justify-center sticky bottom-2 md:bottom-24 z-[200]">
+            <button
+              onClick={() => setOverlay('prediction')}
+              data-testid={T.app.nextRound}
+              className="btn-primary px-5 shadow-lg"
+            >
+              {t('buttons.startNextRound')}
+            </button>
+          </div>
+          {currentRound > 1 && (
+            <div className="mt-2 flex justify-center">
+              <button
+                type="button"
+                onClick={correctLastRound}
+                data-testid={T.app.correctLastRound}
+                className="btn-ghost inline-flex items-center px-2 text-xs text-ink-soft"
+              >
+                {t('buttons.correctLastRound')}
+              </button>
+            </div>
+          )}
+        </>
       )}
 
       {showConfirm && (
