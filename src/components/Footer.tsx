@@ -1,4 +1,5 @@
 import { useTranslation } from 'react-i18next';
+import { useState } from 'react';
 import LanguageSwitcher from './LanguageSwitcher';
 import { T } from '../test-ids';
 
@@ -21,7 +22,7 @@ import { T } from '../test-ids';
  */
 export default function Footer() {
   const { t } = useTranslation();
-  const year = new Date().getFullYear();
+  const [year] = useState(() => new Date().getFullYear());
 
   return (
     <footer
@@ -29,7 +30,7 @@ export default function Footer() {
       className="mt-8 px-4 pb-2 text-center text-ink-soft text-sm md:fixed md:inset-x-0 md:bottom-0 md:z-30 md:mt-0 md:border-t md:border-line md:bg-surface/80 md:pt-1 md:backdrop-blur"
     >
       <LanguageSwitcher />
-      <span data-testid={T.footer.copyright}>
+      <span data-testid={T.footer.copyright} data-year={year}>
         {t('footer.copy', { year, version: __APP_VERSION__ })}
       </span>
       <span aria-hidden="true" className="mx-1">

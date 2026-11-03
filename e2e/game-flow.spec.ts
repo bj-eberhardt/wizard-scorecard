@@ -69,6 +69,24 @@ test.describe('Game flow (integration)', () => {
         'data-points',
         '50'
       );
+      await test.step('Both completed rounds retain their visible values', async () => {
+        await expect(game.getByTestId(T.scoreboard.cell(0, 0, 'prediction'))).toHaveAttribute(
+          'data-prediction',
+          '1'
+        );
+        await expect(game.getByTestId(T.scoreboard.cell(0, 1, 'prediction'))).toHaveAttribute(
+          'data-prediction',
+          '0'
+        );
+        await expect(game.getByTestId(T.scoreboard.cell(1, 1, 'tricks'))).toHaveAttribute(
+          'data-tricks',
+          '1'
+        );
+        await expect(game.getByTestId(T.scoreboard.cell(2, 1, 'tricks'))).toHaveAttribute(
+          'data-tricks',
+          '1'
+        );
+      });
     });
   });
 
@@ -100,6 +118,32 @@ test.describe('Game flow (integration)', () => {
       await expect(game.getByTestId(T.scoreboard.cell(1, 0, 'points'))).toHaveAttribute(
         'data-points',
         '-10'
+      );
+    });
+  });
+
+  test('Last completed round correction preserves Wolke entries', async ({ game }) => {
+    await test.step('Finish a Wolke round', async () => {
+      await openApp(game);
+      await startGame(game, { players: ['Anna', 'Ben', 'Cia'], wolke: true });
+      await submitPredictions(game, [1, 0, 0]);
+      await submitResults(game, [1, 0, 0], 0);
+    });
+    await test.step('Reopen the round and verify the raw Wolke input is restored', async () => {
+      await game.getByTestId(T.app.correctLastRound).click();
+      await expect(game.getByTestId(T.result.overlay)).toBeVisible();
+      await expect(game.getByTestId(T.result.input(0))).toHaveValue('1');
+      await expect(game.getByTestId(T.result.wolke(0))).toBeChecked();
+    });
+    await test.step('Submit the unchanged correction and keep the Wolke marker', async () => {
+      await submitResults(game, [1, 0, 0], 0);
+      await expect(game.getByTestId(T.scoreboard.cell(0, 0, 'tricks'))).toHaveAttribute(
+        'data-wolke',
+        'true'
+      );
+      await expect(game.getByTestId(T.scoreboard.cell(0, 0, 'tricks'))).toHaveAttribute(
+        'data-received-tricks',
+        '1'
       );
     });
   });

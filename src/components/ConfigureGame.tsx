@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useRef } from 'react';
 import { GripVertical, Plus, X } from 'lucide-react';
 import useSettingsStore from '../store/settingsStore';
 import { useTranslation } from 'react-i18next';
@@ -67,13 +67,9 @@ const ConfigureGame: React.FC<ConfigureGameProps> = ({ onStart }) => {
   const minAllowedRounds = 5;
   const maxAllowedRounds = defaultRounds > 0 ? defaultRounds * 2 : minAllowedRounds * 2;
 
-  useEffect(() => {
-    // when the player count changes and the user never typed a manual value,
-    // keep the manual field in sync with the new default
-    if (!usedManualOverride) {
-      setManualRounds(roundsForCount(nonEmptyCount));
-    }
-  }, [nonEmptyCount, usedManualOverride]);
+  // Derive the untouched custom value from the current player count instead of
+  // synchronizing it through an effect.
+  const displayedManualRounds = usedManualOverride ? manualRounds : defaultRounds;
 
   const addRow = () => {
     if (rows.length >= MAX_PLAYERS) return;
@@ -265,7 +261,7 @@ const ConfigureGame: React.FC<ConfigureGameProps> = ({ onStart }) => {
                     type="number"
                     min={minAllowedRounds}
                     max={maxAllowedRounds}
-                    value={manualRounds}
+                    value={displayedManualRounds}
                     data-testid={T.config.rounds}
                     onChange={(e) => {
                       const v = parseInt(e.target.value || '0', 10);

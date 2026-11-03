@@ -1,5 +1,5 @@
 import { useGameStore } from '../store/gameStore';
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { T } from '../test-ids';
 import { NumberStepper } from './NumberStepper';
@@ -14,7 +14,12 @@ export function PredictionOverlay({ close }: { close: () => void }) {
     getCurrentDealerIndex,
     useNotEqual,
   } = useGameStore();
-  const [predictions, setPredictions] = useState<number[]>(Array(players.length).fill(0));
+  const startPlayerIndex = getCurrentStartPlayerIndex();
+  const [predictions, setPredictions] = useState<number[]>(() => {
+    const roundIndex = currentRound - 1;
+    const rotated = [...players.slice(startPlayerIndex), ...players.slice(0, startPlayerIndex)];
+    return rotated.map((player) => player.predictions?.[roundIndex] ?? 0);
+  });
   const [error, setError] = useState<string>('');
   // raw i18n key of the current error, exposed via data-error-key for E2E
   const [errorKey, setErrorKey] = useState<string>('');
@@ -24,16 +29,8 @@ export function PredictionOverlay({ close }: { close: () => void }) {
     setErrorKey(key);
   };
 
-  const startPlayerIndex = getCurrentStartPlayerIndex();
   // seat to the left of the start player: shuffles and deals this round
   const dealerIndex = getCurrentDealerIndex();
-
-  useEffect(() => {
-    const r = currentRound - 1;
-    const rotated = [...players.slice(startPlayerIndex), ...players.slice(0, startPlayerIndex)];
-    const existing = rotated.map((p) => p.predictions?.[r] ?? 0);
-    setPredictions(existing);
-  }, [players, currentRound, startPlayerIndex]);
 
   const rotatedPlayers = [
     ...players.slice(startPlayerIndex),

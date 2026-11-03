@@ -16,23 +16,30 @@ export function ResultOverlay({ close }: { close: () => void }) {
     getCurrentStartPlayerIndex,
     setOverlay,
   } = useGameStore();
-  const [results, setResults] = useState<number[]>(Array(players.length).fill(0));
-  const [wolkeFlags, setWolkeFlags] = useState<boolean[]>(Array(players.length).fill(false));
-  const [error, setError] = useState<string>('');
-  // raw i18n key of the current error, exposed via data-error-key for E2E
-  const [errorKey, setErrorKey] = useState<string>('');
-  // prevent immediate submit: disable OK for a short time after the overlay opens
-  const [submitDisabled, setSubmitDisabled] = useState<boolean>(true);
-  const timerRef = useRef<number | null>(null);
-
-  // A correction reopens a round that already has stored result data. It should be
-  // immediately submittable; the short anti-accidental-submit lock is for new rounds.
+  const startPlayerIndex = getCurrentStartPlayerIndex();
   const isCorrection = players.some(
     (player) =>
       typeof player.receivedResults?.[currentRound - 1] === 'number' ||
       typeof player.results?.[currentRound - 1] === 'number'
   );
+  const [results, setResults] = useState<number[]>(() => {
+    const roundIndex = currentRound - 1;
+    return players.map(
+      (player) => player.receivedResults?.[roundIndex] ?? player.results?.[roundIndex] ?? 0
+    );
+  });
+  const [wolkeFlags, setWolkeFlags] = useState<boolean[]>(() =>
+    players.map((player) => !!player.wolkeUsed?.[currentRound - 1])
+  );
+  const [error, setError] = useState<string>('');
+  // raw i18n key of the current error, exposed via data-error-key for E2E
+  const [errorKey, setErrorKey] = useState<string>('');
+  // prevent immediate submit: disable OK for a short time after the overlay opens
+  const [submitDisabled, setSubmitDisabled] = useState<boolean>(() => !isCorrection);
+  const timerRef = useRef<number | null>(null);
 
+  // A correction reopens a round that already has stored result data. It should be
+  // immediately submittable; the short anti-accidental-submit lock is for new rounds.
   const showError = (key: string, options?: Record<string, unknown>) => {
     setError(t(key, options));
     setErrorKey(key);
@@ -40,6 +47,8 @@ export function ResultOverlay({ close }: { close: () => void }) {
 
   useEffect(() => {
     // enable submit after 2 seconds (immediately in e2e runs to keep tests fast)
+    // This state update is intentional: it is the timer's state transition.
+    // eslint-disable-next-line @eslint-react/set-state-in-effect
     setSubmitDisabled(!isCorrection);
     if (timerRef.current) {
       window.clearTimeout(timerRef.current);
@@ -52,23 +61,10 @@ export function ResultOverlay({ close }: { close: () => void }) {
     };
   }, [isCorrection]);
 
-  // Reopen the last completed round with its raw entries and Wolke choices intact.
-  useEffect(() => {
-    const roundIndex = currentRound - 1;
-    const correctedResults = players.map(
-      (player) => player.receivedResults?.[roundIndex] ?? player.results?.[roundIndex] ?? 0
-    );
-    const correctedWolkeFlags = players.map((player) => !!player.wolkeUsed?.[roundIndex]);
-    setResults(correctedResults);
-    setWolkeFlags(correctedWolkeFlags);
-  }, [currentRound, players]);
-
-  // reset error if user changes any input
-  useEffect(() => {
+  const clearError = () => {
     if (error) setError('');
-  }, [results, wolkeFlags]);
-
-  const startPlayerIndex = getCurrentStartPlayerIndex();
+    if (errorKey) setErrorKey('');
+  };
   const rotatedPlayers = [
     ...players.slice(startPlayerIndex),
     ...players.slice(0, startPlayerIndex),
@@ -181,6 +177,7 @@ export function ResultOverlay({ close }: { close: () => void }) {
                   data-testid={T.result.input(i)}
                   onFocus={(e) => e.target.select()}
                   onChange={(e) => {
+                    clearError();
                     const copy = [...results];
                     copy[i] = parseInt(e.target.value);
                     setResults(copy);
@@ -194,6 +191,7 @@ export function ResultOverlay({ close }: { close: () => void }) {
                   min={0}
                   max={currentRound}
                   onChange={(value) => {
+                    clearError();
                     const copy = [...results];
                     copy[i] = value;
                     setResults(copy);
@@ -211,6 +209,7 @@ export function ResultOverlay({ close }: { close: () => void }) {
                     checked={wolkeFlags[i]}
                     data-testid={T.result.wolke(i)}
                     onChange={(e) => {
+                      clearError();
                       const copy = [...wolkeFlags];
                       copy[i] = e.target.checked;
                       setWolkeFlags(copy);
