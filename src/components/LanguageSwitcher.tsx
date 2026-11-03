@@ -41,9 +41,6 @@ const LANGUAGES: {
   { code: 'en', flag: FlagGb, labelKey: 'footer.langEn' },
 ];
 
-const focusRing =
-  'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 focus-visible:ring-offset-2';
-
 /**
  * Language switcher, one flag per supported language. Rendered inside the
  * `Footer`, which the app shows on every screen — configuration, scoreboard and
@@ -81,12 +78,12 @@ export default function LanguageSwitcher() {
           aria-label={t(labelKey)}
           aria-pressed={activeLanguage === code}
           title={t(labelKey)}
-          className={`flex min-h-11 min-w-11 cursor-pointer items-center justify-center rounded px-2 opacity-60 hover:opacity-100 focus-visible:opacity-100 aria-pressed:opacity-100 ${focusRing}`}
+          className="flex min-h-11 min-w-11 cursor-pointer items-center justify-center rounded px-2 opacity-60 hover:opacity-100 focus-visible:opacity-100 aria-pressed:opacity-100"
         >
-          {/* the active language is outlined, the ring also shows keyboard focus */}
+          {/* the active language is outlined in gold; keyboard focus shows the global gold outline */}
           <span
             className={`overflow-hidden rounded-[3px] shadow-sm ring-1 ${
-              activeLanguage === code ? 'ring-gray-700' : 'ring-black/10'
+              activeLanguage === code ? 'ring-gold' : 'ring-white/20'
             }`}
           >
             <Flag />

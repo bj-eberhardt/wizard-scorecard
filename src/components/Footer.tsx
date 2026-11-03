@@ -26,12 +26,22 @@ export default function Footer() {
   return (
     <footer
       data-testid={T.footer.root}
-      className="mt-8 px-4 pb-2 text-center text-gray-500 text-sm md:fixed md:inset-x-0 md:bottom-0 md:z-30 md:mt-0 md:border-t md:border-gray-200 md:bg-white/95 md:pt-1 md:backdrop-blur"
+      className="mt-8 px-4 pb-2 text-center text-ink-soft text-sm md:fixed md:inset-x-0 md:bottom-0 md:z-30 md:mt-0 md:border-t md:border-line md:bg-surface/80 md:pt-1 md:backdrop-blur"
     >
       <LanguageSwitcher />
       <span data-testid={T.footer.copyright}>
         {t('footer.copy', { year, version: __APP_VERSION__ })}
       </span>
+      <span aria-hidden="true" className="mx-1">
+        ·
+      </span>
+      <a
+        data-testid={T.footer.privacy}
+        href="privacy.html"
+        className="text-xs text-ink-soft underline-offset-2 hover:text-ink hover:underline"
+      >
+        {t('footer.privacy')}
+      </a>
     </footer>
   );
 }

@@ -34,10 +34,10 @@ const FullscreenButton: React.FC = () => {
     <button
       onClick={toggleFullscreen}
       data-testid={T.header.fullscreen}
-      className="absolute top-2 right-2 z-50 cursor-pointer p-2 bg-white rounded-full shadow-md"
+      className="absolute top-2 right-2 z-50 cursor-pointer p-2 bg-panel/90 ring-1 ring-line rounded-full shadow-md"
       aria-label={t('buttons.toggleFullscreen')}
     >
-      <Icon size={24} strokeWidth={2} aria-hidden className="text-gray-800" />
+      <Icon size={24} strokeWidth={2} aria-hidden className="text-ink" />
     </button>
   );
 };

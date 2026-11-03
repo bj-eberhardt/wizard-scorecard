@@ -130,7 +130,7 @@ export function ResultOverlay({ close }: { close: () => void }) {
       data-testid={T.result.overlay}
     >
       <form
-        className="relative bg-white p-4 rounded shadow w-96"
+        className="relative bg-panel border border-line p-4 rounded-lg shadow-2xl w-96"
         noValidate
         onSubmit={(e) => submit(e)}
       >
@@ -165,7 +165,7 @@ export function ResultOverlay({ close }: { close: () => void }) {
                   copy[i] = parseInt(e.target.value);
                   setResults(copy);
                 }}
-                className="border w-16 p-1"
+                className="border border-line bg-surface text-ink rounded p-1 w-16 text-right tabular-nums"
               />
               {useAnniversaryRules && (
                 <label className="text-xs ml-2 self-center">
@@ -179,6 +179,7 @@ export function ResultOverlay({ close }: { close: () => void }) {
                       copy[i] = e.target.checked;
                       setWolkeFlags(copy);
                     }}
+                    className="accent-gold"
                   />{' '}
                   &nbsp;{t('resultOverlay.wolke')}
                 </label>
@@ -188,7 +189,7 @@ export function ResultOverlay({ close }: { close: () => void }) {
         ))}
         {error && (
           <div
-            className="bg-red-100 text-red-700 p-2 mb-2 rounded"
+            className="bg-danger-soft text-danger p-2 mb-2 rounded"
             data-testid={T.result.error}
             data-error-key={errorKey}
           >
@@ -197,7 +198,7 @@ export function ResultOverlay({ close }: { close: () => void }) {
         )}
         {confirmZero && (
           <div
-            className="bg-orange-100 text-orange-800 p-2 mb-2 rounded"
+            className="bg-warn-soft text-yellow-200 p-2 mb-2 rounded"
             data-testid={T.result.confirmZero}
           >
             {t('resultOverlay.confirmAllZero')}
@@ -206,7 +207,7 @@ export function ResultOverlay({ close }: { close: () => void }) {
         {/* single info line above the buttons, shown once if any wolke is selected */}
         {anyWolkeSelected && (
           <div
-            className="text-sm text-gray-700 bg-gray-50 p-2 rounded mb-2"
+            className="text-sm text-ink-soft bg-white/5 p-2 rounded mb-2"
             data-testid={T.result.wolkeInfo}
           >
             {t('resultOverlay.wolkeInfo')}
@@ -223,7 +224,7 @@ export function ResultOverlay({ close }: { close: () => void }) {
               setOverlay('prediction');
             }}
             data-testid={T.result.revert}
-            className="flex-0 bg-gray-200 text-gray-800 px-3 py-2 rounded"
+            className="btn-secondary flex-0 px-3"
             title={t('resultOverlay.revertButton')}
           >
             ↶
@@ -236,7 +237,7 @@ export function ResultOverlay({ close }: { close: () => void }) {
             aria-busy={submitDisabled}
             data-submit-ready={submitDisabled ? 'false' : 'true'}
             data-testid={T.result.submit}
-            className={`flex-1 px-4 py-2 rounded ${submitDisabled ? 'bg-gray-300 text-gray-600 cursor-not-allowed' : 'bg-green-500 text-white'}`}
+            className={`flex-1 px-4 py-2 rounded-md ${submitDisabled ? 'min-h-11 bg-white/10 text-ink-soft cursor-not-allowed' : 'btn-primary'}`}
           >
             {submitDisabled
               ? t('resultOverlay.submitButtonDisabled')

@@ -80,7 +80,8 @@
     "copy": "© {{year}} - Version: {{version}}",
     "langGroup": "Sprache",
     "langDe": "Deutsch",
-    "langEn": "Englisch"
+    "langEn": "Englisch",
+    "privacy": "Datenschutz"
   },
   "configureGame": {
     "title": "Bitte gib die Namen der Spieler ein:",

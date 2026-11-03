@@ -47,17 +47,17 @@ export function WinnerView() {
       <WinnerConfetti />
 
       <div
-        className="mx-auto mt-4 max-w-md p-4 bg-gray-50 border border-gray-200 rounded-lg text-center"
+        className="mx-auto mt-4 max-w-md p-4 bg-panel border border-line rounded-lg text-center"
         data-testid={T.winner.container}
         data-winner-count={winners.length}
         data-points={maxReachedPoints}
         data-winner-names={winners.map((w) => w.name).join('|')}
       >
         {/* Heading */}
-        <h2 className="text-xl font-bold text-yellow-700 mb-4">{announcementText}</h2>
+        <h2 className="text-xl font-bold text-gold mb-4">{announcementText}</h2>
 
         {/* Column header */}
-        <div className="flex items-center justify-end gap-3 px-3 pb-1 text-[10px] font-medium uppercase tracking-wide text-gray-400">
+        <div className="flex items-center justify-end gap-3 px-3 pb-1 text-[10px] font-medium uppercase tracking-wide text-ink-soft">
           <span className="mr-auto">{t('labels.player')}</span>
           <span className="w-10 text-right">{t('labels.points')}</span>
           <span
@@ -81,21 +81,19 @@ export function WinnerView() {
               data-hit-rate={rp.stats.hitRate ?? ''}
               className={`flex items-center justify-between rounded px-3 py-2 text-sm ${
                 rp.rank === 1
-                  ? 'bg-yellow-50 border border-yellow-300 font-bold text-yellow-800'
-                  : 'bg-white border border-gray-100 text-gray-700'
+                  ? 'bg-gold/10 border border-gold/60 font-bold text-gold'
+                  : 'bg-surface/60 border border-line text-ink'
               }`}
             >
               <span className="flex items-center gap-2 min-w-0">
-                {rp.rank === 1 && (
-                  <Trophy size={16} className="shrink-0 text-yellow-500" aria-hidden />
-                )}
+                {rp.rank === 1 && <Trophy size={16} className="shrink-0 text-gold" aria-hidden />}
                 <span className="w-6 shrink-0">{rp.rank}.</span>
                 <span className="truncate">{rp.player.name}</span>
               </span>
               <span className="flex items-center gap-3 shrink-0">
                 <span className="font-mono">{rp.finalPoints}</span>
                 <span
-                  className="flex w-10 items-center justify-end gap-0.5 text-xs text-gray-500"
+                  className="flex w-10 items-center justify-end gap-0.5 text-xs text-ink-soft"
                   data-hit-total={rp.stats.hitTotal}
                   title={t('winnerView.hitRateLabel')}
                   aria-label={`${t('winnerView.hitRateLabel')}: ${

@@ -25,10 +25,14 @@ export function Scoreboard({ compact = false }: { compact?: boolean }) {
   // Numbers are right-aligned with `tabular-nums`: equal digit widths plus a shared right edge
   // line the same decimal places up across rows (the `1` of `1` sits under the `0` of `30`) —
   // centring would instead float a short number to the middle and break that place alignment.
-  const cellClass = 'border border-black w-12 px-0.5 py-0.5 text-xs text-right tabular-nums';
+  // Borders are the thin theme line (1 px), never a heavy black frame.
+  const cellClass = 'border border-line w-12 px-0.5 py-0.5 text-xs text-right tabular-nums';
   // Backgrounds are set per cell, never here, so no element carries two conflicting ones.
   const headerLabelClass =
-    'w-12 px-0.5 py-0.5 text-xs font-normal text-gray-500 border-2 border-black text-center';
+    'w-12 px-0.5 py-0.5 text-xs font-normal text-ink-soft border border-line text-center';
+  // Vertical separator between player groups — a thin gold line, not a black block.
+  const groupEdge = 'border-l-2 border-l-gold/50';
+  const groupEnd = 'border-r-2 border-r-gold/50';
 
   /**
    * Rendered text of the tricks cell: `3→2 ☁` for a Wolke round, else the value. The narrow
@@ -71,7 +75,7 @@ export function Scoreboard({ compact = false }: { compact?: boolean }) {
                 rowSpan={2}
                 data-testid={T.scoreboard.roundHeader}
                 aria-label={t('labels.round')}
-                className="bg-white sticky left-0 z-10 px-1 md:px-2 py-1 text-xs md:text-base text-center border-2 border-black"
+                className="bg-panel sticky left-0 z-10 px-1 md:px-2 py-1 text-xs md:text-base text-center border border-line"
               >
                 {/* Narrow the sticky round column on phones (the auto-layout table lets the
                     header word stretch it well beyond the two digits below); on desktop
@@ -94,16 +98,14 @@ export function Scoreboard({ compact = false }: { compact?: boolean }) {
                     key={`${i}-name`}
                     colSpan={compact ? 2 : 3}
                     data-testid={T.scoreboard.headerPlayer(i)}
-                    className={`px-2 py-1 text-center border-2 border-black ${
-                      i > 0 ? 'border-l-4' : ''
-                    }`}
+                    className={`px-2 py-1 text-center border border-line ${i > 0 ? groupEdge : ''}`}
                   >
                     {p.name}
                     {compact && typeof total === 'number' && (
                       <span
                         data-testid={T.scoreboard.headerPoints(i)}
                         data-points={total}
-                        className="block text-xs font-normal text-gray-600"
+                        className="block text-xs font-normal text-ink-soft"
                       >
                         ({total})
                       </span>
@@ -117,14 +119,14 @@ export function Scoreboard({ compact = false }: { compact?: boolean }) {
                 <React.Fragment key={`${i}-labels`}>
                   <th
                     data-testid={T.scoreboard.headerLabel(i, 'prediction')}
-                    className={`bg-white ${headerLabelClass} ${i > 0 ? 'border-l-4' : ''}`}
+                    className={`bg-panel ${headerLabelClass} ${i > 0 ? groupEdge : ''}`}
                   >
                     {t('labels.prediction')}
                   </th>
                   <th
                     data-testid={T.scoreboard.headerLabel(i, 'tricks')}
-                    className={`bg-white ${headerLabelClass} ${
-                      compact && i === players.length - 1 ? 'border-r-4' : ''
+                    className={`bg-panel ${headerLabelClass} ${
+                      compact && i === players.length - 1 ? groupEnd : ''
                     }`}
                   >
                     {t('labels.tricks')}
@@ -132,8 +134,8 @@ export function Scoreboard({ compact = false }: { compact?: boolean }) {
                   {!compact && (
                     <th
                       data-testid={T.scoreboard.headerLabel(i, 'points')}
-                      className={`bg-gray-50 ${headerLabelClass} ${
-                        i === players.length - 1 ? 'border-r-4' : ''
+                      className={`bg-gold/[0.06] ${headerLabelClass} ${
+                        i === players.length - 1 ? groupEnd : ''
                       }`}
                     >
                       {t('labels.points')}
@@ -145,10 +147,8 @@ export function Scoreboard({ compact = false }: { compact?: boolean }) {
           </thead>
           <tbody>
             {rounds.map((_, roundIndex) => (
-              <tr key={roundIndex}>
-                <td className="bg-white sticky left-0 z-10 border-2 border-black">
-                  {roundIndex + 1}
-                </td>
+              <tr key={roundIndex} className="odd:bg-white/[0.04]">
+                <td className="bg-panel sticky left-0 z-10 border border-line">{roundIndex + 1}</td>
                 {players.map((p, i) => {
                   const prediction = p.predictions[roundIndex];
                   const evaluated = p.results?.[roundIndex];
@@ -159,7 +159,7 @@ export function Scoreboard({ compact = false }: { compact?: boolean }) {
                       <td
                         data-testid={T.scoreboard.cell(i, roundIndex, 'prediction')}
                         data-prediction={attr(prediction)}
-                        className={`${cellClass} ${i > 0 ? 'border-l-4' : ''}`}
+                        className={`${cellClass} ${i > 0 ? groupEdge : ''}`}
                       >
                         <span className="w-full inline-block text-right rounded px-1 py-0.5">
                           {prediction ?? '-'}
@@ -171,7 +171,7 @@ export function Scoreboard({ compact = false }: { compact?: boolean }) {
                         data-received-tricks={attr(entered)}
                         data-wolke={wolke ? 'true' : 'false'}
                         className={`${cellClass} ${
-                          compact && i === players.length - 1 ? 'border-r-4' : ''
+                          compact && i === players.length - 1 ? groupEnd : ''
                         }`}
                       >
                         {tricksText(p, roundIndex)}
@@ -180,8 +180,8 @@ export function Scoreboard({ compact = false }: { compact?: boolean }) {
                         <td
                           data-testid={T.scoreboard.cell(i, roundIndex, 'points')}
                           data-points={attr(p.points[roundIndex])}
-                          className={`${cellClass} bg-gray-50 font-bold ${
-                            i === players.length - 1 ? 'border-r-4' : ''
+                          className={`${cellClass} bg-gold/[0.06] font-bold ${
+                            i === players.length - 1 ? groupEnd : ''
                           }`}
                         >
                           {p.points[roundIndex] ?? '-'}
