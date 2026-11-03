@@ -1,6 +1,5 @@
 import { useEffect, useState } from 'react';
-import logoPng from '../assets/logo.png';
-import logoWebp from '../assets/logo.webp';
+import logoTransparent from '../assets/logo_transparent.png';
 import { isE2E } from '../e2eFlag';
 import { T } from '../test-ids';
 
@@ -28,18 +27,17 @@ export const LoadingScreen = () => {
       } ${isVisible ? 'opacity-100' : 'opacity-0'}`}
       data-testid={T.loading.splash}
     >
-      <div className="w-48 h-48 sm:w-64 sm:h-64 md:w-128 md:h-128 relative">
-        <picture>
-          <source srcSet={logoWebp} type="image/webp" />
-          <img
-            src={logoPng}
-            alt=""
-            className="w-full h-full object-contain animate-pulse"
-            loading="eager"
-            width="256"
-            height="256"
-          />
-        </picture>
+      {/* Transparent emblem asset so it blends into the dark surface with no
+          background box; the pulse is the only loading affordance. */}
+      <div className="relative w-48 h-48 sm:w-64 sm:h-64 md:w-128 md:h-128">
+        <img
+          src={logoTransparent}
+          alt=""
+          className="h-full w-full object-contain animate-pulse"
+          loading="eager"
+          width="256"
+          height="256"
+        />
       </div>
     </div>
   );
