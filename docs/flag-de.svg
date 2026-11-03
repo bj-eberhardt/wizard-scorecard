@@ -1,0 +1,5 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="24" height="16" viewBox="0 0 24 16" role="img" aria-label="German flag">
+  <rect width="24" height="16" rx="1" fill="#ffce00"/>
+  <path fill="#000" d="M1 0h22a1 1 0 0 1 1 1v4H0V1a1 1 0 0 1 1-1Z"/>
+  <path fill="#d00" d="M0 5h24v6H0z"/>
+</svg>
