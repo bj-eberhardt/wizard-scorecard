@@ -146,6 +146,19 @@ test.describe('Enter results', () => {
     });
   });
 
+  test('Wolke checkbox is reachable with Tab', async ({ game }) => {
+    await test.step('Open a result overlay with anniversary rules', async () => {
+      await seedRound4(game, { useAnniversaryRules: true });
+      await openApp(game);
+      await expect(game.getByTestId(T.result.wolke(0))).toBeVisible();
+    });
+    await test.step('Tab from the first result input to the first Wolke checkbox', async () => {
+      await expect(game.getByTestId(T.result.input(0))).toBeFocused();
+      await game.keyboard.press('Tab');
+      await expect(game.getByTestId(T.result.wolke(0))).toBeFocused();
+    });
+  });
+
   test('Wolke: difference 1 becomes a correct prediction (points +)', async ({ game }) => {
     await test.step('Seed round 4 with the anniversary rule', async () => {
       await seedRound4(game, { useAnniversaryRules: true });

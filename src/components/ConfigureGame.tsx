@@ -1,4 +1,4 @@
-import React, { useState, useRef } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { GripVertical, Plus, X } from 'lucide-react';
 import useSettingsStore from '../store/settingsStore';
 import { useTranslation } from 'react-i18next';
@@ -6,6 +6,7 @@ import { roundsForCount } from '../store/gameStore';
 import InfoTooltip from './InfoTooltip';
 import { useDragReorder } from '../hooks/useDragReorder';
 import { T } from '../test-ids';
+import { ValidationError } from './ValidationError';
 
 interface ConfigureGameProps {
   onStart: (names: string[], useWolke: boolean, useNotEqual: boolean, rounds?: number) => void;
@@ -36,6 +37,8 @@ const ConfigureGame: React.FC<ConfigureGameProps> = ({ onStart }) => {
   // row must survive the live swap, so React must NOT reconcile rows by index.
   const [rowIds, setRowIds] = useState<number[]>(() => rows.map((_, i) => i + 1));
   const nextRowIdRef = useRef(initialCount + 1);
+  const playerInputRef = useRef<Array<HTMLInputElement | null>>([]);
+  const pendingFocusIndexRef = useRef<number | null>(null);
   const [useWolke, setUseWolke] = useState(useAnniversaryRules);
   const [useNotEqual, setUseNotEqual] = useState(useNotEqualSetting);
   const [error, setError] = useState<string | null>(null);
@@ -71,8 +74,16 @@ const ConfigureGame: React.FC<ConfigureGameProps> = ({ onStart }) => {
   // synchronizing it through an effect.
   const displayedManualRounds = usedManualOverride ? manualRounds : defaultRounds;
 
+  useEffect(() => {
+    const index = pendingFocusIndexRef.current;
+    if (index === null) return;
+    pendingFocusIndexRef.current = null;
+    playerInputRef.current[index]?.focus();
+  }, [rows.length]);
+
   const addRow = () => {
     if (rows.length >= MAX_PLAYERS) return;
+    pendingFocusIndexRef.current = rows.length;
     setRows((r) => [...r, '']);
     setRowIds((ids) => [...ids, nextRowIdRef.current++]);
   };
@@ -178,6 +189,9 @@ const ConfigureGame: React.FC<ConfigureGameProps> = ({ onStart }) => {
               <input
                 type="text"
                 value={name}
+                ref={(element) => {
+                  playerInputRef.current[i] = element;
+                }}
                 data-testid={T.config.playerName(i)}
                 placeholder={t('configureGame.playerNamePlaceholder', { number: i + 1 })}
                 onChange={(e) => {
@@ -327,13 +341,7 @@ const ConfigureGame: React.FC<ConfigureGameProps> = ({ onStart }) => {
         </section>
 
         {error && (
-          <div
-            className="bg-danger-soft text-danger p-2 rounded"
-            data-testid={T.config.error}
-            data-error-key={errorKey ?? ''}
-          >
-            {error}
-          </div>
+          <ValidationError message={error} errorKey={errorKey ?? ''} testId={T.config.error} />
         )}
         <button
           type={'button'}

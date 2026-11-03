@@ -4,6 +4,7 @@ import { useTranslation } from 'react-i18next';
 import { T } from '../test-ids';
 import { isE2E } from '../e2eFlag';
 import { NumberStepper } from './NumberStepper';
+import { ValidationError } from './ValidationError';
 
 export function ResultOverlay({ close }: { close: () => void }) {
   const { t } = useTranslation();
@@ -204,7 +205,6 @@ export function ResultOverlay({ close }: { close: () => void }) {
               {useAnniversaryRules && (
                 <label className="text-xs shrink-0 self-center whitespace-nowrap">
                   <input
-                    tabIndex={-1}
                     type="checkbox"
                     checked={wolkeFlags[i]}
                     data-testid={T.result.wolke(i)}
@@ -222,15 +222,7 @@ export function ResultOverlay({ close }: { close: () => void }) {
             </div>
           </div>
         ))}
-        {error && (
-          <div
-            className="bg-danger-soft text-danger p-2 mb-2 rounded"
-            data-testid={T.result.error}
-            data-error-key={errorKey}
-          >
-            {error}
-          </div>
-        )}
+        {error && <ValidationError message={error} errorKey={errorKey} testId={T.result.error} />}
         {/* single info line above the buttons, shown once if any wolke is selected */}
         {anyWolkeSelected && (
           <div

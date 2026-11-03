@@ -1,4 +1,4 @@
-@import "tailwindcss";
+@import 'tailwindcss';
 @config "../tailwind.config.js";
 
 @theme {
@@ -56,6 +56,28 @@ input:focus-visible {
 
   .btn-destructive {
     @apply min-h-11 cursor-pointer rounded-md border border-danger px-4 py-2 text-danger transition-colors hover:bg-danger-soft;
+  }
+
+  .validation-error {
+    @apply my-3 rounded border-l-4 border-danger bg-danger-soft p-2 leading-snug text-danger;
+    animation: validation-error-in 180ms ease-out;
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .validation-error {
+      animation: none;
+    }
+  }
+}
+
+@keyframes validation-error-in {
+  from {
+    opacity: 0;
+    transform: translateY(-0.25rem);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
   }
 }
 

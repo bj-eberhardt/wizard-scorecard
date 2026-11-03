@@ -3,6 +3,7 @@ import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { T } from '../test-ids';
 import { NumberStepper } from './NumberStepper';
+import { ValidationError } from './ValidationError';
 
 export function PredictionOverlay({ close }: { close: () => void }) {
   const { t } = useTranslation();
@@ -176,13 +177,7 @@ export function PredictionOverlay({ close }: { close: () => void }) {
           </div>
         ))}
         {error && (
-          <div
-            className="bg-danger-soft text-danger p-2 mb-2 rounded"
-            data-testid={T.prediction.error}
-            data-error-key={errorKey}
-          >
-            {error}
-          </div>
+          <ValidationError message={error} errorKey={errorKey} testId={T.prediction.error} />
         )}
         <button type="submit" data-testid={T.prediction.submit} className="btn-primary mt-2 w-full">
           {t('predictionOverlay.startRound')}

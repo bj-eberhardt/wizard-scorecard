@@ -205,6 +205,7 @@ test.describe('Configure game', () => {
 
     await test.step('Add a 4th row and name the first two', async () => {
       await game.getByTestId(T.config.addPlayer).click();
+      await expect(game.getByTestId(T.config.playerName(3))).toBeFocused();
       await game.getByTestId(T.config.playerName(0)).fill('Anna');
       await game.getByTestId(T.config.playerName(1)).fill('Ben');
     });
@@ -214,6 +215,12 @@ test.describe('Configure game', () => {
       await game.getByTestId(T.config.removePlayer(0)).click();
       await expect(game.getByTestId(T.config.playerName(0))).toHaveValue('Ben');
     });
+  });
+
+  test('Player rows: add focuses the new field on mobile @mobile', async ({ game }) => {
+    await openApp(game);
+    await game.getByTestId(T.config.addPlayer).click();
+    await expect(game.getByTestId(T.config.playerName(3))).toBeFocused();
   });
 
   test('Player rows: reorder via drag & drop on the grip handle', async ({ game }) => {

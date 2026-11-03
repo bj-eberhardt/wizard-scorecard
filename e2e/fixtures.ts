@@ -139,6 +139,8 @@ export async function submitResults(page: Page, values: number[], wolkeIdx?: num
 export async function expectError(page: Page, testId: string, errorKey: string) {
   const el = page.getByTestId(testId);
   await expect(el).toBeVisible();
+  await expect(el).toHaveAttribute('role', 'alert');
+  await expect(el).toHaveAttribute('aria-live', 'polite');
   await expect(el).toHaveAttribute('data-error-key', errorKey);
 }
 
