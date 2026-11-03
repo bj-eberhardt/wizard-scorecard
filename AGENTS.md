@@ -59,8 +59,16 @@ the hook (too slow) — that stays in CI / on demand.
   when the active Node does not match. If an install fails with `EBADENGINE`, switch
   to Node 24 (`nvm use 24`).
 - Docker base image is `node:24-alpine`; all GitHub Actions use
-  `actions/setup-node@v4` with `node-version: 24`.
+  `actions/setup-node@v7` with `node-version: 24`.
 - Keep Docker, CI, and `engines` in sync when ever bumping the LTS line.
+- **Action pins are Node 24 majors.** GitHub deprecated Node 20 on its runners, so any
+  action still declaring it is *force-run* on Node 24 and logs a deprecation warning.
+  All `uses:` pins in `.github/workflows/` are on majors whose `action.yml` says
+  `runs.using: node24` (checkout/setup-node/upload-artifact v7, configure-pages v6,
+  cache v6, github-script v9, upload-pages-artifact/deploy-pages v5,
+  docker/login-action & setup-buildx-action v4, softprops/action-gh-release v3, whose
+  `v3` tag already points at a node24 release). When bumping a pin, check the target
+  version's `action.yml` — not just the major number.
 
 ---
 
@@ -365,7 +373,19 @@ map to the rotated players, not the roster order.
 - `build_and_push.yml` — on `master` push: builds, deploys GitHub Pages, bumps version
   (`npm version patch`), builds/pushes the Docker image, creates a release. Skips itself
   on version-bump commits.
-- `dependabot.yml` / `dependabot-automerge.yml` — dependency updates.
+- `dependabot.yml` / `dependabot-automerge.yml` — dependency updates for **both** the
+  `npm` and the `github-actions` ecosystem (the latter keeps the workflow `uses:` pins on
+  Node 24 majors, see §3). Policy:
+  - Each ecosystem has one `groups` entry with `update-types: [minor, patch]`, so routine
+    updates arrive as a **single** grouped PR per ecosystem instead of many PRs that then
+    conflict with one another. Major updates are excluded from the group and stay solo.
+  - The auto-merge job gates on `update-type != version-update:semver-major`: a major bump
+    (any ecosystem) is **never** auto-merged and needs a human. `update-type` is the highest
+    change in the PR, so a grouped minor+patch PR still passes the gate. Security-update PRs
+    (label `security`) auto-merge even when the fix is a major.
+  - The job runs on `pull_request_target`, **not** `pull_request`: on a Dependabot PR the
+    `pull_request` event only gets a read-only `GITHUB_TOKEN`, so `gh pr merge` would fail.
+    Safe here because the job never checks out or executes PR code.
 
 A PR to `master` therefore gates on: prettier-clean, lint-clean, Docker smoke, and the
 E2E suite. Run `npm run format` and `npm run test:e2e` locally before pushing.
