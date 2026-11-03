@@ -61,6 +61,17 @@ Important build behavior:
   `/wizard-scorecard/`. Use a relative local build, or provide the correct `--base`, for another
   deployment path.
 
+### Docker image
+
+Build and run the local nginx image:
+
+```bash
+docker build -t wizard-scoreboard .
+docker run --rm -p 8080:80 wizard-scoreboard
+```
+
+Open <http://localhost:8080/>. The published Docker Hub image is documented in [README.md](README.md).
+
 ## README screenshots
 
 Generate the German and English README screenshots from a production build:

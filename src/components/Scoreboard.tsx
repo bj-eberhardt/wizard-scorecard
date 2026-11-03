@@ -95,7 +95,7 @@ export function Scoreboard({ compact = false }: { compact?: boolean }) {
                 const total = totalPoints(p);
                 return (
                   <th
-                    key={`${i}-name`}
+                    key={`header-${p.name}`}
                     colSpan={compact ? 2 : 3}
                     data-testid={T.scoreboard.headerPlayer(i)}
                     className={`px-2 py-1 text-center border border-line ${i > 0 ? groupEdge : ''}`}
@@ -115,8 +115,8 @@ export function Scoreboard({ compact = false }: { compact?: boolean }) {
               })}
             </tr>
             <tr>
-              {players.map((_, i) => (
-                <React.Fragment key={`${i}-labels`}>
+              {players.map((p, i) => (
+                <React.Fragment key={`labels-${p.name}`}>
                   <th
                     data-testid={T.scoreboard.headerLabel(i, 'prediction')}
                     className={`bg-panel ${headerLabelClass} ${i > 0 ? groupEdge : ''}`}
@@ -146,8 +146,8 @@ export function Scoreboard({ compact = false }: { compact?: boolean }) {
             </tr>
           </thead>
           <tbody>
-            {rounds.map((_, roundIndex) => (
-              <tr key={roundIndex} className="odd:bg-white/[0.04]">
+            {rounds.map((roundIndex) => (
+              <tr key={`round-${roundIndex}`} className="odd:bg-white/[0.04]">
                 <td className="bg-panel sticky left-0 z-10 border border-line">{roundIndex + 1}</td>
                 {players.map((p, i) => {
                   const prediction = p.predictions[roundIndex];
@@ -155,7 +155,7 @@ export function Scoreboard({ compact = false }: { compact?: boolean }) {
                   const entered = p.receivedResults?.[roundIndex] ?? evaluated;
                   const wolke = !!p.wolkeUsed?.[roundIndex];
                   return (
-                    <React.Fragment key={`${i}-player${roundIndex}`}>
+                    <React.Fragment key={`${p.name}-round-${roundIndex}`}>
                       <td
                         data-testid={T.scoreboard.cell(i, roundIndex, 'prediction')}
                         data-prediction={attr(prediction)}

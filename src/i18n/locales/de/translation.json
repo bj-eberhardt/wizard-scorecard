@@ -15,9 +15,12 @@
     "onlyOneWolke": "Es kann nur eine Wolke pro Runde geben",
     "predictionTooSmall": "Zu kleine Schätzung für Spieler {{playerNames}}",
     "predictionTooLarge": "Zu große Schätzung für Spieler {{playerNames}}",
+    "resultSum": "Die Summe der Stiche muss {{round}} betragen.",
+    "resultSumAnniversary": "Die Summe der Stiche muss {{roundMinusOne}} oder {{round}} betragen.",
     "predictionNotEqualLast": "Die Summe aller Vorhersagen würde {{round}} ergeben. Der zuletzt vorhersagende Spieler ({{playerName}}) darf diese Schätzung nicht abgeben — bitte passe die Eingabe an."
   },
   "buttons": {
+    "correctLastRound": "Runde korrigieren",
     "close": "Schließen",
     "submit": "Bestätigen",
     "startNextRound": "Nächste Runde starten",
@@ -26,6 +29,10 @@
     "rematch": "Revanche starten",
     "saveImage": "Ergebnis speichern",
     "copyText": "Als Text kopieren"
+  },
+  "numberStepper": {
+    "decrease": "Verringern",
+    "increase": "Erhöhen"
   },
   "labels": {
     "prediction": "Tipp",
@@ -46,7 +53,6 @@
     "wolke": "Wolke",
     "submitButton": "Runde beenden",
     "submitButtonDisabled": "Runde beenden",
-    "confirmAllZero": "Alle Ergebnisse sind 0. Noch einmal klicken, um dies zu bestätigen.",
     "wolkeInfo": "Trage die erhaltenen Stiche ein und markiere die Wolke für diesen Spieler – die Berechnung übernehmen wir.",
     "revertButton": "Zurück"
   },

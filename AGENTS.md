@@ -13,7 +13,7 @@ acting; this document describes the actual state of the code.
 
 ## 1. What this project is
 
-**Wizard Punkteblock** — a digital scoreboard for the card game *Wizard*. Built
+**Wizard Punkteblock** — a digital scoreboard for the card game _Wizard_. Built
 with Vite + React 18 + TypeScript + Tailwind CSS v4, state in Zustand, fully
 client-side with `localStorage` persistence. Deployment targets: GitHub Pages and
 an nginx Docker image. The core usage scenario is a game table with one shared
@@ -23,21 +23,21 @@ phone: fast input, readable from a distance, error-tolerant.
 
 ## 2. Commands
 
-| Task | Command | Notes |
-|---|---|---|
-| Install | `npm ci` (or `npm install`) | `engine-strict` is on — see §3 |
-| Dev server | `npm run dev` | `vite --host`, **port 5173** |
-| Production build | `npm run build` | outputs to `dist/`, `base: './'` |
-| Preview build | `npm run preview` | `vite preview`, default **port 4173** |
-| Lint | `npm run lint` | `eslint src e2e playwright.config.ts vite.config.ts` — includes the E2E suite |
-| Format + lint | `npm run format` | `prettier --write` (src + e2e + configs) then `eslint` |
-| Check formatting | `npm run prettier:check` | no writes; used by CI and the pre-commit hook |
-| Type check | `npm run typecheck` | `tsc -p tsconfig.json --noEmit` over src + e2e + configs (Vite does NOT type-check) |
-| Install hooks | `npm run prepare` | sets up Husky (`core.hooksPath=.husky/_`); runs automatically on `npm install` |
-| E2E (all) | `npm run test:e2e` | builds + serves preview on 4173 itself |
-| E2E (interactive UI) | `npm run test:e2e:ui` | Playwright UI runner (watch, click-to-run, time-travel) |
-| E2E (headed) | `npm run test:e2e:headed` | `playwright test --headed` |
-| E2E (report) | `npm run test:e2e:report` | open last HTML report |
+| Task                 | Command                     | Notes                                                                               |
+| -------------------- | --------------------------- | ----------------------------------------------------------------------------------- |
+| Install              | `npm ci` (or `npm install`) | `engine-strict` is on — see §3                                                      |
+| Dev server           | `npm run dev`               | `vite --host`, **port 5173**                                                        |
+| Production build     | `npm run build`             | outputs to `dist/`, `base: './'`                                                    |
+| Preview build        | `npm run preview`           | `vite preview`, default **port 4173**                                               |
+| Lint                 | `npm run lint`              | `eslint src e2e playwright.config.ts vite.config.ts` — includes the E2E suite       |
+| Format + lint        | `npm run format`            | `prettier --write` (src + e2e + configs) then `eslint`                              |
+| Check formatting     | `npm run prettier:check`    | no writes; used by CI and the pre-commit hook                                       |
+| Type check           | `npm run typecheck`         | `tsc -p tsconfig.json --noEmit` over src + e2e + configs (Vite does NOT type-check) |
+| Install hooks        | `npm run prepare`           | sets up Husky (`core.hooksPath=.husky/_`); runs automatically on `npm install`      |
+| E2E (all)            | `npm run test:e2e`          | builds + serves preview on 4173 itself                                              |
+| E2E (interactive UI) | `npm run test:e2e:ui`       | Playwright UI runner (watch, click-to-run, time-travel)                             |
+| E2E (headed)         | `npm run test:e2e:headed`   | `playwright test --headed`                                                          |
+| E2E (report)         | `npm run test:e2e:report`   | open last HTML report                                                               |
 
 **Port separation:** dev (5173) and E2E/preview (4173) never collide; they can run
 simultaneously. The E2E webServer uses `--strictPort`, so a second concurrent E2E
@@ -62,7 +62,7 @@ the hook (too slow) — that stays in CI / on demand.
   `actions/setup-node@v7` with `node-version: 24`.
 - Keep Docker, CI, and `engines` in sync when ever bumping the LTS line.
 - **Action pins are Node 24 majors.** GitHub deprecated Node 20 on its runners, so any
-  action still declaring it is *force-run* on Node 24 and logs a deprecation warning.
+  action still declaring it is _force-run_ on Node 24 and logs a deprecation warning.
   All `uses:` pins in `.github/workflows/` are on majors whose `action.yml` says
   `runs.using: node24` (checkout/setup-node/upload-artifact v7, configure-pages v6,
   cache v6, github-script v9, upload-pages-artifact/deploy-pages v5,
@@ -83,7 +83,7 @@ src/
   components/
     ConfigureGame.tsx   # player names, rounds, rule toggles, validation
     PredictionOverlay.tsx  # enter tricks per player (start-player rotated)
-    ResultOverlay.tsx   # enter results, Wolke, submit-lock, all-zero confirm
+    ResultOverlay.tsx   # enter results, Wolke, submit-lock, result-sum validation
     Scoreboard.tsx      # two-row header, three columns per player (prediction · tricks · points)
     WinnerView.tsx      # end screen incl. tie handling
     Header.tsx / Footer.tsx / LanguageSwitcher.tsx / FullscreenButton.tsx / LoadingScreen.tsx
@@ -139,7 +139,7 @@ Key rules (all implemented in `gameStore.ts` / `ResultOverlay.tsx`):
   are rotated so row 0 is the current start player. Predictions/results map
   row-index → original player via `(i + startPlayerIndex) % playerCount`.
 - **Dealer (shuffler):** derived only, never persisted — `dealerIndex = (startIndex - 1 +
-  playerCount) % playerCount`, the seat to the LEFT of the start player (`getCurrentDealerIndex()`
+playerCount) % playerCount`, the seat to the LEFT of the start player (`getCurrentDealerIndex()`
   in `gameStore.ts`). That is also the LAST row of the rotated overlay order and therefore the
   player who predicts last (the `predictionNotEqualLast` case). `PredictionOverlay` names both
   roles in one info box under its title, as a single running sentence joined by a middot
@@ -164,8 +164,10 @@ Key rules (all implemented in `gameStore.ts` / `ResultOverlay.tsx`):
 - **NotEqual rule (opt-in):** the sum of all predictions in a round may not equal the
   round's trick count; the last player to predict must adjust (error
   `predictionNotEqualLast`).
-- **All-zero guard:** submitting all `0` in round > 1 needs a second confirming
-  click.
+- **Result-sum validation:** submitted tricks must sum to `currentRound`. With anniversary
+  rules enabled, `currentRound - 1` is also valid because the Bomb can remove one trick.
+  Invalid sums expose `errors.resultSum` or `errors.resultSumAnniversary`; range and
+  Wolke-specific errors take precedence.
 
 `resetGame()` clears the store and removes `wizard_state_v1`. `gameStore` writes
 `localStorage` after every mutation via an internal `save()`.
@@ -174,11 +176,11 @@ Key rules (all implemented in `gameStore.ts` / `ResultOverlay.tsx`):
 
 ## 6. Persistence (localStorage keys)
 
-| Key | Owner | Contents |
-|---|---|---|
-| `wizard_state_v1` | `gameStore.ts` | full running game (`players`, `currentRound`, `totalRounds`, `gameStarted`, `useAnniversaryRules`, `useNotEqual`, `overlay`) |
-| `wizard_settings_v1` | `settingsStore.ts` (zustand `persist`) | remembered `playerNames` (6 slots), `useAnniversaryRules`, `useNotEqual`, explicit `language` choice (`'de' | 'en' | null`) |
-| `i18nextLng` | i18next browser detector | active language |
+| Key                  | Owner                                  | Contents                                                                                                                     |
+| -------------------- | -------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------- |
+| `wizard_state_v1`    | `gameStore.ts`                         | full running game (`players`, `currentRound`, `totalRounds`, `gameStarted`, `useAnniversaryRules`, `useNotEqual`, `overlay`) |
+| `wizard_settings_v1` | `settingsStore.ts` (zustand `persist`) | remembered `playerNames` (6 slots), `useAnniversaryRules`, `useNotEqual`, explicit `language` choice (`'de'                  | 'en' | null`) |
+| `i18nextLng`         | i18next browser detector               | active language                                                                                                              |
 
 E2E fixtures clear both game/settings keys before every test. See §8.
 
@@ -212,7 +214,7 @@ E2E fixtures clear both game/settings keys before every test. See §8.
 - **The footer holds the language switcher; its placement is responsive**
   (`Footer.tsx`, mobile-first, `md` = the 768 px `FullscreenButton` threshold). On **desktop**
   (`md:`) it is an always-visible bar fixed to the viewport bottom (`md:fixed md:inset-x-0
-  md:bottom-0 md:z-30`), so the language is switchable on every screen **and while a round
+md:bottom-0 md:z-30`), so the language is switchable on every screen **and while a round
   overlay is open**; its z-30 sits above the two full-screen overlays (`z-20`) but below the
   modal dialogs (`z-50`) and the splash (`z-[1000]`). On **mobile** it is NOT pinned: it is a
   plain in-flow block (`mt-8`) that simply follows the page content, i.e. it appears **after
@@ -234,6 +236,7 @@ E2E fixtures clear both game/settings keys before every test. See §8.
 ## 8. E2E testing with Playwright (the important part)
 
 ### 8.1 Guiding principles
+
 1. **Select only by `data-testid`, never by text or CSS class.** All ids come from
    the single source of truth `src/test-ids.ts` (`T`), which BOTH the components and
    the specs import — a rename breaks the build, not the tests silently.
@@ -261,15 +264,17 @@ E2E fixtures clear both game/settings keys before every test. See §8.
      (consumed by `useDialogA11y`; asserted with `toBeFocused()`, never via text)
    - `data-lang` on the footer switcher → the language code each desktop flag button switches to,
      and the CURRENT language on the mobile cycle chip (both share `activeLanguage`)
-   **Accessibility state is asserted the same way** — `role`/`aria-*` attributes and
-   `toBeFocused()`/`keyboard.press(...)` — so a locale change can never break those tests.
-3. **Keep it fast.** Advanced states are *seeded*, not clicked through; artificial
+     **Accessibility state is asserted the same way** — `role`/`aria-*` attributes and
+     `toBeFocused()`/`keyboard.press(...)` — so a locale change can never break those tests.
+3. **Keep it fast.** Advanced states are _seeded_, not clicked through; artificial
    delays are bypassed (except in `waiting.spec.ts`).
 4. **Rich `test.step` descriptions** in English, one `await test.step('…', async () …)`
    per logical step so failures are readable in the report/UI timeline.
 
 ### 8.2 The `?e2e=1` bypass
+
 `src/e2eFlag.ts` → `isE2E()` returns true when the query string has `e2e`. It zeroes:
+
 - the 2s loading splash (`LoadingScreen`), and
 - the 2s result submit-lock (`ResultOverlay`).
 
@@ -280,7 +285,9 @@ flag is unchanged for real users. If you add another artificial delay in the pro
 gate it with `isE2E()` and cover the un-bypassed path in `waiting.spec.ts`.
 
 ### 8.3 Config & projects
+
 `playwright.config.ts`:
+
 - `baseURL: 'http://localhost:4173'`, production build via `vite preview`
   (`webServer.command: 'npm run build && npm run preview -- --port 4173 --strictPort'`,
   `reuseExistingServer: !CI`).
@@ -293,7 +300,9 @@ gate it with `isE2E()` and cover the un-bypassed path in `waiting.spec.ts`.
   test both ways.
 
 ### 8.4 Fixtures & page-object helpers (`e2e/fixtures.ts`)
+
 Use these instead of re-implementing flows:
+
 - `game` — the test's `Page` with `localStorage` cleared via `addInitScript`.
 - `openApp(page, { e2e = true, locale?, waitReady = true })` — navigate; readiness is
   the generic `#root` not-empty check (works for config screen AND seeded in-game
@@ -314,6 +323,7 @@ Row order note: inputs are indexed by **visible row** (rotated), so helper `valu
 map to the rotated players, not the roster order.
 
 ### 8.5 Coverage map (specs → area)
+
 - `configure-game.spec.ts` — names/rounds/rules/validation, `roundsForCount`, info dialogs incl.
   their keyboard path (modal attributes, focus trap, Escape, focus return — F12);
   F9 flow: add/remove player rows (gap-free by construction), standard/custom rounds segments;
@@ -325,7 +335,7 @@ map to the rotated players, not the roster order.
   (`Input.dispatchTouchEvent`), because `page.mouse` would report `pointerType: 'mouse'`
 - `prediction.spec.ts` — submit, prefill, start-player rotation, dealer/start-player info
   lines (round-1 wrap-around + one-seat-on), too-small/large, not-equal
-- `result.spec.ts` — points formula, all-zero confirm, Wolke rules, revert
+- `result.spec.ts` — points formula, result-sum validation, Wolke rules, revert
 - `scoreboard.spec.ts` — two-row header, the full cell matrix (all players × all rounds,
   incl. both Wolke branches), point sums/deltas, the centred table and primary button
   (equal left/right gaps), and that no prediction cell carries an
@@ -348,6 +358,7 @@ map to the rotated players, not the roster order.
 - `waiting.spec.ts` — real (un-bypassed) splash + submit-lock timing, no `?e2e`
 
 ### 8.6 Adding a new selector / test — checklist
+
 1. Add the id under the right group in `src/test-ids.ts` (`T`). Use a function for
    indexed elements (e.g. `cell(player, round, kind)`).
 2. Attach `data-testid={T.…}` in the component. If the state is textual, also expose
@@ -360,6 +371,23 @@ map to the rotated players, not the roster order.
 6. Keep `src/test-ids.ts`, `gameStore.ts`, and both translation.json in sync when adding
    features.
 
+### 8.7 README screenshot regression check
+
+`README.md` embeds eight generated mobile screenshots in `docs/1-de.png` through
+`docs/4-en.png`. The capture flow is implemented in `scripts/capture-readme.mjs` and
+uses the visible mobile controls, not the desktop-only inputs.
+
+Whenever `src/test-ids.ts`, overlay structure, responsive visibility, or mobile control
+behaviour changes, run:
+
+```bash
+npm run docs:screenshots
+```
+
+The command builds the production bundle, starts a temporary preview, captures both
+languages, and must finish successfully. Review the six generated files visually before
+committing. A selector or responsive change is incomplete until this check passes.
+
 ---
 
 ## 9. CI (GitHub Actions)
@@ -367,7 +395,7 @@ map to the rotated players, not the roster order.
 - `e2e.yml` — on push/PR to `master` + `workflow_dispatch`: Node 24, `npm ci`,
   Playwright Chromium (with `~/.cache/ms-playwright` cache keyed on `package-lock`),
   `npx playwright test` (webServer builds/serves itself), uploads `playwright-report/`
-  + `test-results/` (7-day retention) with `if: always()`.
+  - `test-results/` (7-day retention) with `if: always()`.
 - `pull_request.yml` — Prettier check + `npm run lint` (comments on failures), then a
   Docker build/run smoke test against `<title>Wizard Punkteblock</title>`.
 - `build_and_push.yml` — on `master` push: builds, deploys GitHub Pages, bumps version
@@ -399,7 +427,8 @@ E2E suite. Run `npm run format` and `npm run test:e2e` locally before pushing.
   `playwright.config.ts` and `vite.config.ts`. For `e2e/**` the React-specific rules
   (`rules-of-hooks`, `no-missing-key`) are switched **off** — Playwright fixtures are
   not React (the `use` fixture param would otherwise be a false positive). Current
-  `src` warnings (setState-in-effect, array-index key) are tolerated; **errors** are not.
+  Keep the lint output warning-free; warnings and **errors** require review and should not
+  be left as accepted baseline noise.
 - **Prettier**: no config file → defaults. `prettier`/`prettier:check`/`format` cover
   `src/**/*.{ts,tsx,js,jsx}`, `e2e/**/*.ts` and the two root configs.
 - TypeScript `strict`; import with the `T` id object and store hooks; functional

@@ -1,7 +1,8 @@
 import { useGameStore } from '../store/gameStore';
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { T } from '../test-ids';
+import { NumberStepper } from './NumberStepper';
 
 export function PredictionOverlay({ close }: { close: () => void }) {
   const { t } = useTranslation();
@@ -13,7 +14,12 @@ export function PredictionOverlay({ close }: { close: () => void }) {
     getCurrentDealerIndex,
     useNotEqual,
   } = useGameStore();
-  const [predictions, setPredictions] = useState<number[]>(Array(players.length).fill(0));
+  const startPlayerIndex = getCurrentStartPlayerIndex();
+  const [predictions, setPredictions] = useState<number[]>(() => {
+    const roundIndex = currentRound - 1;
+    const rotated = [...players.slice(startPlayerIndex), ...players.slice(0, startPlayerIndex)];
+    return rotated.map((player) => player.predictions?.[roundIndex] ?? 0);
+  });
   const [error, setError] = useState<string>('');
   // raw i18n key of the current error, exposed via data-error-key for E2E
   const [errorKey, setErrorKey] = useState<string>('');
@@ -23,16 +29,8 @@ export function PredictionOverlay({ close }: { close: () => void }) {
     setErrorKey(key);
   };
 
-  const startPlayerIndex = getCurrentStartPlayerIndex();
   // seat to the left of the start player: shuffles and deals this round
   const dealerIndex = getCurrentDealerIndex();
-
-  useEffect(() => {
-    const r = currentRound - 1;
-    const rotated = [...players.slice(startPlayerIndex), ...players.slice(0, startPlayerIndex)];
-    const existing = rotated.map((p) => p.predictions?.[r] ?? 0);
-    setPredictions(existing);
-  }, [players, currentRound, startPlayerIndex]);
 
   const rotatedPlayers = [
     ...players.slice(startPlayerIndex),
@@ -84,7 +82,7 @@ export function PredictionOverlay({ close }: { close: () => void }) {
 
   return (
     <div
-      className="fixed inset-0 bg-black/60 flex xs:items-[normal] items-center justify-center overflow-y-auto z-20 px-4 py-6 md:pb-28"
+      className="fixed inset-0 bg-black/60 flex items-start md:items-center justify-center overflow-y-auto z-20 px-4 py-4 md:py-6 md:pb-28"
       data-testid={T.prediction.overlay}
     >
       <form
@@ -93,9 +91,10 @@ export function PredictionOverlay({ close }: { close: () => void }) {
           e.preventDefault();
           submit();
         }}
-        className="bg-panel border border-line p-4 rounded-lg shadow-2xl w-96"
+        className="bg-panel border border-line p-4 rounded-lg shadow-2xl w-96 max-w-full max-h-[calc(100dvh-2rem)] overflow-y-auto"
+        data-testid={T.prediction.form}
       >
-        <h2 className="text-lg font-bold mb-2">
+        <h2 className="text-lg font-bold mb-2" data-testid={T.prediction.title}>
           {t('predictionOverlay.title', { round: currentRound })}
         </h2>
         {/* ONE running sentence naming both roles (who shuffles/deals, who opens the round).
@@ -130,10 +129,10 @@ export function PredictionOverlay({ close }: { close: () => void }) {
             key={p.name}
             data-testid={T.prediction.playerRow(i)}
             data-start-player={i === 0 ? 'true' : 'false'}
-            className="flex flex-col xs:flex-row justify-between mb-2"
+            className="flex items-center justify-between gap-2 mb-2"
           >
-            <div>
-              <span>{p.name}</span>
+            <div className="min-w-0 flex-1" data-testid={T.prediction.playerName(i)}>
+              <span className="break-words">{p.name}</span>
               {p.points.at(-1) != null && (
                 <span className="italic">
                   &nbsp;({p.points.at(-1)} {t('labels.points')})
@@ -143,20 +142,37 @@ export function PredictionOverlay({ close }: { close: () => void }) {
             {/* No `max` attribute: the browser would block submission with a native,
                 unlocalized bubble before our app validation can run. Range checks are
                 owned by `predictionTooSmall` / `predictionTooLarge` below. */}
-            <input
-              autoFocus={i === 0}
-              type="number"
-              min={0}
-              value={predictions[i]}
-              data-testid={T.prediction.input(i)}
-              onFocus={(e) => e.target.select()}
-              onChange={(e) => {
-                const copy = [...predictions];
-                copy[i] = parseInt(e.target.value) || 0;
-                setPredictions(copy);
-              }}
-              className="border border-line bg-surface text-ink rounded p-1 w-16 text-right tabular-nums"
-            />
+            <div className="hidden md:block">
+              <input
+                autoFocus={i === 0}
+                type="number"
+                min={0}
+                value={predictions[i]}
+                data-testid={T.prediction.input(i)}
+                onFocus={(e) => e.target.select()}
+                onChange={(e) => {
+                  const copy = [...predictions];
+                  copy[i] = parseInt(e.target.value) || 0;
+                  setPredictions(copy);
+                }}
+                className="border border-line bg-surface text-ink rounded p-1 w-16 text-right tabular-nums"
+              />
+            </div>
+            <div className="md:hidden">
+              <NumberStepper
+                value={predictions[i]}
+                min={0}
+                max={currentRound}
+                onChange={(value) => {
+                  const copy = [...predictions];
+                  copy[i] = value;
+                  setPredictions(copy);
+                }}
+                decreaseLabel={t('numberStepper.decrease')}
+                increaseLabel={t('numberStepper.increase')}
+                testId={T.prediction.stepper(i)}
+              />
+            </div>
           </div>
         ))}
         {error && (

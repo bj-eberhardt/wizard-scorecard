@@ -85,6 +85,29 @@ test.describe('Configure game', () => {
     });
   });
 
+  test('Custom rounds follow player-count defaults until manually overridden', async ({ game }) => {
+    await test.step('Start with four players and select custom rounds', async () => {
+      await openApp(game);
+      await addPlayersTo(game, 4);
+      for (let i = 0; i < 4; i++) {
+        await game.getByTestId(T.config.playerName(i)).fill(`P${i + 1}`);
+      }
+      await game.getByTestId(T.config.roundsModeCustom).click();
+      await expect(game.getByTestId(T.config.rounds)).toHaveValue('15');
+    });
+    await test.step('Adding a fifth player updates the untouched custom value', async () => {
+      await game.getByTestId(T.config.addPlayer).click();
+      await game.getByTestId(T.config.playerName(4)).fill('P5');
+      await expect(game.getByTestId(T.config.rounds)).toHaveValue('12');
+    });
+    await test.step('A manually entered value remains stable when the roster changes', async () => {
+      await game.getByTestId(T.config.rounds).fill('8');
+      await game.getByTestId(T.config.addPlayer).click();
+      await game.getByTestId(T.config.playerName(5)).fill('P6');
+      await expect(game.getByTestId(T.config.rounds)).toHaveValue('8');
+    });
+  });
+
   test('Validation: fewer than 3 players', async ({ game }) => {
     await test.step('Enter only two names and start', async () => {
       await openApp(game);

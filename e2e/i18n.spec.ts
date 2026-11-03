@@ -101,6 +101,10 @@ test.describe('Localization safety', () => {
       });
       await test.step('Desktop shows flags + copyright', async () => {
         await expect(game.getByTestId(T.footer.copyright)).toBeVisible();
+        await expect(game.getByTestId(T.footer.copyright)).toHaveAttribute(
+          'data-year',
+          String(new Date().getFullYear())
+        );
       });
       await test.step('Click the British flag -> UI and <html lang> switch to English', async () => {
         await game.getByTestId(T.footer.langButton('en')).click();

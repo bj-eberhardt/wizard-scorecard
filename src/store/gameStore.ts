@@ -31,6 +31,7 @@ interface GameState {
     meta?: { wolkeUsed?: boolean; receivedTricks?: number }
   ) => void;
   advanceRound: () => void;
+  correctLastRound: () => void;
   resetGame: () => void;
   rematch: () => void;
   setUseAnniversaryRules: (use: boolean) => void;
@@ -167,6 +168,12 @@ export const useGameStore = create<GameState>((set, get) => {
     },
     advanceRound: () => {
       set({ currentRound: get().currentRound + 1 }, false);
+      save();
+    },
+    correctLastRound: () => {
+      const { currentRound, gameStarted } = get();
+      if (!gameStarted || currentRound <= 1) return;
+      set({ currentRound: currentRound - 1, overlay: 'result' }, false);
       save();
     },
     resetGame: () => {

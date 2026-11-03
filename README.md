@@ -19,7 +19,7 @@ Gedacht für den gemeinsamen Gebrauch am Tisch: ein Handy, schnelle Eingabe, aus
   </tr>
 </table>
 
-## Ausprobieren
+## 🚀 Ausprobieren
 
 - Live-Demo: [bj-eberhardt.github.io/wizard-scorecard](https://bj-eberhardt.github.io/wizard-scorecard/)
 - Android-App im Google Play Store (Paket `de.emailspeicher.wizardpunkteblock`):
@@ -28,36 +28,35 @@ Gedacht für den gemeinsamen Gebrauch am Tisch: ein Handy, schnelle Eingabe, aus
   <img src="https://play.google.com/intl/en_us/badges/static/images/badges/en_badge_web_generic.png" alt="Get it on Google Play" width="180">
 </a>
 
-## Funktionen
+## ✨ Funktionen
 
 - Einfache Verwaltung von Spielern und Runden
 - Klare Anzeige der Punktestände
 - Responsives Design für Desktop und Mobil
 
-## Entwicklung
+## 🛠️ Entwicklung
 
 Lokales Setup (`npm run dev`), Produktions-Build, die Playwright-E2E-Suite und das Aktualisieren
 der Screenshots oben sind in [DEV.md](DEV.md) dokumentiert.
 
-## Produktion & Deployment
+## 🚢 Produktion & Deployment
 
-### Docker
+### 🐳 Docker
 
-Das Projekt lässt sich mit Docker bauen und über nginx ausliefern:
+<img src="docs/docker.svg" width="32" height="24" alt=""> Das fertige Image von Docker Hub starten:
 
 ```bash
-docker build -t wizard-scoreboard .
-docker run -p 8080:80 wizard-scoreboard
+docker run --rm -p 8080:80 beberhardt/wizard-scorecard:latest
 ```
 
 Danach läuft die App unter `http://localhost:8080`.
 
-Das fertige Image gibt es auch auf Docker Hub:
+Für lokale Builds siehe [DEV.md](DEV.md). Docker-Hub-Repository:
 https://hub.docker.com/repository/docker/beberhardt/wizard-scorecard
 
-### Webassets-Ordner
+### 📦 Webassets-Ordner
 
-Wer die App ohne eigene Build-Umgebung selbst hosten will, lädt das Release-ZIP (`dist.zip`) von der
+<img src="docs/assets.svg" width="32" height="24" alt=""> Wer die App ohne eigene Build-Umgebung selbst hosten will, lädt das Release-ZIP (`dist.zip`) von der
 [Releases-Seite](https://github.com/bj-eberhardt/wizard-scorecard/releases) herunter. Es enthält den
 fertigen Produktions-Build: Nach dem Entpacken liegen `index.html` und die zugehörigen Assets
 direkt beieinander, ohne Zwischenordner. Diesen Inhalt auf einen beliebigen Webserver legen – nginx,
@@ -92,7 +91,7 @@ overlay and the scoreboard in English.
   </tr>
 </table>
 
-### Try it out
+### 🚀 Try it out
 
 - Live demo: [bj-eberhardt.github.io/wizard-scorecard](https://bj-eberhardt.github.io/wizard-scorecard/)
 - Android app on Google Play (package `de.emailspeicher.wizardpunkteblock`):
@@ -101,36 +100,35 @@ overlay and the scoreboard in English.
   <img src="https://play.google.com/intl/en_us/badges/static/images/badges/en_badge_web_generic.png" alt="Get it on Google Play" width="180">
 </a>
 
-### Features
+### ✨ Features
 
 - Easy management of players and rounds
 - Clear display of scores
 - Responsive design for desktop and mobile
 
-### Development
+### 🛠️ Development
 
 Local setup (`npm run dev`), the production build, the Playwright E2E suite and how to refresh the
 screenshots above are documented in [DEV.md](DEV.md).
 
-### Production & deployment
+### 🚢 Production & deployment
 
-#### Docker
+#### 🐳 Docker
 
-The project can be built with Docker and served using nginx:
+<img src="docs/docker.svg" width="32" height="24" alt=""> Run the published Docker Hub image:
 
 ```bash
-docker build -t wizard-scoreboard .
-docker run -p 8080:80 wizard-scoreboard
+docker run --rm -p 8080:80 beberhardt/wizard-scorecard:latest
 ```
 
 It starts at `http://localhost:8080`.
 
-You can get the image also via docker-hub via:
+For local builds, see [DEV.md](DEV.md). Docker Hub repository:
 https://hub.docker.com/repository/docker/beberhardt/wizard-scorecard
 
-#### Webassets folder
+#### 📦 Webassets folder
 
-To host the app without your own build environment, download the release ZIP (`dist.zip`) from the
+<img src="docs/assets.svg" width="32" height="24" alt=""> To host the app without your own build environment, download the release ZIP (`dist.zip`) from the
 [releases page](https://github.com/bj-eberhardt/wizard-scorecard/releases). It contains the finished
 production build: once unzipped, `index.html` and its assets sit side by side, with no intermediate
 folder. Put that content on any web server – nginx, Apache, GitHub Pages or a plain static

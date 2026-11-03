@@ -102,19 +102,17 @@ try {
 
       await page.getByTestId('config-start-button').click();
       await page.getByTestId('prediction-overlay').waitFor({ state: 'visible' });
-      // round 1 allows predictions of 0/1 only (app validation), so keep values small
-      await page.fill('[data-testid="prediction-input-0"]', '1');
-      await page.fill('[data-testid="prediction-input-1"]', '0');
-      await page.fill('[data-testid="prediction-input-2"]', '1');
+      // The screenshots use a mobile viewport, so the desktop inputs are hidden.
+      // Use the visible stepper controls instead.
+      await page.getByTestId('prediction-stepper-0-increase').click();
+      await page.getByTestId('prediction-stepper-2-increase').click();
       await page.waitForTimeout(200); // let the overlay settle before shooting
       await page.screenshot({ path: `${OUT_DIR}/2-${language.code}.png` });
       console.log('wrote', `${OUT_DIR}/2-${language.code}.png`);
 
       await page.getByTestId('prediction-submit').click();
       await page.getByTestId('result-overlay').waitFor({ state: 'visible' });
-      await page.fill('[data-testid="result-input-0"]', '1');
-      await page.fill('[data-testid="result-input-1"]', '0');
-      await page.fill('[data-testid="result-input-2"]', '0');
+      await page.getByTestId('result-stepper-0-increase').click();
       await page.waitForTimeout(200); // the e2e submit-lock releases on a 0 ms timer + render tick
       await page.screenshot({ path: `${OUT_DIR}/3-${language.code}.png` });
       console.log('wrote', `${OUT_DIR}/3-${language.code}.png`);

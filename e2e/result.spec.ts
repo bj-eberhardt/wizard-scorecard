@@ -35,10 +35,10 @@ async function seedRound4(game: import('@playwright/test').Page, extra: object =
 
 test.describe('Enter results', () => {
   test('Points formula correct (all predictions hit)', async ({ game }) => {
-    await test.step('Start a game and predict round 1 [1,1,0]', async () => {
+    await test.step('Start a game and predict round 1 [1,0,0]', async () => {
       await openApp(game);
       await startGame(game, { players: ['Anna', 'Ben', 'Cia'] });
-      await submitPredictions(game, [1, 1, 0]);
+      await submitPredictions(game, [1, 0, 0]);
     });
     await test.step('Out-of-range results -> app errors, not native browser validation', async () => {
       const input = game.getByTestId(T.result.input(0));
@@ -57,16 +57,16 @@ test.describe('Enter results', () => {
       await submit.click();
       await expectError(game, T.result.error, 'errors.valueTooSmall');
     });
-    await test.step('Results [1,1,0] -> all correct: 30/30/20', async () => {
-      await submitResults(game, [1, 1, 0]);
-      // correct: 20 + value*10  -> P0/P1: 30, P2 (value 0): 20
+    await test.step('Results [1,0,0] -> all correct: 30/20/20', async () => {
+      await submitResults(game, [1, 0, 0]);
+      // correct: 20 + value*10 -> P0: 30, P1/P2 (value 0): 20
       await expect(game.getByTestId(T.scoreboard.cell(0, 0, 'points'))).toHaveAttribute(
         'data-points',
         '30'
       );
       await expect(game.getByTestId(T.scoreboard.cell(1, 0, 'points'))).toHaveAttribute(
         'data-points',
-        '30'
+        '20'
       );
       await expect(game.getByTestId(T.scoreboard.cell(2, 0, 'points'))).toHaveAttribute(
         'data-points',
@@ -98,22 +98,51 @@ test.describe('Enter results', () => {
     });
   });
 
-  test('All-zero confirmation in round > 1', async ({ game }) => {
+  test('All-zero results fail the sum validation in round > 1', async ({ game }) => {
     await test.step('Seed round 4 with inputs', async () => {
       await seedRound4(game);
       await openApp(game);
       await expect(game.getByTestId(T.result.overlay)).toBeVisible();
     });
-    await test.step('All results 0 -> first click shows the confirmation', async () => {
+    await test.step('All results 0 -> sum validation error', async () => {
       const submit = game.getByTestId(T.result.submit);
       await expect(submit).toHaveAttribute('data-submit-ready', 'true');
       await submit.click();
-      await expect(game.getByTestId(T.result.confirmZero)).toBeVisible();
+      await expectError(game, T.result.error, 'errors.resultSum');
+      await expect(game.getByTestId(T.result.overlay)).toBeVisible();
     });
-    await test.step('Second click confirms and the round is completed', async () => {
+  });
+
+  test('Result sum must match the round number', async ({ game }) => {
+    await test.step('Seed round 4 without anniversary rules', async () => {
+      await seedRound4(game, { useAnniversaryRules: false });
+      await openApp(game);
+    });
+    await test.step('Reject results whose sum is below the round number', async () => {
+      await game.getByTestId(T.result.input(0)).fill('1');
+      await game.getByTestId(T.result.input(1)).fill('1');
+      await game.getByTestId(T.result.input(2)).fill('1');
+      const submit = game.getByTestId(T.result.submit);
+      await expect(submit).toHaveAttribute('data-submit-ready', 'true');
+      await submit.click();
+      await expectError(game, T.result.error, 'errors.resultSum');
+      await expect(game.getByTestId(T.result.overlay)).toBeVisible();
+    });
+    await test.step('Accept results whose sum equals the round number', async () => {
+      await game.getByTestId(T.result.input(2)).fill('2');
       await game.getByTestId(T.result.submit).click();
       await expect(game.getByTestId(T.result.overlay)).toHaveCount(0);
-      await expect(game.getByTestId(T.scoreboard.table)).toBeVisible();
+    });
+  });
+
+  test('Anniversary rules allow one missing trick', async ({ game }) => {
+    await test.step('Seed round 4 with anniversary rules', async () => {
+      await seedRound4(game, { useAnniversaryRules: true });
+      await openApp(game);
+    });
+    await test.step('Accept result sum equal to round number minus one', async () => {
+      await submitResults(game, [1, 1, 1]);
+      await expect(game.getByTestId(T.result.overlay)).toHaveCount(0);
     });
   });
 
@@ -123,7 +152,7 @@ test.describe('Enter results', () => {
       await openApp(game);
     });
     await test.step('P0: result 1 + Wolke (prediction 2, diff 1) -> counted as 2, correct', async () => {
-      await submitResults(game, [1, 0, 0], 0);
+      await submitResults(game, [1, 1, 1], 0);
       // P0 correct: +20+2*10=+40 -> 100+40=140
       await expect(game.getByTestId(T.scoreboard.cell(0, 3, 'points'))).toHaveAttribute(
         'data-points',
@@ -140,7 +169,7 @@ test.describe('Enter results', () => {
       // a player without Wolke shows the plain value only
       const plain = game.getByTestId(T.scoreboard.cell(1, 3, 'tricks'));
       await expect(plain).toHaveAttribute('data-wolke', 'false');
-      await expect(plain).toHaveText('0');
+      await expect(plain).toHaveText('1');
     });
   });
 
@@ -153,6 +182,7 @@ test.describe('Enter results', () => {
       // Not all zeros, so the all-zero confirmation does not fire first.
       await game.getByTestId(T.result.input(0)).fill('0');
       await game.getByTestId(T.result.input(1)).fill('1');
+      await game.getByTestId(T.result.input(2)).fill('2');
       await game.getByTestId(T.result.wolke(0)).check();
       const submit = game.getByTestId(T.result.submit);
       await expect(submit).toHaveAttribute('data-submit-ready', 'true');
@@ -188,6 +218,51 @@ test.describe('Enter results', () => {
       await game.getByTestId(T.result.revert).click();
       await expect(game.getByTestId(T.prediction.overlay)).toBeVisible();
       await expect(game.getByTestId(T.result.overlay)).toHaveCount(0);
+    });
+  });
+
+  test('Mobile: result stepper works with Wolke @mobile', async ({ game }) => {
+    await test.step('Seed a result overlay with anniversary rules', async () => {
+      await seedRound4(game, { useAnniversaryRules: true });
+      await openApp(game);
+    });
+    await test.step('Use result stepper and keep Wolke control available', async () => {
+      const stepper = game.getByTestId(T.result.stepper(0));
+      const increase = game.getByTestId(T.result.stepperIncrease(0));
+      await expect(stepper).toBeVisible();
+      await expect(game.getByTestId(T.result.input(0))).toBeHidden();
+      await increase.click();
+      await expect(stepper).toHaveAttribute('aria-valuenow', '1');
+      await game.getByTestId(T.result.wolke(0)).check();
+      await expect(game.getByTestId(T.result.wolke(0))).toBeChecked();
+    });
+  });
+
+  test('Mobile: long result names keep stepper and Wolke reachable @mobile', async ({ game }) => {
+    await test.step('Seed result overlay with long player names', async () => {
+      await seedGameState(game, {
+        gameStarted: true,
+        currentRound: 1,
+        totalRounds: 10,
+        overlay: 'result',
+        useAnniversaryRules: true,
+        players: [
+          { name: 'AlexandertheGreatWizard', predictions: [1], results: [], points: [] },
+          { name: 'MaximilianvonSpielkarten', predictions: [0], results: [], points: [] },
+          { name: 'Christoph', predictions: [0], results: [], points: [] },
+        ],
+      });
+      await openApp(game);
+    });
+    await test.step('Right-side controls stay inside the viewport', async () => {
+      const viewportWidth = await game.evaluate(() => window.innerWidth);
+      for (let i = 0; i < 3; i++) {
+        const stepper = game.getByTestId(T.result.stepper(i));
+        const box = await stepper.boundingBox();
+        expect(box).not.toBeNull();
+        expect((box?.x ?? 0) + (box?.width ?? 0)).toBeLessThanOrEqual(viewportWidth);
+        await expect(game.getByTestId(T.result.wolke(i))).toBeVisible();
+      }
     });
   });
 });
