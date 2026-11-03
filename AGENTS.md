@@ -371,6 +371,23 @@ map to the rotated players, not the roster order.
 6. Keep `src/test-ids.ts`, `gameStore.ts`, and both translation.json in sync when adding
    features.
 
+### 8.7 README screenshot regression check
+
+`README.md` embeds eight generated mobile screenshots in `docs/1-de.png` through
+`docs/4-en.png`. The capture flow is implemented in `scripts/capture-readme.mjs` and
+uses the visible mobile controls, not the desktop-only inputs.
+
+Whenever `src/test-ids.ts`, overlay structure, responsive visibility, or mobile control
+behaviour changes, run:
+
+```bash
+npm run docs:screenshots
+```
+
+The command builds the production bundle, starts a temporary preview, captures both
+languages, and must finish successfully. Review the six generated files visually before
+committing. A selector or responsive change is incomplete until this check passes.
+
 ---
 
 ## 9. CI (GitHub Actions)
@@ -410,7 +427,8 @@ E2E suite. Run `npm run format` and `npm run test:e2e` locally before pushing.
   `playwright.config.ts` and `vite.config.ts`. For `e2e/**` the React-specific rules
   (`rules-of-hooks`, `no-missing-key`) are switched **off** — Playwright fixtures are
   not React (the `use` fixture param would otherwise be a false positive). Current
-  `src` warnings (setState-in-effect, array-index key) are tolerated; **errors** are not.
+  Keep the lint output warning-free; warnings and **errors** require review and should not
+  be left as accepted baseline noise.
 - **Prettier**: no config file → defaults. `prettier`/`prettier:check`/`format` cover
   `src/**/*.{ts,tsx,js,jsx}`, `e2e/**/*.ts` and the two root configs.
 - TypeScript `strict`; import with the `T` id object and store hooks; functional
