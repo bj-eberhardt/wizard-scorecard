@@ -18,6 +18,10 @@ export function ResultOverlay({ close }: { close: () => void }) {
     setOverlay,
   } = useGameStore();
   const startPlayerIndex = getCurrentStartPlayerIndex();
+  const rotatedPlayers = [
+    ...players.slice(startPlayerIndex),
+    ...players.slice(0, startPlayerIndex),
+  ];
   const isCorrection = players.some(
     (player) =>
       typeof player.receivedResults?.[currentRound - 1] === 'number' ||
@@ -25,12 +29,14 @@ export function ResultOverlay({ close }: { close: () => void }) {
   );
   const [results, setResults] = useState<number[]>(() => {
     const roundIndex = currentRound - 1;
-    return players.map(
-      (player) => player.receivedResults?.[roundIndex] ?? player.results?.[roundIndex] ?? 0
+    return rotatedPlayers.map((player) =>
+      isCorrection
+        ? (player.receivedResults?.[roundIndex] ?? player.results?.[roundIndex] ?? 0)
+        : (player.predictions?.[roundIndex] ?? 0)
     );
   });
   const [wolkeFlags, setWolkeFlags] = useState<boolean[]>(() =>
-    players.map((player) => !!player.wolkeUsed?.[currentRound - 1])
+    rotatedPlayers.map((player) => !!player.wolkeUsed?.[currentRound - 1])
   );
   const [error, setError] = useState<string>('');
   // raw i18n key of the current error, exposed via data-error-key for E2E
@@ -66,10 +72,6 @@ export function ResultOverlay({ close }: { close: () => void }) {
     if (error) setError('');
     if (errorKey) setErrorKey('');
   };
-  const rotatedPlayers = [
-    ...players.slice(startPlayerIndex),
-    ...players.slice(0, startPlayerIndex),
-  ];
   const anyWolkeSelected = useAnniversaryRules && wolkeFlags.some((v) => v);
 
   const submit = (e?: React.SyntheticEvent) => {

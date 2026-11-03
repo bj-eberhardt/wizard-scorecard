@@ -244,8 +244,9 @@ test.describe('Enter results', () => {
       const increase = game.getByTestId(T.result.stepperIncrease(0));
       await expect(stepper).toBeVisible();
       await expect(game.getByTestId(T.result.input(0))).toBeHidden();
+      await expect(stepper).toHaveAttribute('aria-valuenow', '2');
       await increase.click();
-      await expect(stepper).toHaveAttribute('aria-valuenow', '1');
+      await expect(stepper).toHaveAttribute('aria-valuenow', '3');
       await game.getByTestId(T.result.wolke(0)).check();
       await expect(game.getByTestId(T.result.wolke(0))).toBeChecked();
     });
