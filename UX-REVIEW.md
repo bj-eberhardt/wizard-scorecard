@@ -44,7 +44,7 @@ Das Produkt richtet sich an eine klare Kernsituation: **Wizard-Runde am Tisch, e
 | F23 | Schätz- und Ergebnis-Overlay ohne Dialog-Semantik (Fokus, Escape, `aria-modal`) | A11y | 🟡 Gering |
 | F13 | `lang="de"` fix im HTML, aber Sprache wird per Browser-Detector gewählt → gemischte Sprachen | i18n | 🟡 Gering · ✅ |
 | F14 | Kein Sprachumschalter im UI, obwohl EN vorhanden | i18n | 🟡 Gering · ✅ |
-| F15 | Design ohne eigene Sprache: weißer Hintergrund, harte schwarze Rahmen, Standard-Tailwind-Farben | Design | 🟡 Gering |
+| F15 | Design ohne eigene Sprache: weißer Hintergrund, harte schwarze Rahmen, Standard-Tailwind-Farben | Design | 🟡 Gering · ✅ |
 | F16 | Winner-View ist ein gelber Textkasten – kein Abschluss-Moment, keine Rangliste | Design | 🟡 Gering · ✅ |
 | F17 | Info-Icon zeigt "!" obwohl Titel eine Frage ist; doppelte `id` im Modal | A11y/Design | 🟡 Gering · ✅ |
 | F18 | `visibilitychange`-Listener wird in jedem Render neu angelegt (Wake-Lock leak) | Code/Robustheit | 🟡 Gering · ✅ |
@@ -483,7 +483,38 @@ Das Produkt richtet sich an eine klare Kernsituation: **Wizard-Runde am Tisch, e
 
 ---
 
-### F15 · Design ohne eigene Sprache 🟡
+### F15 · Design ohne eigene Sprache 🟡 · ✅ umgesetzt
+
+> **Status:** umgesetzt als **festes Dark-Theme ohne Umschalter** — die Palette stammt aus
+> [`resultImage.ts`](./src/components/resultImage.ts), die den PNG-Export schon immer dunkel mit
+> Gold zeichnet; jetzt zieht sie in die App zurück. Tokens in [`src/index.css`](./src/index.css)
+> (`@theme`): `surface #1a1a2e`, `panel #16213e`, `gold #d4af37` (plus `gold-hi`/`gold-ink`),
+> `ink #f0f0f0` / `ink-soft #a0a0a0`, `line rgba(255,255,255,.12)`, `danger`/`danger-soft`/
+> `warn-soft`. `color-scheme: dark` dunkelt native Controls (Number-Spinner, Scrollbars) ab;
+> `theme-color` in `index.html` und `manifest.json` folgen dem Surface.
+> - **Button-System:** `.btn-primary` (Gold-Füllung, dunkler Text), `.btn-secondary` (Outline),
+>   `.btn-ghost` (Textlink), `.btn-destructive` (Rot-Outline, nur im Dialog) — als
+>   `@layer components` in `index.css`, damit per-element Utilities (`px-5`, `w-full`) weiterhin
+>   gewinnen. Sämtliche Tailwind-Rohfarben sind aus `src/` entfernt; übrig bleiben bewusst nur
+>   Alpha-Flächen (Scrim `bg-black/50|60`, Hover-Tints, Zebra).
+> - **Tabellenrahmen** 2 px schwarz → 1 px `border-line`; Spielergruppen trennt eine dünne
+>   Gold-Senkrechte; die Zebrastreifen sitzen als `odd:bg-white/[0.04]` auf der `<tr>`, **nie**
+>   auf der Zelle — der F5-Klassen-Scan und die 48-px-Breiten-Assertion in `scoreboard.spec.ts`
+>   bleiben grün (box-border). Die Punkte-Spalte ist jetzt gold-getönt statt hellgrau.
+> - **Fokus:** eine einzige globale `:focus-visible`-Gold-Outline in `index.css`; die duplizierten
+>   blauen `focusRing`-Strings in `App`/`LanguageSwitcher`/`InfoTooltip` sind entfallen.
+> - **Logo auf Mobile** auf 64 px begrenzt (`h-16 md:h-auto`), der Seitentitel steht in Gold.
+> - `tabular-nums` war seit F2 bereits drin und musste nicht erneut eingeführt werden.
+>
+> Bewacht ohne neue `data-*`: das Theme ist reine Optik, die Suite assertiert Attribute — 60/60
+> E2E grün nach der Umstellung.
+> **Belege:** [`ux-shots/capture-theme.mjs`](./ux-shots/capture-theme.mjs) →
+> [27a](./ux-shots/27a-theme-config-desktop.png) Config, [27b](./ux-shots/27b-theme-prediction-desktop.png)
+> Schätz-Overlay, [27c](./ux-shots/27c-theme-result-desktop.png) Ergebnis inkl. Wolke (goldener
+> Checkbox-Akzent), [27d](./ux-shots/27d-theme-scoreboard-desktop.png) Brett Desktop (Zebra +
+> Gold-Trenner), [27e](./ux-shots/27e-theme-scoreboard-mobile.png) Mobile inkl. Confirm-Dialog
+> (sichere Aktion laut in Gold, destruktive nur Outline), [27f](./ux-shots/27f-theme-winner-desktop.png)
+> Winner mit Statistik, [27g](./ux-shots/27g-theme-info-desktop.png) Regel-Dialog.
 
 **Beobachtung:** Weißer Hintergrund, durchgehend 2 px schwarze Rahmen, Standard-Tailwind-Blau/Grün/Rot, großes WIZARD-Logo mit hartem Shadow. Das funktioniert, wirkt aber wie ein Funktions-Prototyp und verschenkt Identität — obwohl das Wizard-Branding (Gold/Schwarz, mystisch) eine fertige Designsprache mitbringt:
 
@@ -817,7 +848,7 @@ F11 und die Spaltenbreiten-Assertion aus F2 bleiben grün.
 
 **P2 — Politur & Identität:**
 
-13. F15 — Design-Tokens/Dark-Theme schrittweise (M)
+13. F15 — Design-Tokens/Dark-Theme schrittweise (M) ✅ umgesetzt (festes Dark-Theme in Wizard-Palette, kein Umschalter)
 14. F16 — Winner-View mit Rangliste & Teilen (M) ✅ umgesetzt (Rangliste, Confetti, Revanche mit Rotation)
 15. F25 — Spielerstatistik expandable (S) ✅ umgesetzt
 16. F26 — Ergebnis-Export als PNG/Text (S) ✅ umgesetzt
@@ -880,6 +911,10 @@ F11 und die Spaltenbreiten-Assertion aus F2 bleiben grün.
     [`index.css`](./src/index.css) (`.confetti-container` Keyframes)
   - Statistik (F25, ✅ umgesetzt): [`src/store/stats.ts`](./src/store/stats.ts)
     (`computePlayerStats`, `rankPlayers`, `buildTextSummary`, `sanitizeNameForFile`)
+  - Design-Tokens/Theme (F15, ✅ umgesetzt): [`src/index.css`](./src/index.css) — `@theme`-Palette
+    (übernommen aus [`resultImage.ts`](./src/components/resultImage.ts)), `.btn-*`-Knopfsystem im
+    `components`-Layer, globale `:focus-visible`-Outline; alle Komponenten nutzen nur noch
+    Token-Utilities; `theme-color` in [`index.html`](./index.html)/[`manifest.json`](./public/manifest.json)
   - Export (F26, ✅ umgesetzt): [`src/components/resultImage.ts`](./src/components/resultImage.ts)
     (`renderResultImage`, `downloadBlob`) — Canvas 2D, 1080×1350, Scale 2
 

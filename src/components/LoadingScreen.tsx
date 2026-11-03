@@ -23,7 +23,7 @@ export const LoadingScreen = () => {
 
   return (
     <div
-      className={`fixed inset-0 bg-white z-[1000] flex items-center justify-center transition-opacity ${
+      className={`fixed inset-0 bg-surface z-[1000] flex items-center justify-center transition-opacity ${
         isE2E() ? 'duration-0' : 'duration-1000'
       } ${isVisible ? 'opacity-100' : 'opacity-0'}`}
       data-testid={T.loading.splash}

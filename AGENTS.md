@@ -404,6 +404,25 @@ E2E suite. Run `npm run format` and `npm run test:e2e` locally before pushing.
   `src/**/*.{ts,tsx,js,jsx}`, `e2e/**/*.ts` and the two root configs.
 - TypeScript `strict`; import with the `T` id object and store hooks; functional
   components; Tailwind utility classes for styling.
+- **Design tokens, not raw colors** (UX-REVIEW F15): the app is a fixed dark theme built on the
+  Wizard palette already used by `resultImage.ts` for the PNG export. Tokens live in the `@theme`
+  block of `src/index.css` (Tailwind v4 generates the utilities from them): `bg-surface` `#1a1a2e`
+  (page background), `bg-panel` `#16213e` (sections, cards, sticky cells), `gold` `#d4af37` /
+  `gold-hi` / `gold-ink` (primary actions, winner accent, active segment, focus), `text-ink`
+  `#f0f0f0` / `text-ink-soft` `#a0a0a0` (text), `border-line` `rgba(255,255,255,0.12)` (every
+  rule and divider), plus `danger` / `danger-soft` / `warn-soft` banners. Components must use
+  these utilities — **no raw Tailwind palette classes** (`bg-white`, `border-black`, `blue-*`,
+  `green-*`, …) in `src/components`.
+- Buttons go through the four `@layer components` classes `.btn-primary` (gold fill, dark ink),
+  `.btn-secondary` (line border), `.btn-ghost` (soft text), `.btn-destructive` (danger outline).
+  They must stay in `@layer components` so per-element utilities (`px-5`, `w-full`) still win the
+  cascade; the safe action of a confirm dialog stays loud (`btn-primary`), the destructive one is
+  the quiet red outline — F11 ordering.
+- Focus styling is one global rule (`:focus-visible { outline: 2px solid var(--color-gold) }` in
+  `index.css`); do not re-add per-component `focus:ring` strings. Scoreboard tables use 1 px
+  `border-line` rules with gold group dividers, zebra striping via `odd:bg-white/[0.04]` on the
+  `<tr>` **only** — a class on the `td`s would trip the F5 animation-guard scan in
+  `scoreboard.spec.ts`.
 - Forms use `noValidate` and app-level validation (so localized `data-error-key`
   banners are reachable, not native browser bubbles).
 - The trick inputs in `PredictionOverlay`/`ResultOverlay` deliberately have **no

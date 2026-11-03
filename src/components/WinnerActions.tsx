@@ -77,7 +77,7 @@ export default function WinnerActions({ ranked, winners }: WinnerActionsProps) {
         type="button"
         onClick={handleRematch}
         data-testid={T.winner.rematch}
-        className="w-full min-h-11 cursor-pointer rounded bg-green-500 px-5 py-2 text-white font-semibold hover:bg-green-600"
+        className="btn-primary w-full px-5"
       >
         {t('buttons.rematch')}
       </button>
@@ -88,7 +88,7 @@ export default function WinnerActions({ ranked, winners }: WinnerActionsProps) {
           onClick={handleSaveImage}
           data-testid={T.winner.saveImage}
           data-export-state={exportState}
-          className="min-h-11 cursor-pointer rounded border-2 border-gray-300 px-3 py-2 text-sm text-gray-700 hover:bg-gray-50"
+          className="btn-secondary px-3 text-sm"
         >
           {t('buttons.saveImage')}
         </button>
@@ -97,7 +97,7 @@ export default function WinnerActions({ ranked, winners }: WinnerActionsProps) {
           onClick={handleCopyText}
           data-testid={T.winner.copyText}
           data-copied={copied}
-          className="min-h-11 cursor-pointer rounded border-2 border-gray-300 px-3 py-2 text-sm text-gray-700 hover:bg-gray-50"
+          className="btn-secondary px-3 text-sm"
         >
           {t('buttons.copyText')}
         </button>
@@ -108,7 +108,7 @@ export default function WinnerActions({ ranked, winners }: WinnerActionsProps) {
           type="button"
           onClick={resetGame}
           data-testid={T.winner.newGame}
-          className="min-h-11 cursor-pointer px-3 py-2 text-sm text-gray-500 underline-offset-4 hover:text-red-600 hover:underline"
+          className="btn-ghost px-3 text-sm underline-offset-4 hover:text-danger hover:underline"
         >
           {t('buttons.newGame')}
         </button>

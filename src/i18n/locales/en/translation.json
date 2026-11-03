@@ -109,6 +109,7 @@
     "copy": "© {{year}} - Version: {{version}}",
     "langGroup": "Language",
     "langDe": "German",
-    "langEn": "English"
+    "langEn": "English",
+    "privacy": "Privacy"
   }
 }

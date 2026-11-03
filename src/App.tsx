@@ -14,10 +14,6 @@ import { useDialogA11y } from './hooks/useDialogA11y';
 import { RotateCcw } from 'lucide-react';
 import { T } from './test-ids';
 
-/** Visible keyboard focus ring; Tailwind's default outline is too subtle on white. */
-const focusRing =
-  'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 focus-visible:ring-offset-2';
-
 export default function App() {
   const { t } = useTranslation();
   const {
@@ -135,7 +131,7 @@ export default function App() {
           <button
             onClick={() => setShowConfirm(true)}
             data-testid={T.app.newGame}
-            className={`cursor-pointer inline-flex min-h-11 items-center gap-1.5 rounded px-2 text-sm text-gray-500 underline-offset-4 hover:text-red-600 hover:underline ${focusRing}`}
+            className="btn-ghost inline-flex items-center gap-1.5 text-sm underline-offset-4 hover:text-danger hover:underline"
           >
             <RotateCcw size={14} aria-hidden />
             {t('buttons.newGame')}
@@ -150,7 +146,7 @@ export default function App() {
             onClick={() => setCompact((v) => !v)}
             data-compact={compact ? 'true' : 'false'}
             data-testid={T.scoreboard.compactToggle}
-            className={`cursor-pointer inline-flex min-h-11 items-center rounded px-2 text-sm text-gray-500 underline-offset-4 hover:text-gray-800 hover:underline ${focusRing}`}
+            className="btn-ghost inline-flex items-center text-sm underline-offset-4 hover:text-ink hover:underline"
           >
             {compact ? t('scoreboard.full') : t('scoreboard.compact')}
           </button>
@@ -161,7 +157,7 @@ export default function App() {
           <button
             onClick={() => setOverlay('prediction')}
             data-testid={T.app.nextRound}
-            className="bg-green-500 text-white px-5 py-2 rounded min-h-11 shadow-lg cursor-pointer"
+            className="btn-primary px-5 shadow-lg"
           >
             {t('buttons.startNextRound')}
           </button>
@@ -177,13 +173,13 @@ export default function App() {
           className="fixed inset-0 flex items-center justify-center bg-black/50 z-50"
           data-testid={T.app.confirmDialog}
         >
-          <div className="bg-white p-6 rounded shadow-lg text-center">
+          <div className="bg-panel p-6 rounded-lg border border-line shadow-lg text-center">
             <p id={confirmTitleId}>{t('confirmDialog.title')}</p>
             <div className="mt-4 flex justify-center gap-4">
               <button
                 onClick={handleNewGame}
                 data-testid={T.app.confirmYes}
-                className={`cursor-pointer rounded border-2 border-red-600 px-4 py-2 text-red-600 min-h-11 hover:bg-red-50 ${focusRing}`}
+                className="btn-destructive"
               >
                 {t('confirmDialog.yes')}
               </button>
@@ -191,7 +187,7 @@ export default function App() {
                 onClick={() => setShowConfirm(false)}
                 data-testid={T.app.confirmCancel}
                 data-autofocus
-                className={`cursor-pointer rounded bg-gray-300 px-4 py-2 min-h-11 hover:bg-gray-200 ${focusRing}`}
+                className="btn-primary"
               >
                 {t('confirmDialog.cancel')}
               </button>

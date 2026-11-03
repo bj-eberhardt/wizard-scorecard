@@ -3,6 +3,60 @@
 
 @theme {
   --breakpoint-xs: 25rem;
+
+  /* Wizard palette — the same tokens the PNG export (resultImage.ts) already draws with */
+  --color-surface: #1a1a2e; /* page background, inputs, splash */
+  --color-panel: #16213e; /* cards, sections, modal forms, sticky cells */
+  --color-gold: #d4af37; /* primary action, winner accent, focus */
+  --color-gold-hi: #e8c95a; /* hover on gold */
+  --color-gold-ink: #141425; /* text ON gold (dark, not white) */
+  --color-ink: #f0f0f0; /* primary text */
+  --color-ink-soft: #a0a0a0; /* secondary text, header labels, ghost links */
+  --color-line: rgba(255, 255, 255, 0.12); /* all borders and separators */
+  --color-danger: #f87171; /* destructive outline/hover */
+  --color-danger-soft: rgba(248, 113, 113, 0.16); /* error banner background */
+  --color-warn-soft: rgba(234, 179, 8, 0.16); /* all-zero confirmation banner */
+}
+
+/* Dark page surface; `color-scheme: dark` also darkens native controls
+   (number-input spinners, scrollbars). */
+html {
+  color-scheme: dark;
+}
+
+body {
+  background-color: var(--color-surface);
+  color: var(--color-ink);
+}
+
+/* One global visible keyboard-focus ring for every interactive control —
+   replaces the per-component ring utilities (one gold outline, one language). */
+button:focus-visible,
+a:focus-visible,
+input:focus-visible {
+  outline: 2px solid var(--color-gold);
+  outline-offset: 2px;
+}
+
+/* Button system (in the components layer so per-element utilities such as
+   `px-5` or `w-full` still win): primary = gold fill, secondary = outline,
+   ghost = plain text link, destructive = red outline (dialog only). */
+@layer components {
+  .btn-primary {
+    @apply min-h-11 cursor-pointer rounded-md bg-gold px-4 py-2 font-semibold text-gold-ink transition-colors hover:bg-gold-hi;
+  }
+
+  .btn-secondary {
+    @apply min-h-11 cursor-pointer rounded-md border border-line px-4 py-2 text-ink transition-colors hover:bg-white/5;
+  }
+
+  .btn-ghost {
+    @apply min-h-11 cursor-pointer rounded px-2 text-ink-soft transition-colors hover:text-ink;
+  }
+
+  .btn-destructive {
+    @apply min-h-11 cursor-pointer rounded-md border border-danger px-4 py-2 text-danger transition-colors hover:bg-danger-soft;
+  }
 }
 
 /* F16 Confetti — CSS-only, runs once on mount, respects reduced-motion */
@@ -33,7 +87,7 @@
 
 .confetti-container::after {
   left: 75%;
-  background: #3b82f6;
+  background: #e8c95a;
   animation-delay: 0.3s;
 }
 

@@ -28,10 +28,8 @@ export default function InfoTooltip({ title, content, className, testId }: InfoT
         aria-pressed={open}
         onClick={() => setOpen((s) => !s)}
         data-testid={testId}
-        className={`ml-1 inline-flex cursor-pointer items-center justify-center w-6 h-6 rounded-full focus:outline-none focus:ring-2 focus:ring-blue-300 transition-colors ${
-          open
-            ? 'bg-white text-blue-700 border border-blue-600'
-            : 'bg-blue-600 text-white hover:bg-blue-700'
+        className={`ml-1 inline-flex cursor-pointer items-center justify-center w-6 h-6 rounded-full transition-colors ${
+          open ? 'bg-panel text-gold border border-gold' : 'bg-gold text-gold-ink hover:bg-gold-hi'
         }`}
         title={title}
       >
@@ -49,7 +47,7 @@ export default function InfoTooltip({ title, content, className, testId }: InfoT
           onClick={() => setOpen(false)}
         >
           <div
-            className="max-w-md w-full cursor-default bg-white rounded shadow-lg p-4 text-gray-800"
+            className="max-w-md w-full cursor-default bg-panel border border-line rounded-lg shadow-lg p-4 text-ink"
             onClick={(e) => e.stopPropagation()}
           >
             {title && (
@@ -64,7 +62,7 @@ export default function InfoTooltip({ title, content, className, testId }: InfoT
                 onClick={() => setOpen(false)}
                 data-testid={T.infoModal.close}
                 data-autofocus
-                className="cursor-pointer rounded bg-blue-600 px-3 py-1 text-white hover:bg-blue-700 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 focus-visible:ring-offset-2"
+                className="btn-primary px-3"
               >
                 {t('buttons.close')}
               </button>

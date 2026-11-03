@@ -92,6 +92,7 @@ export const T = {
     // one flag button per supported language, indexed by the i18n code
     langButton: (lng: 'de' | 'en') => `footer-lang-${lng}`,
     copyright: 'footer-copyright',
+    privacy: 'footer-privacy',
   },
   infoModal: {
     dialog: 'info-modal-dialog',

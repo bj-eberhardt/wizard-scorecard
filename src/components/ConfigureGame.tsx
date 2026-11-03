@@ -148,11 +148,9 @@ const ConfigureGame: React.FC<ConfigureGameProps> = ({ onStart }) => {
     <div className="mt-8" data-testid={T.config.root}>
       <form className="flex flex-col gap-4 max-w-md mx-auto mt-8 text-left">
         {/* Players */}
-        <section className="rounded-lg border border-gray-200 p-4">
-          <h2 className="mb-1 text-base font-semibold text-gray-800">
-            {t('configureGame.sectionPlayers')}
-          </h2>
-          <p className="mb-3 text-sm text-gray-500">{t('configureGame.title')}</p>
+        <section className="rounded-lg border border-line bg-panel p-4">
+          <h2 className="mb-1 text-base font-semibold">{t('configureGame.sectionPlayers')}</h2>
+          <p className="mb-3 text-sm text-ink-soft">{t('configureGame.title')}</p>
           {rows.map((name, i) => (
             <div
               key={rowIds[i]}
@@ -174,11 +172,11 @@ const ConfigureGame: React.FC<ConfigureGameProps> = ({ onStart }) => {
                 {...gripProps(i)}
                 data-testid={T.config.grip(i)}
                 aria-label={t('configureGame.dragHint', { number: i + 1 })}
-                className="shrink-0 w-7 h-7 flex items-center justify-center rounded cursor-grab touch-none text-gray-400 hover:text-gray-700 hover:bg-gray-100 transition-colors"
+                className="shrink-0 w-7 h-7 flex items-center justify-center rounded cursor-grab touch-none text-ink-soft hover:text-ink hover:bg-white/10 transition-colors"
               >
                 <GripVertical size={18} strokeWidth={2} aria-hidden />
               </button>
-              <span className="shrink-0 w-16 text-left text-sm text-gray-600">
+              <span className="shrink-0 w-16 text-left text-sm text-ink-soft">
                 {t('configureGame.playerBadge', { number: i + 1, defaultValue: i + 1 })}
               </span>
               <input
@@ -191,7 +189,7 @@ const ConfigureGame: React.FC<ConfigureGameProps> = ({ onStart }) => {
                   r[i] = e.target.value;
                   setRows(r);
                 }}
-                className="min-h-10 w-full border px-2 py-2 text-base"
+                className="min-h-10 w-full rounded border border-line bg-surface px-2 py-2 text-base text-ink"
               />
               {/* at 3 rows no further removal is possible, so hide the × entirely */}
               {rows.length > MIN_PLAYERS && (
@@ -202,7 +200,7 @@ const ConfigureGame: React.FC<ConfigureGameProps> = ({ onStart }) => {
                   onClick={() => removeRow(i)}
                   data-testid={T.config.removePlayer(i)}
                   aria-label={t('configureGame.removePlayerLabel', { number: i + 1 })}
-                  className="shrink-0 cursor-pointer p-2 rounded text-gray-400 hover:text-red-600 hover:bg-red-50 transition-colors"
+                  className="shrink-0 cursor-pointer p-2 rounded text-ink-soft hover:text-danger hover:bg-danger-soft transition-colors"
                 >
                   <X size={18} strokeWidth={2.5} aria-hidden />
                 </button>
@@ -215,7 +213,7 @@ const ConfigureGame: React.FC<ConfigureGameProps> = ({ onStart }) => {
               type="button"
               onClick={addRow}
               data-testid={T.config.addPlayer}
-              className="flex cursor-pointer items-center justify-center gap-1 px-3 py-2 min-h-10 rounded border border-dashed border-gray-400 text-gray-600 hover:bg-gray-100 transition-colors"
+              className="flex cursor-pointer items-center justify-center gap-1 px-3 py-2 min-h-10 rounded border border-dashed border-line text-ink-soft hover:bg-white/10 transition-colors"
             >
               <Plus size={18} strokeWidth={2.5} aria-hidden />
               {t('configureGame.addPlayer')}
@@ -225,13 +223,11 @@ const ConfigureGame: React.FC<ConfigureGameProps> = ({ onStart }) => {
 
         {/* Rounds — only meaningful once at least 3 players are named */}
         {nonEmptyCount >= MIN_PLAYERS && (
-          <section className="rounded-lg border border-gray-200 p-4">
-            <h2 className="mb-3 text-base font-semibold text-gray-800">
-              {t('configureGame.sectionRounds')}
-            </h2>
+          <section className="rounded-lg border border-line bg-panel p-4">
+            <h2 className="mb-3 text-base font-semibold">{t('configureGame.sectionRounds')}</h2>
             <div className="flex flex-col items-start gap-2 w-full">
               <div
-                className="flex rounded border border-gray-300 overflow-hidden"
+                className="flex rounded border border-line overflow-hidden"
                 role="group"
                 aria-label={t('configureGame.roundsLabel')}
               >
@@ -243,8 +239,8 @@ const ConfigureGame: React.FC<ConfigureGameProps> = ({ onStart }) => {
                   aria-pressed={roundsMode === 'standard'}
                   className={`cursor-pointer px-3 py-2 min-h-10 text-base ${
                     roundsMode === 'standard'
-                      ? 'bg-blue-500 text-white'
-                      : 'bg-white text-gray-700 hover:bg-gray-100'
+                      ? 'bg-gold text-gold-ink'
+                      : 'bg-panel text-ink-soft hover:bg-white/5'
                   }`}
                 >
                   {t('configureGame.roundsStandard', { default: defaultRounds })}
@@ -256,8 +252,8 @@ const ConfigureGame: React.FC<ConfigureGameProps> = ({ onStart }) => {
                   aria-pressed={roundsMode === 'custom'}
                   className={`cursor-pointer px-3 py-2 min-h-10 text-base ${
                     roundsMode === 'custom'
-                      ? 'bg-blue-500 text-white'
-                      : 'bg-white text-gray-700 hover:bg-gray-100'
+                      ? 'bg-gold text-gold-ink'
+                      : 'bg-panel text-ink-soft hover:bg-white/5'
                   }`}
                 >
                   {t('configureGame.roundsCustom')}
@@ -276,10 +272,10 @@ const ConfigureGame: React.FC<ConfigureGameProps> = ({ onStart }) => {
                       setUsedManualOverride(true);
                       setManualRounds(Number.isNaN(v) ? 0 : v);
                     }}
-                    className="min-h-10 w-full border px-2 py-2 text-base"
+                    className="min-h-10 w-full rounded border border-line bg-surface px-2 py-2 text-base text-ink"
                     aria-label={t('configureGame.roundsCustom')}
                   />
-                  <span className="text-xs text-gray-500">
+                  <span className="text-xs text-ink-soft">
                     {t('configureGame.roundsHelp', { default: defaultRounds })}
                   </span>
                 </>
@@ -290,12 +286,10 @@ const ConfigureGame: React.FC<ConfigureGameProps> = ({ onStart }) => {
 
         {/* Options — rule toggles. ONE shared grid so both checkboxes, both
             (wrapping) labels and both info icons line up in three columns: on
-            mobile the two blue icons stack under each other, on desktop they sit
+            mobile the two gold icons stack under each other, on desktop they sit
             right after the widest label instead of drifting to the far edge. */}
-        <section className="rounded-lg border border-gray-200 p-4">
-          <h2 className="mb-3 text-base font-semibold text-gray-800">
-            {t('configureGame.sectionOptions')}
-          </h2>
+        <section className="rounded-lg border border-line bg-panel p-4">
+          <h2 className="mb-3 text-base font-semibold">{t('configureGame.sectionOptions')}</h2>
           <div className="grid w-fit max-w-full grid-cols-[auto_minmax(0,auto)_auto] items-center gap-x-2 gap-y-3 text-left">
             <input
               id="config-anniversary"
@@ -303,7 +297,7 @@ const ConfigureGame: React.FC<ConfigureGameProps> = ({ onStart }) => {
               checked={useWolke}
               data-testid={T.config.anniversary}
               onChange={(e) => setUseWolke(e.target.checked)}
-              className="h-5 w-5 shrink-0 cursor-pointer accent-blue-600"
+              className="h-5 w-5 shrink-0 cursor-pointer accent-gold"
             />
             <label
               htmlFor="config-anniversary"
@@ -323,7 +317,7 @@ const ConfigureGame: React.FC<ConfigureGameProps> = ({ onStart }) => {
               checked={useNotEqual}
               data-testid={T.config.notEqual}
               onChange={(e) => setUseNotEqual(e.target.checked)}
-              className="h-5 w-5 shrink-0 cursor-pointer accent-blue-600"
+              className="h-5 w-5 shrink-0 cursor-pointer accent-gold"
             />
             <label htmlFor="config-not-equal" className="flex min-h-10 cursor-pointer items-center">
               {t('configureGame.useNotEqual')}
@@ -338,7 +332,7 @@ const ConfigureGame: React.FC<ConfigureGameProps> = ({ onStart }) => {
 
         {error && (
           <div
-            className="bg-red-100 text-red-700 p-2 rounded"
+            className="bg-danger-soft text-danger p-2 rounded"
             data-testid={T.config.error}
             data-error-key={errorKey ?? ''}
           >
@@ -349,7 +343,7 @@ const ConfigureGame: React.FC<ConfigureGameProps> = ({ onStart }) => {
           type={'button'}
           onClick={handleStart}
           data-testid={T.config.startButton}
-          className="min-h-10 w-full cursor-pointer rounded bg-blue-500 px-4 py-2 text-base text-white transition-colors hover:bg-blue-600"
+          className="btn-primary w-full text-base"
         >
           {t('configureGame.startGame')}
         </button>

@@ -93,7 +93,7 @@ export function PredictionOverlay({ close }: { close: () => void }) {
           e.preventDefault();
           submit();
         }}
-        className="bg-white p-4 rounded shadow w-96"
+        className="bg-panel border border-line p-4 rounded-lg shadow-2xl w-96"
       >
         <h2 className="text-lg font-bold mb-2">
           {t('predictionOverlay.title', { round: currentRound })}
@@ -105,7 +105,7 @@ export function PredictionOverlay({ close }: { close: () => void }) {
             ORIGINAL roster index (not the visible row) plus the cards-per-player number as
             `data-*`, so the E2E suite can assert the roles without reading the text.
             Cards per player = round number, the Wizard dealing rule. */}
-        <div className="text-sm text-gray-700 bg-gray-50 p-2 rounded mb-2 leading-snug">
+        <div className="text-sm text-ink-soft bg-white/5 p-2 rounded mb-2 leading-snug">
           <span
             data-testid={T.prediction.dealerInfo}
             data-dealer-index={dealerIndex}
@@ -155,24 +155,20 @@ export function PredictionOverlay({ close }: { close: () => void }) {
                 copy[i] = parseInt(e.target.value) || 0;
                 setPredictions(copy);
               }}
-              className="border w-16 p-1"
+              className="border border-line bg-surface text-ink rounded p-1 w-16 text-right tabular-nums"
             />
           </div>
         ))}
         {error && (
           <div
-            className="bg-red-100 text-red-700 p-2 mb-2 rounded"
+            className="bg-danger-soft text-danger p-2 mb-2 rounded"
             data-testid={T.prediction.error}
             data-error-key={errorKey}
           >
             {error}
           </div>
         )}
-        <button
-          type="submit"
-          data-testid={T.prediction.submit}
-          className="mt-2 bg-blue-500 text-white px-4 py-2 rounded w-full"
-        >
+        <button type="submit" data-testid={T.prediction.submit} className="btn-primary mt-2 w-full">
           {t('predictionOverlay.startRound')}
         </button>
       </form>
