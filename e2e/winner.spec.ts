@@ -181,11 +181,26 @@ test.describe('Winner view', () => {
     });
     await test.step('Seed a finished game', async () => {
       await seedFinished(game, [100, 50, 200]);
-      await openApp(game);
+      await openApp(game, { locale: 'de' });
     });
     await test.step('Click copy and verify attribute', async () => {
       await game.getByTestId(T.winner.copyText).click();
       await expect(game.getByTestId(T.winner.copyText)).toHaveAttribute('data-copied', 'true');
+      const copiedText = await game.evaluate(() => navigator.clipboard.readText());
+      expect(copiedText).toMatch(/\d{2}\.\d{2}\.\d{4}/);
+      expect(copiedText).toMatch(/:\s*\d+%/);
+    });
+  });
+
+  test('Query flag hides image export but keeps text export', async ({ game }) => {
+    await test.step('Seed a finished game and enable the image-export flag', async () => {
+      await seedFinished(game, [100, 50, 200]);
+      await game.goto('/?e2e=1&hideSaveImage=1');
+      await expect(game.getByTestId(T.winner.container)).toBeVisible();
+    });
+    await test.step('Only the text export remains available', async () => {
+      await expect(game.getByTestId(T.winner.saveImage)).toHaveCount(0);
+      await expect(game.getByTestId(T.winner.copyText)).toBeVisible();
     });
   });
 

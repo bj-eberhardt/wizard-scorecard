@@ -113,11 +113,15 @@ export function rankPlayers(players: Player[], totalRounds: number): RankedPlaye
 }
 
 /** Build the plain-text summary for the clipboard action (F26). */
-export function buildTextSummary(ranked: RankedPlayer[], dateStr: string): string {
+export function buildTextSummary(
+  ranked: RankedPlayer[],
+  dateStr: string,
+  rateLabel = 'Rate'
+): string {
   const lines: string[] = [];
   for (const rp of ranked) {
     const rateStr = rp.stats.hitRate !== null ? `${rp.stats.hitRate}%` : '-';
-    lines.push(`${rp.rank}. ${rp.player.name}  ${rp.finalPoints}  (${rateStr})`);
+    lines.push(`${rp.rank}. ${rp.player.name}  ${rp.finalPoints}  ${rateLabel}: ${rateStr}`);
   }
   return `Wizard — ${dateStr}\n${lines.join('\n')}`;
 }

@@ -20,7 +20,7 @@ interface WinnerActionsProps {
  * Owns the export state and the rematch rotation logic.
  */
 export default function WinnerActions({ ranked, winners }: WinnerActionsProps) {
-  const { t } = useTranslation();
+  const { t, i18n } = useTranslation();
   const {
     players,
     totalRounds,
@@ -34,11 +34,20 @@ export default function WinnerActions({ ranked, winners }: WinnerActionsProps) {
 
   const [exportState, setExportState] = useState<'idle' | 'ready' | 'error'>('idle');
   const [copied, setCopied] = useState(false);
+  const hideSaveImage = new URLSearchParams(window.location.search).has('hideSaveImage');
 
   const dateStr = useMemo(() => {
     const d = new Date();
     return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
   }, []);
+
+  const displayDate = useMemo(
+    () =>
+      new Intl.DateTimeFormat(i18n.language === 'de' ? 'de-DE' : 'en-US', {
+        dateStyle: 'medium',
+      }).format(new Date()),
+    [i18n.language]
+  );
 
   const handleRematch = () => {
     const names = players.map((p) => p.name);
@@ -70,7 +79,7 @@ export default function WinnerActions({ ranked, winners }: WinnerActionsProps) {
 
   const handleCopyText = async () => {
     try {
-      const summary = buildTextSummary(ranked, dateStr);
+      const summary = buildTextSummary(ranked, displayDate, t('winnerView.hitRateColumn'));
       await navigator.clipboard.writeText(summary);
       setCopied(true);
     } catch {
@@ -89,22 +98,24 @@ export default function WinnerActions({ ranked, winners }: WinnerActionsProps) {
         {t('buttons.rematch')}
       </button>
 
-      <div className="grid grid-cols-2 gap-2">
-        <button
-          type="button"
-          onClick={handleSaveImage}
-          data-testid={T.winner.saveImage}
-          data-export-state={exportState}
-          className="btn-secondary px-3 text-sm"
-        >
-          {t('buttons.saveImage')}
-        </button>
+      <div className={hideSaveImage ? '' : 'grid grid-cols-2 gap-2'}>
+        {!hideSaveImage && (
+          <button
+            type="button"
+            onClick={handleSaveImage}
+            data-testid={T.winner.saveImage}
+            data-export-state={exportState}
+            className="btn-secondary px-3 text-sm"
+          >
+            {t('buttons.saveImage')}
+          </button>
+        )}
         <button
           type="button"
           onClick={handleCopyText}
           data-testid={T.winner.copyText}
           data-copied={copied}
-          className="btn-secondary px-3 text-sm"
+          className={`btn-secondary px-3 text-sm ${hideSaveImage ? 'w-full' : ''}`}
         >
           {t('buttons.copyText')}
         </button>
