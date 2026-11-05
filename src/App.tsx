@@ -28,13 +28,9 @@ export default function App() {
     setUseNotEqual,
     resetGame,
     correctLastRound,
+    introTransition,
   } = useGameStore();
   const [showConfirm, setShowConfirm] = useState(false);
-  const [skipDialogIntroOnReload, setSkipDialogIntroOnReload] = useState(() => {
-    const navigation = performance.getEntriesByType('navigation')[0] as
-      PerformanceNavigationTiming | undefined;
-    return navigation?.type === 'reload' && overlay !== 'none';
-  });
   // Compact view: the default follows the viewport once at mount (narrow screen =
   // compact); the user can then override it with the toggle. No resize listener on purpose —
   // rotating the phone must not silently discard a manual choice.
@@ -217,18 +213,16 @@ export default function App() {
       )}
       {overlay === 'prediction' && (
         <PredictionOverlay
-          skipIntroAnimation={skipDialogIntroOnReload}
+          skipIntroAnimation={introTransition?.target === 'prediction'}
           close={() => {
-            setSkipDialogIntroOnReload(false);
             setOverlay('result');
           }}
         />
       )}
       {overlay === 'result' && (
         <ResultOverlay
-          skipIntroAnimation={skipDialogIntroOnReload}
+          skipIntroAnimation={introTransition?.target === 'result'}
           close={() => {
-            setSkipDialogIntroOnReload(false);
             setOverlay('none');
           }}
         />

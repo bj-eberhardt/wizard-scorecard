@@ -9,3 +9,10 @@ export interface Player {
 }
 
 export type OverlayState = 'prediction' | 'result' | 'none';
+
+export type IntroOverlay = Exclude<OverlayState, 'none'>;
+
+export interface IntroTransition {
+  target: IntroOverlay;
+  carryToNextResult: boolean;
+}

@@ -1,4 +1,11 @@
-import { test, expect, openApp, seedGameState, submitResults } from './fixtures';
+import {
+  test,
+  expect,
+  openApp,
+  seedGameState,
+  submitResults,
+  INTRO_TRANSITION_KEY,
+} from './fixtures';
 import { T } from '../src/test-ids';
 
 const players = [
@@ -135,6 +142,70 @@ test.describe('Dialog intro animation settings', () => {
       await expect(page.getByTestId(T.result.overlay)).toBeVisible();
       await expect(page.getByTestId(T.result.intro)).toHaveCount(0);
       await expect(page.getByTestId(T.result.input(0))).toBeVisible();
+    });
+  });
+
+  test('preserves the undo transition across reload before returning to results', async ({
+    page,
+  }) => {
+    await test.step('Open a result dialog for an unsubmitted round', async () => {
+      await page.addInitScript((transitionKey) => {
+        if (sessionStorage.getItem('intro-transition-test-booted')) return;
+        sessionStorage.removeItem(transitionKey);
+        localStorage.setItem(
+          'wizard_state_v2',
+          JSON.stringify({
+            version: 2,
+            gameStarted: true,
+            currentRound: 2,
+            totalRounds: 3,
+            useAnniversaryRules: false,
+            useNotEqual: false,
+            overlay: 'result',
+            players: [
+              {
+                name: 'Anna',
+                predictions: [1, 0],
+                results: [1],
+                points: [30],
+                wolkeUsed: [],
+                receivedResults: [1],
+              },
+              {
+                name: 'Ben',
+                predictions: [0, 1],
+                results: [0],
+                points: [20],
+                wolkeUsed: [],
+                receivedResults: [0],
+              },
+              {
+                name: 'Cia',
+                predictions: [0, 0],
+                results: [0],
+                points: [20],
+                wolkeUsed: [],
+                receivedResults: [0],
+              },
+            ],
+          })
+        );
+        sessionStorage.setItem('intro-transition-test-booted', 'true');
+      }, INTRO_TRANSITION_KEY);
+      await openApp(page, { showIntroAnimation: true });
+      await expect(page.getByTestId(T.result.intro)).toBeVisible();
+      await expect(page.getByTestId(T.result.intro)).toHaveCount(0, { timeout: 7000 });
+      await page.getByTestId(T.result.revert).click();
+      await expect(page.getByTestId(T.prediction.intro)).toHaveCount(0);
+    });
+
+    await test.step('Reload the prediction dialog and continue without either intro', async () => {
+      await page.reload();
+      await expect(page.getByTestId(T.prediction.overlay)).toBeVisible();
+      await expect(page.getByTestId(T.prediction.intro)).toHaveCount(0);
+      await page.getByTestId(T.prediction.submit).click();
+      await expect(page.getByTestId(T.result.overlay)).toBeVisible();
+      await expect(page.getByTestId(T.result.intro)).toHaveCount(0);
     });
   });
 });

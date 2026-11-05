@@ -12,9 +12,56 @@ import {
 } from './persistence';
 import { getDealerIndex, getStartPlayerIndex, roundsForCount } from '../domain/gameRules';
 import { recalculateCumulativePoints } from '../domain/scoring';
-import type { OverlayState, Player } from '../domain/types';
+import type { IntroOverlay, IntroTransition, OverlayState, Player } from '../domain/types';
 
 export type { OverlayState, Player } from '../domain/types';
+
+export const INTRO_TRANSITION_STORAGE_KEY = 'wizard_intro_transition_v1';
+
+function readIntroTransition(): IntroTransition | null {
+  try {
+    const raw = sessionStorage.getItem(INTRO_TRANSITION_STORAGE_KEY);
+    if (!raw) return null;
+    const parsed: unknown = JSON.parse(raw);
+    if (
+      typeof parsed === 'object' &&
+      parsed !== null &&
+      'target' in parsed &&
+      (parsed.target === 'prediction' || parsed.target === 'result') &&
+      'carryToNextResult' in parsed &&
+      typeof parsed.carryToNextResult === 'boolean'
+    ) {
+      return parsed as IntroTransition;
+    }
+  } catch {
+    // Ignore unavailable or malformed session state.
+  }
+  return null;
+}
+
+function writeIntroTransition(transition: IntroTransition | null) {
+  try {
+    if (transition) {
+      sessionStorage.setItem(INTRO_TRANSITION_STORAGE_KEY, JSON.stringify(transition));
+    } else {
+      sessionStorage.removeItem(INTRO_TRANSITION_STORAGE_KEY);
+    }
+  } catch {
+    // Ignore unavailable session storage; the in-memory transition still works.
+  }
+}
+
+function getInitialIntroTransition(overlay: OverlayState): IntroTransition | null {
+  const stored = readIntroTransition();
+  if (stored) return stored;
+  if (typeof window === 'undefined') return null;
+  const navigation = performance.getEntriesByType('navigation')[0] as
+    PerformanceNavigationTiming | undefined;
+  if (navigation?.type === 'reload' && overlay !== 'none') {
+    return { target: overlay as IntroOverlay, carryToNextResult: false };
+  }
+  return null;
+}
 
 interface GameState {
   players: Player[];
@@ -24,8 +71,7 @@ interface GameState {
   useAnniversaryRules: boolean;
   useNotEqual: boolean;
   overlay: OverlayState;
-  skipPredictionIntro: boolean;
-  skipResultIntro: boolean;
+  introTransition: IntroTransition | null;
   setPlayerNames: (names: string[]) => void;
   setTotalRounds: (rounds: number) => void;
   setPrediction: (playerIndex: number, value: number) => void;
@@ -42,8 +88,7 @@ interface GameState {
   setUseAnniversaryRules: (use: boolean) => void;
   setUseNotEqual: (use: boolean) => void;
   setOverlay: (o: OverlayState) => void;
-  setSkipPredictionIntro: (skip: boolean) => void;
-  setSkipResultIntro: (skip: boolean) => void;
+  setIntroTransition: (transition: IntroTransition | null) => void;
   saveToStorage: () => void;
   getCurrentStartPlayerIndex: () => number;
   getCurrentDealerIndex: () => number;
@@ -61,6 +106,7 @@ export const useGameStore = create<GameState>((set, get) => {
   const initialUseAnniversaryRules: boolean = saved?.useAnniversaryRules ?? false;
   const initialUseNotEqual: boolean = saved?.useNotEqual ?? false;
   const initialOverlay: OverlayState = saved?.overlay ?? 'none';
+  const initialIntroTransition = getInitialIntroTransition(initialOverlay);
 
   const save = () => {
     const state = get();
@@ -80,8 +126,7 @@ export const useGameStore = create<GameState>((set, get) => {
     useAnniversaryRules: initialUseAnniversaryRules,
     useNotEqual: initialUseNotEqual,
     overlay: initialOverlay,
-    skipPredictionIntro: false,
-    skipResultIntro: false,
+    introTransition: initialIntroTransition,
     setPlayerNames: (names: string[]) => {
       const players = names.map((name) => ({
         name,
@@ -99,11 +144,11 @@ export const useGameStore = create<GameState>((set, get) => {
           totalRounds: rounds,
           gameStarted: true,
           currentRound: 1,
-          skipPredictionIntro: false,
-          skipResultIntro: false,
+          introTransition: null,
         },
         false
       );
+      writeIntroTransition(null);
       save();
     },
     setTotalRounds: (r) => {
@@ -170,11 +215,11 @@ export const useGameStore = create<GameState>((set, get) => {
           useAnniversaryRules: false,
           useNotEqual: false,
           overlay: 'none',
-          skipPredictionIntro: false,
-          skipResultIntro: false,
+          introTransition: null,
         },
         false
       );
+      writeIntroTransition(null);
       try {
         removeStorage(GAME_STORAGE_KEY);
         removeStorage(LEGACY_GAME_STORAGE_KEY);
@@ -205,11 +250,11 @@ export const useGameStore = create<GameState>((set, get) => {
           currentRound: 1,
           gameStarted: true,
           overlay: 'prediction',
-          skipPredictionIntro: false,
-          skipResultIntro: false,
+          introTransition: null,
         },
         false
       );
+      writeIntroTransition(null);
       save();
     },
     setUseAnniversaryRules: (use) => {
@@ -224,11 +269,9 @@ export const useGameStore = create<GameState>((set, get) => {
       set({ overlay: o }, false);
       save();
     },
-    setSkipPredictionIntro: (skip) => {
-      set({ skipPredictionIntro: skip }, false);
-    },
-    setSkipResultIntro: (skip) => {
-      set({ skipResultIntro: skip }, false);
+    setIntroTransition: (transition) => {
+      set({ introTransition: transition }, false);
+      writeIntroTransition(transition);
     },
     saveToStorage: save,
     getCurrentStartPlayerIndex: () => {

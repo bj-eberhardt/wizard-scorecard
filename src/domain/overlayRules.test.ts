@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { getResultOverlayTiming, shouldSkipPredictionIntro } from './overlayRules';
+import { getIntroTransitionAfterPrediction, getResultOverlayTiming } from './overlayRules';
 
 describe('getResultOverlayTiming', () => {
   it('skips both intro and submit lock for corrections', () => {
@@ -27,12 +27,23 @@ describe('getResultOverlayTiming', () => {
   });
 });
 
-describe('shouldSkipPredictionIntro', () => {
-  it('skips the intro when returning from the result dialog', () => {
-    expect(shouldSkipPredictionIntro(true)).toBe(true);
+describe('getIntroTransitionAfterPrediction', () => {
+  it('carries a return transition from prediction to result', () => {
+    expect(
+      getIntroTransitionAfterPrediction({ target: 'prediction', carryToNextResult: true })
+    ).toEqual({
+      target: 'result',
+      carryToNextResult: false,
+    });
   });
 
-  it('keeps the intro for a new prediction round', () => {
-    expect(shouldSkipPredictionIntro(false)).toBe(false);
+  it('clears a normal or already consumed transition', () => {
+    expect(getIntroTransitionAfterPrediction(null)).toBeNull();
+    expect(
+      getIntroTransitionAfterPrediction({ target: 'prediction', carryToNextResult: false })
+    ).toBeNull();
+    expect(
+      getIntroTransitionAfterPrediction({ target: 'result', carryToNextResult: false })
+    ).toBeNull();
   });
 });

@@ -1,3 +1,5 @@
+import type { IntroTransition } from './types';
+
 export interface ResultOverlayTiming {
   skipIntroAnimation: boolean;
   submitDisabledInitially: boolean;
@@ -20,6 +22,11 @@ export function getResultOverlayTiming(isCorrection: boolean, isE2E: boolean): R
   };
 }
 
-export function shouldSkipPredictionIntro(isReturningToResult: boolean): boolean {
-  return isReturningToResult;
+export function getIntroTransitionAfterPrediction(
+  transition: IntroTransition | null
+): IntroTransition | null {
+  if (transition?.target === 'prediction' && transition.carryToNextResult) {
+    return { target: 'result', carryToNextResult: false };
+  }
+  return null;
 }

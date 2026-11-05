@@ -16,6 +16,7 @@ import { T } from '../src/test-ids';
 export const STATE_KEY = 'wizard_state_v2';
 export const LEGACY_STATE_KEY = 'wizard_state_v1';
 export const SETTINGS_KEY = 'wizard_settings_v1';
+export const INTRO_TRANSITION_KEY = 'wizard_intro_transition_v1';
 export const INVALID_STATE_KEY = 'wizard_state_v2_backup';
 export const INVALID_LEGACY_STATE_KEY = 'wizard_state_v1_backup';
 
@@ -49,6 +50,7 @@ export const test = base.extend<Fixtures>({
     // Runs before every navigation/test load: guarantees a clean slate.
     await page.addInitScript(() => {
       localStorage.clear();
+      sessionStorage.removeItem('wizard_intro_transition_v1');
     });
     await use(page);
   },
