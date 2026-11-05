@@ -113,7 +113,7 @@ export default function App() {
     return (
       <>
         <LoadingScreen />
-        <div className="p-4 space-y-2 relative min-h-screen md:pb-28">
+        <div className="p-4 space-y-2 relative min-h-screen">
           <FullscreenButton />
           <Header />
           <ConfigureGame onStart={handleStart} />
@@ -124,7 +124,7 @@ export default function App() {
   }
 
   return (
-    <div className="relative min-h-screen p-4 md:pb-28">
+    <div className="relative min-h-screen p-4">
       <FullscreenButton />
       <Header />
       {!isGameOver && (
@@ -155,7 +155,7 @@ export default function App() {
       )}
       {!isGameOver && overlay === 'none' && (
         <>
-          <div className="mt-4 flex justify-center sticky bottom-2 md:bottom-24 z-[200]">
+          <div className="mt-4 flex justify-center sticky bottom-2 z-[200]">
             <button
               onClick={() => setOverlay('prediction')}
               data-testid={T.app.nextRound}

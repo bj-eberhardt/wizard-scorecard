@@ -35,6 +35,8 @@ export const T = {
     overlay: 'prediction-overlay',
     title: 'prediction-title',
     form: 'prediction-form',
+    intro: 'prediction-intro',
+    introImage: 'prediction-intro-image',
     playerRow: (i: number) => `prediction-row-${i}`,
     playerName: (i: number) => `prediction-player-name-${i}`,
     input: (i: number) => `prediction-input-${i}`,
@@ -49,6 +51,8 @@ export const T = {
   },
   result: {
     overlay: 'result-overlay',
+    intro: 'result-intro',
+    introImage: 'result-intro-image',
     playerRow: (i: number) => `result-row-${i}`,
     input: (i: number) => `result-input-${i}`,
     stepper: (i: number) => `result-stepper-${i}`,

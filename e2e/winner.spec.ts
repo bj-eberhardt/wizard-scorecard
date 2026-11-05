@@ -195,7 +195,7 @@ test.describe('Winner view', () => {
   test('Query flag hides image export but keeps text export', async ({ game }) => {
     await test.step('Seed a finished game and enable the image-export flag', async () => {
       await seedFinished(game, [100, 50, 200]);
-      await game.goto('/?e2e=1&hideSaveImage=1');
+      await game.goto('/?e2e=1&hideWinningShareImage=1&showDialogIntroAnimation=0');
       await expect(game.getByTestId(T.winner.container)).toBeVisible();
     });
     await test.step('Only the text export remains available', async () => {

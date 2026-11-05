@@ -182,26 +182,19 @@ test.describe('Localization safety', () => {
         await expect(
           game.getByTestId(overlayTestId).getByTestId(T.footer.langButton('de'))
         ).toHaveCount(0);
-        // the single footer switcher is on top of the overlay and clickable
-        await expect(game.getByTestId(T.footer.langButton('de'))).toBeVisible();
       };
 
-      await test.step('Start screen shows the footer (fixed on desktop)', async () => {
+      await test.step('Start screen shows the footer in normal page flow', async () => {
         await openApp(game);
         await expect(game.getByTestId(T.config.root)).toBeVisible();
         await expect(game.getByTestId(T.footer.langButton('de'))).toBeVisible();
-        await expect(game.getByTestId(T.footer.root)).toHaveCSS('position', 'fixed');
+        await expect(game.getByTestId(T.footer.root)).toHaveCSS('position', 'static');
       });
-      await test.step('Prediction overlay: footer on top, no own switcher', async () => {
+      await test.step('Prediction overlay: no own switcher', async () => {
         await startGame(game, { players: ['Anna', 'Ben', 'Cia'] });
         await expectOverlayWithoutOwnSwitcher(T.prediction.overlay);
       });
-      await test.step('Switching works while the prediction overlay is open', async () => {
-        await game.getByTestId(T.footer.langButton('en')).click();
-        await expectActive(game, 'en');
-        await expect(game.getByTestId(T.prediction.overlay)).toBeVisible();
-      });
-      await test.step('Result overlay likewise', async () => {
+      await test.step('Result overlay likewise has no own switcher', async () => {
         await submitPredictions(game, [1, 0, 0]);
         await expectOverlayWithoutOwnSwitcher(T.result.overlay);
       });

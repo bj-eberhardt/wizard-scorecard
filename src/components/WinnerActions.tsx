@@ -6,6 +6,7 @@ import { renderResultImage, downloadBlob } from './resultImage';
 import { useGameStore } from '../store/gameStore';
 import type { Player } from '../store/gameStore';
 import useSettingsStore from '../store/settingsStore';
+import { appSettings } from '../settings';
 import { T } from '../test-ids';
 
 interface WinnerActionsProps {
@@ -34,7 +35,7 @@ export default function WinnerActions({ ranked, winners }: WinnerActionsProps) {
 
   const [exportState, setExportState] = useState<'idle' | 'ready' | 'error'>('idle');
   const [copied, setCopied] = useState(false);
-  const hideSaveImage = new URLSearchParams(window.location.search).has('hideSaveImage');
+  const hideSaveImage = appSettings.hideWinningShareImage;
 
   const dateStr = useMemo(() => {
     const d = new Date();

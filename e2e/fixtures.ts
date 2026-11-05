@@ -53,13 +53,21 @@ export const test = base.extend<Fixtures>({
 /** Navigate to the app. By default with the e2e bypass enabled. */
 export async function openApp(
   page: Page,
-  opts: { e2e?: boolean; locale?: 'de' | 'en'; waitReady?: boolean } = {}
+  opts: {
+    e2e?: boolean;
+    locale?: 'de' | 'en';
+    waitReady?: boolean;
+    showIntroAnimation?: boolean;
+  } = {}
 ) {
-  const { e2e = true, locale, waitReady = true } = opts;
+  const { e2e = true, locale, waitReady = true, showIntroAnimation = false } = opts;
   if (locale) {
     await page.addInitScript((lng) => localStorage.setItem('i18nextLng', lng), locale);
   }
-  const url = e2e ? '/?e2e=1' : '/';
+  const params = new URLSearchParams();
+  if (e2e) params.set('e2e', '1');
+  params.set('showDialogIntroAnimation', showIntroAnimation ? '1' : '0');
+  const url = `/?${params.toString()}`;
   await page.goto(url);
   if (waitReady) {
     // Generic readiness: React has mounted and rendered its first screen.

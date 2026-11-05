@@ -5,6 +5,8 @@ import { T } from '../test-ids';
 import { isE2E } from '../e2eFlag';
 import { NumberStepper } from './NumberStepper';
 import { ValidationError } from './ValidationError';
+import { IntroAnimation } from './IntroAnimation';
+import resultIntro from '../assets/result-intro.gif';
 
 export function ResultOverlay({ close }: { close: () => void }) {
   const { t } = useTranslation();
@@ -144,7 +146,7 @@ export function ResultOverlay({ close }: { close: () => void }) {
 
   return (
     <div
-      className="fixed inset-0 bg-black/60 flex items-start md:items-center justify-center overflow-y-auto z-20 px-4 py-4 md:py-6 md:pb-28"
+      className="fixed inset-0 bg-black/60 flex items-start md:items-center justify-center overflow-y-auto z-20 px-4 py-4 md:py-6"
       data-testid={T.result.overlay}
     >
       <form
@@ -152,118 +154,126 @@ export function ResultOverlay({ close }: { close: () => void }) {
         noValidate
         onSubmit={(e) => submit(e)}
       >
-        <h2 className="text-lg font-bold mb-2">
+        <h2 className="relative z-20 text-lg font-bold mb-2">
           {t('resultOverlay.title', { round: currentRound })}
         </h2>
-        {rotatedPlayers.map((p, i) => (
-          <div
-            key={p.name}
-            data-testid={T.result.playerRow(i)}
-            className="flex min-w-0 flex-col gap-2 mb-2 xs:flex-row xs:items-center xs:justify-between"
-          >
-            <div className="min-w-0 flex-1">
-              <span className="break-words">{p.name}</span>
-              <span className="italic">
-                &nbsp;{t('resultOverlay.tip', { tip: p.predictions[currentRound - 1] })}
-              </span>
-            </div>
-            <div className="flex shrink-0 items-center gap-2 self-end xs:self-auto">
-              {/* No `max` attribute: the browser would block submission with a native,
+        <IntroAnimation
+          src={resultIntro}
+          testId={T.result.intro}
+          imageTestId={T.result.introImage}
+          overlayClassName="absolute inset-0 z-10 flex items-center justify-center rounded-lg bg-panel transition-opacity duration-500"
+          durationMs={5000}
+        >
+          {rotatedPlayers.map((p, i) => (
+            <div
+              key={p.name}
+              data-testid={T.result.playerRow(i)}
+              className="flex min-w-0 flex-col gap-2 mb-2 xs:flex-row xs:items-center xs:justify-between"
+            >
+              <div className="min-w-0 flex-1">
+                <span className="break-words">{p.name}</span>
+                <span className="italic">
+                  &nbsp;{t('resultOverlay.tip', { tip: p.predictions[currentRound - 1] })}
+                </span>
+              </div>
+              <div className="flex shrink-0 items-center gap-2 self-end xs:self-auto">
+                {/* No `max` attribute: the browser would block submission with a native,
                   unlocalized bubble before our app validation can run. Range checks are
                   owned by `valueTooSmall` / `valueTooLarge` below. */}
-              <div className="hidden md:block">
-                <input
-                  autoFocus={i == 0}
-                  type="number"
-                  min={0}
-                  value={results[i]}
-                  data-testid={T.result.input(i)}
-                  onFocus={(e) => e.target.select()}
-                  onChange={(e) => {
-                    clearError();
-                    const copy = [...results];
-                    copy[i] = parseInt(e.target.value);
-                    setResults(copy);
-                  }}
-                  className="border border-line bg-surface text-ink rounded p-1 w-16 text-right tabular-nums"
-                />
-              </div>
-              <div className="md:hidden">
-                <NumberStepper
-                  value={results[i]}
-                  min={0}
-                  max={currentRound}
-                  onChange={(value) => {
-                    clearError();
-                    const copy = [...results];
-                    copy[i] = value;
-                    setResults(copy);
-                  }}
-                  decreaseLabel={t('numberStepper.decrease')}
-                  increaseLabel={t('numberStepper.increase')}
-                  testId={T.result.stepper(i)}
-                />
-              </div>
-              {useAnniversaryRules && (
-                <label className="text-xs shrink-0 self-center whitespace-nowrap">
+                <div className="hidden md:block">
                   <input
-                    type="checkbox"
-                    checked={wolkeFlags[i]}
-                    data-testid={T.result.wolke(i)}
+                    autoFocus={i == 0}
+                    type="number"
+                    min={0}
+                    value={results[i]}
+                    data-testid={T.result.input(i)}
+                    onFocus={(e) => e.target.select()}
                     onChange={(e) => {
                       clearError();
-                      const copy = [...wolkeFlags];
-                      copy[i] = e.target.checked;
-                      setWolkeFlags(copy);
+                      const copy = [...results];
+                      copy[i] = parseInt(e.target.value);
+                      setResults(copy);
                     }}
-                    className="accent-gold"
-                  />{' '}
-                  &nbsp;{t('resultOverlay.wolke')}
-                </label>
-              )}
+                    className="border border-line bg-surface text-ink rounded p-1 w-16 text-right tabular-nums"
+                  />
+                </div>
+                <div className="md:hidden">
+                  <NumberStepper
+                    value={results[i]}
+                    min={0}
+                    max={currentRound}
+                    onChange={(value) => {
+                      clearError();
+                      const copy = [...results];
+                      copy[i] = value;
+                      setResults(copy);
+                    }}
+                    decreaseLabel={t('numberStepper.decrease')}
+                    increaseLabel={t('numberStepper.increase')}
+                    testId={T.result.stepper(i)}
+                  />
+                </div>
+                {useAnniversaryRules && (
+                  <label className="text-xs shrink-0 self-center whitespace-nowrap">
+                    <input
+                      type="checkbox"
+                      checked={wolkeFlags[i]}
+                      data-testid={T.result.wolke(i)}
+                      onChange={(e) => {
+                        clearError();
+                        const copy = [...wolkeFlags];
+                        copy[i] = e.target.checked;
+                        setWolkeFlags(copy);
+                      }}
+                      className="accent-gold"
+                    />{' '}
+                    &nbsp;{t('resultOverlay.wolke')}
+                  </label>
+                )}
+              </div>
             </div>
+          ))}
+          {error && <ValidationError message={error} errorKey={errorKey} testId={T.result.error} />}
+          {/* single info line above the buttons, shown once if any wolke is selected */}
+          {anyWolkeSelected && (
+            <div
+              className="text-sm text-ink-soft bg-white/5 p-2 rounded mb-2"
+              data-testid={T.result.wolkeInfo}
+            >
+              {t('resultOverlay.wolkeInfo')}
+            </div>
+          )}
+          <div className="mt-2 flex gap-2">
+            <button
+              type="button"
+              tabIndex={-1}
+              onClick={() => {
+                setError('');
+                setErrorKey('');
+                setOverlay('prediction');
+              }}
+              data-testid={T.result.revert}
+              className="btn-secondary flex-0 px-3"
+              title={t('resultOverlay.revertButton')}
+            >
+              ↶
+            </button>
+            <button
+              type={'submit'}
+              onClick={(e) => submit(e)}
+              disabled={submitDisabled}
+              aria-disabled={submitDisabled}
+              aria-busy={submitDisabled}
+              data-submit-ready={submitDisabled ? 'false' : 'true'}
+              data-testid={T.result.submit}
+              className={`flex-1 px-4 py-2 rounded-md ${submitDisabled ? 'min-h-11 bg-white/10 text-ink-soft cursor-not-allowed' : 'btn-primary'}`}
+            >
+              {submitDisabled
+                ? t('resultOverlay.submitButtonDisabled')
+                : t('resultOverlay.submitButton')}
+            </button>
           </div>
-        ))}
-        {error && <ValidationError message={error} errorKey={errorKey} testId={T.result.error} />}
-        {/* single info line above the buttons, shown once if any wolke is selected */}
-        {anyWolkeSelected && (
-          <div
-            className="text-sm text-ink-soft bg-white/5 p-2 rounded mb-2"
-            data-testid={T.result.wolkeInfo}
-          >
-            {t('resultOverlay.wolkeInfo')}
-          </div>
-        )}
-        <div className="mt-2 flex gap-2">
-          <button
-            type="button"
-            tabIndex={-1}
-            onClick={() => {
-              setError('');
-              setErrorKey('');
-              setOverlay('prediction');
-            }}
-            data-testid={T.result.revert}
-            className="btn-secondary flex-0 px-3"
-            title={t('resultOverlay.revertButton')}
-          >
-            ↶
-          </button>
-          <button
-            type={'submit'}
-            onClick={(e) => submit(e)}
-            disabled={submitDisabled}
-            aria-disabled={submitDisabled}
-            aria-busy={submitDisabled}
-            data-submit-ready={submitDisabled ? 'false' : 'true'}
-            data-testid={T.result.submit}
-            className={`flex-1 px-4 py-2 rounded-md ${submitDisabled ? 'min-h-11 bg-white/10 text-ink-soft cursor-not-allowed' : 'btn-primary'}`}
-          >
-            {submitDisabled
-              ? t('resultOverlay.submitButtonDisabled')
-              : t('resultOverlay.submitButton')}
-          </button>
-        </div>
+        </IntroAnimation>
       </form>
     </div>
   );

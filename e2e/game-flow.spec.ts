@@ -19,7 +19,7 @@ import { T } from '../src/test-ids';
 test.describe('Game flow (integration)', () => {
   test('Persistence across a reload', async ({ page }) => {
     await test.step('Start a game and finish round 1', async () => {
-      await page.goto('/?e2e=1');
+      await page.goto('/?e2e=1&showDialogIntroAnimation=0');
       await startGame(page, { players: ['Anna', 'Ben', 'Cia'] });
       await submitPredictions(page, [1, 0, 0]);
       await submitResults(page, [1, 0, 0]);

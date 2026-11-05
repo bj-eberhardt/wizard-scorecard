@@ -113,6 +113,13 @@ input:focus-visible {
   animation-delay: 0.3s;
 }
 
+.dialog-intro-image {
+  -webkit-mask-image: radial-gradient(ellipse 76% 76% at center, black 52%, transparent 100%);
+  mask-image: radial-gradient(ellipse 76% 76% at center, black 52%, transparent 100%);
+  -webkit-mask-repeat: no-repeat;
+  mask-repeat: no-repeat;
+}
+
 @keyframes confetti-fall {
   0% {
     transform: translateY(0) rotate(0deg);
