@@ -45,8 +45,9 @@ export function computePlayerStats(player: Player): PlayerStats {
 
   for (let roundIndex = 0; roundIndex < hitTotal; roundIndex++) {
     const prediction = predictions[roundIndex] ?? 0;
+    const adjustedPrediction = player.adjustedPredictions?.[roundIndex] ?? prediction;
     const result = results[roundIndex] ?? 0;
-    if (prediction === result) hitCorrect++;
+    if (adjustedPrediction === result) hitCorrect++;
 
     const delta =
       roundIndex === 0 ? points[roundIndex] : points[roundIndex] - points[roundIndex - 1];
@@ -57,7 +58,8 @@ export function computePlayerStats(player: Player): PlayerStats {
   for (let roundIndex = 0; roundIndex < wolkeUsed.length; roundIndex++) {
     if (!wolkeUsed[roundIndex]) continue;
     wolkeCount++;
-    if ((predictions[roundIndex] ?? 0) === (results[roundIndex] ?? 0)) wolkeSuccess++;
+    const prediction = player.adjustedPredictions?.[roundIndex] ?? predictions[roundIndex] ?? 0;
+    if (prediction === (results[roundIndex] ?? 0)) wolkeSuccess++;
   }
 
   const hitRate = hitTotal > 0 ? Math.round((hitCorrect / hitTotal) * 100) : null;

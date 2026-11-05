@@ -25,11 +25,11 @@ interface GameState {
   setPlayerNames: (names: string[]) => void;
   setTotalRounds: (rounds: number) => void;
   setPrediction: (playerIndex: number, value: number) => void;
-  // value is the actual result (after applying wolke logic), meta optionally contains wolkeUsed and originalPrediction
+  // value is the actual result; meta optionally contains Wolke metadata.
   setResult: (
     playerIndex: number,
     value: number,
-    meta?: { wolkeUsed?: boolean; receivedTricks?: number }
+    meta?: { wolkeUsed?: boolean; receivedTricks?: number; adjustedPrediction?: number }
   ) => void;
   advanceRound: () => void;
   correctLastRound: () => void;
@@ -78,6 +78,7 @@ export const useGameStore = create<GameState>((set, get) => {
       const players = names.map((name) => ({
         name,
         predictions: [],
+        adjustedPredictions: [],
         results: [],
         points: [],
         wolkeUsed: [],
@@ -104,10 +105,13 @@ export const useGameStore = create<GameState>((set, get) => {
       const players = JSON.parse(JSON.stringify(get().players));
       const r = get().currentRound - 1;
       if (!players[i].results) players[i].results = [];
+      if (!players[i].adjustedPredictions) players[i].adjustedPredictions = [];
       if (!players[i].points) players[i].points = [];
       if (!players[i].wolkeUsed) players[i].wolkeUsed = [];
       if (!players[i].receivedResults) players[i].receivedResults = [];
       players[i].results[r] = value;
+      players[i].adjustedPredictions[r] =
+        meta?.adjustedPrediction ?? players[i].predictions[r] ?? 0;
       // store wolke flag and original prediction for this round
       players[i].wolkeUsed[r] = meta?.wolkeUsed ?? false;
       // store the raw entered tricks (received) so we can display what was typed
@@ -115,7 +119,8 @@ export const useGameStore = create<GameState>((set, get) => {
       players[i].points = recalculateCumulativePoints(
         players[i].predictions,
         players[i].results,
-        players[i].points.slice(0, r)
+        players[i].points.slice(0, r),
+        players[i].adjustedPredictions
       );
       set({ players }, false);
       save();
@@ -159,6 +164,7 @@ export const useGameStore = create<GameState>((set, get) => {
       const fresh: Player[] = rotated.map((p) => ({
         name: p.name,
         predictions: [],
+        adjustedPredictions: [],
         results: [],
         points: [],
         wolkeUsed: [],

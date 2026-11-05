@@ -7,8 +7,8 @@ import { T } from '../test-ids';
 /**
  * Scoreboard: one row per round, three columns per player — prediction, tricks, points.
  * Every value is mirrored into a `data-*` attribute so the E2E suite can assert the whole
- * cell matrix without touching localized text. A Wolke round shows `entered → evaluated`
- * plus the cloud marker, because the anniversary rule rewrites the value that counts.
+ * cell matrix without touching localized text. A Wolke round shows the actual trick count
+ * plus the cloud marker; the anniversary rule changes the prediction used for scoring.
  *
  * `compact`: on the narrow phone screen the per-player points column is the
  * furthest-right and hardest to reach, so it is hidden and the current total is shown under
@@ -36,15 +36,14 @@ export function Scoreboard({ compact = false }: { compact?: boolean }) {
   const groupEnd = 'border-r-2 border-r-gold/50';
 
   /**
-   * Rendered text of the tricks cell: `3→2 ☁` for a Wolke round, else the value. The narrow
+   * Rendered text of the tricks cell: `3 ☁` for a Wolke round, else the value. The narrow
    * no-break space (U+202F) keeps the marker inside the fixed column without wrapping.
    */
   function tricksText(p: Player, roundIndex: number): string {
     const evaluated = p.results?.[roundIndex];
     if (typeof evaluated !== 'number') return '-';
     if (!p.wolkeUsed?.[roundIndex]) return String(evaluated);
-    const entered = p.receivedResults?.[roundIndex] ?? evaluated;
-    return `${entered}\u2192${evaluated}\u202F\u2601`;
+    return `${evaluated}\u202F\u2601`;
   }
 
   /** Attribute value of a per-round number: '' when the round is not played yet. */

@@ -22,25 +22,35 @@ export function validateResultSum(
 
 export function recalculateCumulativePoints(
   predictions: readonly number[],
-  effectiveResults: readonly number[],
-  preservedPoints: readonly number[] = []
+  results: readonly number[],
+  preservedPoints: readonly number[] = [],
+  adjustedPredictions: readonly number[] = []
 ): number[] {
   let cumulative = 0;
-  return effectiveResults.map((result, roundIndex) => {
+  return results.map((result, roundIndex) => {
     const preserved = preservedPoints[roundIndex];
     if (typeof preserved === 'number') {
       cumulative = preserved;
       return preserved;
     }
 
-    cumulative += calculateRoundPoints(predictions[roundIndex] ?? 0, result);
+    cumulative += calculateRoundPoints(
+      adjustedPredictions[roundIndex] ?? predictions[roundIndex] ?? 0,
+      result
+    );
     return cumulative;
   });
 }
 
 export interface WolkeEvaluation {
   effectiveResult: number;
+  adjustedPrediction: number;
   wolkeApplied: boolean;
+}
+
+function adjustPredictionForWolke(prediction: number, enteredResult: number): number {
+  if (enteredResult === prediction) return prediction + 1;
+  return prediction + Math.sign(enteredResult - prediction);
 }
 
 export function evaluateWolke(
@@ -50,11 +60,16 @@ export function evaluateWolke(
   wolkeSelected: boolean
 ): WolkeEvaluation {
   if (!useAnniversaryRules || !wolkeSelected) {
-    return { effectiveResult: enteredResult, wolkeApplied: false };
+    return {
+      effectiveResult: enteredResult,
+      adjustedPrediction: prediction,
+      wolkeApplied: false,
+    };
   }
 
   return {
-    effectiveResult: Math.abs(prediction - enteredResult) === 1 ? prediction : prediction + 1,
+    effectiveResult: enteredResult,
+    adjustedPrediction: adjustPredictionForWolke(prediction, enteredResult),
     wolkeApplied: true,
   };
 }

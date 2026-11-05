@@ -127,6 +127,7 @@ export function ResultOverlay({ close }: { close: () => void }) {
       setResult(originalIndex, wolke.effectiveResult, {
         wolkeUsed: wolke.wolkeApplied,
         receivedTricks: val,
+        adjustedPrediction: wolke.adjustedPrediction,
       });
     });
     advanceRound();

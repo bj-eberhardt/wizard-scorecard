@@ -16,6 +16,7 @@ const TOTAL_ROUNDS = 6;
 
 type RoundData = {
   prediction: number;
+  adjustedPrediction?: number;
   /** tricks as entered by the user */
   entered: number;
   /** tricks after the app applied the Wolke rewrite — this is what scores */
@@ -28,7 +29,7 @@ const GAME: Record<string, RoundData[]> = {
   P0: [
     { prediction: 1, entered: 1, evaluated: 1, wolke: false },
     { prediction: 2, entered: 2, evaluated: 2, wolke: false },
-    { prediction: 3, entered: 2, evaluated: 3, wolke: true },
+    { prediction: 3, adjustedPrediction: 2, entered: 2, evaluated: 2, wolke: true },
   ],
   // player 1: miss (-10), miss (-10), hit (+40)
   P1: [
@@ -40,15 +41,16 @@ const GAME: Record<string, RoundData[]> = {
   P2: [
     { prediction: 0, entered: 0, evaluated: 0, wolke: false },
     { prediction: 1, entered: 1, evaluated: 1, wolke: false },
-    { prediction: 1, entered: 4, evaluated: 2, wolke: true },
+    { prediction: 1, adjustedPrediction: 2, entered: 4, evaluated: 4, wolke: true },
   ],
 };
 
 /** Points of a single round: correct -> +(20 + tricks*10), wrong -> -(|diff|*10). */
 function roundPoints(round: RoundData): number {
-  return round.prediction === round.evaluated
+  const prediction = round.adjustedPrediction ?? round.prediction;
+  return prediction === round.evaluated
     ? 20 + round.evaluated * 10
-    : -Math.abs(round.prediction - round.evaluated) * 10;
+    : -Math.abs(prediction - round.evaluated) * 10;
 }
 
 /** Cumulative points per round, derived from the same data the seed uses. */
@@ -66,6 +68,7 @@ function seedPlayer(name: string, rounds: RoundData[]): SeedPlayer {
   return {
     name,
     predictions: rounds.map((r) => r.prediction),
+    adjustedPredictions: rounds.map((r) => r.adjustedPrediction ?? r.prediction),
     results: rounds.map((r) => r.evaluated),
     receivedResults: rounds.map((r) => r.entered),
     wolkeUsed: rounds.map((r) => r.wolke),
@@ -193,7 +196,7 @@ test.describe('Scoreboard', () => {
         for (let round = 0; round < PLAYED_ROUNDS; round++) {
           const data = rounds[round];
           const expectedText = data.wolke
-            ? `${data.entered}\u2192${data.evaluated} \u2601`
+            ? `${data.evaluated}\u202F\u2601`
             : String(data.evaluated);
 
           const prediction = game.getByTestId(T.scoreboard.cell(player, round, 'prediction'));

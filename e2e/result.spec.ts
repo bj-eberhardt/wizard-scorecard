@@ -166,23 +166,80 @@ test.describe('Enter results', () => {
     });
     await test.step('P0: result 1 + Wolke (prediction 2, diff 1) -> counted as 2, correct', async () => {
       await submitResults(game, [1, 1, 1], 0);
-      // P0 correct: +20+2*10=+40 -> 100+40=140
+      // Wolke changes prediction 2 to 1: +20+1*10=+30 -> 100+30=130
       await expect(game.getByTestId(T.scoreboard.cell(0, 3, 'points'))).toHaveAttribute(
         'data-points',
-        '140'
+        '130'
       );
     });
     await test.step('Scoreboard tricks cell shows entered → evaluated with the Wolke marker', async () => {
       const tricks = game.getByTestId(T.scoreboard.cell(0, 3, 'tricks'));
-      await expect(tricks).toHaveAttribute('data-tricks', '2');
+      await expect(tricks).toHaveAttribute('data-tricks', '1');
       await expect(tricks).toHaveAttribute('data-received-tricks', '1');
       await expect(tricks).toHaveAttribute('data-wolke', 'true');
       // numbers + arrow are not localized, so the rendered value can be asserted
-      await expect(tricks).toHaveText('1\u21922 \u2601');
+      await expect(tricks).toHaveText('1 \u2601');
       // a player without Wolke shows the plain value only
       const plain = game.getByTestId(T.scoreboard.cell(1, 3, 'tricks'));
       await expect(plain).toHaveAttribute('data-wolke', 'false');
       await expect(plain).toHaveText('1');
+    });
+  });
+
+  test('Wolke: larger misses keep the remaining difference after adjusting the prediction', async ({
+    game,
+  }) => {
+    await test.step('Seed a round where the Wolke player is three tricks away', async () => {
+      await seedGameState(game, {
+        gameStarted: true,
+        currentRound: 4,
+        totalRounds: 15,
+        overlay: 'result',
+        useAnniversaryRules: true,
+        players: [
+          { name: 'P0', predictions: [1, 2, 2, 4], results: [1, 2, 2], points: [30, 50, 100] },
+          { name: 'P1', predictions: [1, 2, 2, 2], results: [1, 2, 2], points: [30, 50, 100] },
+          { name: 'P2', predictions: [1, 2, 2, 2], results: [1, 2, 2], points: [30, 50, 100] },
+        ],
+      });
+      await openApp(game);
+    });
+    await test.step('Submit result 1 with Wolke for the player who predicted 4', async () => {
+      await submitResults(game, [1, 1, 2], 0);
+    });
+    await test.step('The Wolke adjusts the prediction to 3, so the round costs 20 points', async () => {
+      await expect(game.getByTestId(T.scoreboard.cell(0, 3, 'points'))).toHaveAttribute(
+        'data-points',
+        '80'
+      );
+    });
+  });
+
+  test('Wolke: a zero prediction and three received tricks score minus 20', async ({ game }) => {
+    await test.step('Seed round 3 for six players with zero predictions', async () => {
+      await seedGameState(game, {
+        gameStarted: true,
+        currentRound: 3,
+        totalRounds: 10,
+        overlay: 'result',
+        useAnniversaryRules: true,
+        players: ['A', 'B', 'C', 'D', 'E', 'F'].map((name) => ({
+          name,
+          predictions: [0, 0, 0],
+          results: [0, 0],
+          points: [20, 40],
+        })),
+      });
+      await openApp(game);
+    });
+    await test.step('Give player B three tricks and mark the Wolke in rotated row 6', async () => {
+      await submitResults(game, [0, 0, 0, 0, 0, 3], 5);
+    });
+    await test.step('The Wolke adjusts bid 0 to 1, leaving a difference of 2', async () => {
+      await expect(game.getByTestId(T.scoreboard.cell(1, 2, 'points'))).toHaveAttribute(
+        'data-points',
+        '20'
+      );
     });
   });
 

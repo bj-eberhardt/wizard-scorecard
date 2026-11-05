@@ -20,6 +20,7 @@ export const SETTINGS_KEY = 'wizard_settings_v1';
 export type SeedPlayer = {
   name: string;
   predictions?: number[];
+  adjustedPredictions?: number[];
   results?: number[];
   points?: number[];
   wolkeUsed?: boolean[];
@@ -90,6 +91,7 @@ export async function seedGameState(page: Page, state: SeedState) {
     players: (state.players ?? []).map((player) => ({
       name: player.name,
       predictions: player.predictions ?? [],
+      adjustedPredictions: player.adjustedPredictions ?? [],
       results: player.results ?? [],
       points: player.points ?? [],
       wolkeUsed: player.wolkeUsed ?? [],

@@ -21,25 +21,40 @@ describe('scoring rules', () => {
   it('leaves results unchanged when Wolke is not active', () => {
     expect(evaluateWolke(3, 2, false, true)).toEqual({
       effectiveResult: 2,
+      adjustedPrediction: 3,
       wolkeApplied: false,
     });
     expect(evaluateWolke(3, 2, true, false)).toEqual({
       effectiveResult: 2,
+      adjustedPrediction: 3,
       wolkeApplied: false,
     });
   });
 
   it('turns a one-trick difference into a correct result with Wolke', () => {
     expect(evaluateWolke(3, 2, true, true)).toEqual({
-      effectiveResult: 3,
+      effectiveResult: 2,
+      adjustedPrediction: 2,
       wolkeApplied: true,
     });
   });
 
-  it('uses prediction plus one for other Wolke differences', () => {
+  it('moves the prediction one step toward the actual result for larger Wolke misses', () => {
     expect(evaluateWolke(3, 0, true, true)).toEqual({
-      effectiveResult: 4,
+      effectiveResult: 0,
+      adjustedPrediction: 2,
       wolkeApplied: true,
     });
+    expect(evaluateWolke(3, 6, true, true)).toEqual({
+      effectiveResult: 6,
+      adjustedPrediction: 4,
+      wolkeApplied: true,
+    });
+  });
+
+  it('calculates points from the adjusted Wolke prediction', () => {
+    expect(recalculateCumulativePoints([3], [0], [], [2])).toEqual([-20]);
+    expect(recalculateCumulativePoints([3], [2], [], [2])).toEqual([40]);
+    expect(recalculateCumulativePoints([3], [4], [], [4])).toEqual([60]);
   });
 });

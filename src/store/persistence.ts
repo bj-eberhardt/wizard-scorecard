@@ -8,6 +8,7 @@ export type PersistedOverlay = 'prediction' | 'result' | 'none';
 export interface PersistedPlayerV2 {
   name: string;
   predictions: number[];
+  adjustedPredictions?: number[];
   results: number[];
   points: number[];
   wolkeUsed: boolean[];
@@ -85,6 +86,12 @@ export function validateGameState(input: unknown): input is PersistedGameV2 {
       return false;
     }
     if (!isNumberArray(player.predictions, true)) return false;
+    if (
+      player.adjustedPredictions !== undefined &&
+      !isNumberArray(player.adjustedPredictions, true)
+    ) {
+      return false;
+    }
     if (!isNumberArray(player.results, true)) return false;
     if (!isNumberArray(player.points)) return false;
     if (!isBooleanArray(player.wolkeUsed)) return false;
@@ -92,6 +99,7 @@ export function validateGameState(input: unknown): input is PersistedGameV2 {
 
     return [
       player.predictions,
+      ...(player.adjustedPredictions ? [player.adjustedPredictions] : []),
       player.results,
       player.points,
       player.wolkeUsed,
@@ -106,6 +114,7 @@ function migratePlayer(player: unknown): PersistedPlayerV2 | null {
   }
 
   const predictions = player.predictions ?? [];
+  const adjustedPredictions = player.adjustedPredictions ?? [];
   const results = player.results ?? [];
   const points = player.points ?? [];
   const wolkeUsed = player.wolkeUsed ?? [];
@@ -113,6 +122,7 @@ function migratePlayer(player: unknown): PersistedPlayerV2 | null {
 
   if (
     !isNumberArray(predictions, true) ||
+    !isNumberArray(adjustedPredictions, true) ||
     !isNumberArray(results, true) ||
     !isNumberArray(points) ||
     !isBooleanArray(wolkeUsed) ||
@@ -121,7 +131,15 @@ function migratePlayer(player: unknown): PersistedPlayerV2 | null {
     return null;
   }
 
-  return { name: player.name, predictions, results, points, wolkeUsed, receivedResults };
+  return {
+    name: player.name,
+    predictions,
+    adjustedPredictions,
+    results,
+    points,
+    wolkeUsed,
+    receivedResults,
+  };
 }
 
 /** Convert both the unversioned V1 shape and V2 into the current format. */
@@ -190,6 +208,7 @@ export function toPersistedGame(
     players: state.players.map((player) => ({
       name: player.name,
       predictions: player.predictions,
+      adjustedPredictions: player.adjustedPredictions ?? [],
       results: player.results,
       points: player.points,
       wolkeUsed: player.wolkeUsed ?? [],
