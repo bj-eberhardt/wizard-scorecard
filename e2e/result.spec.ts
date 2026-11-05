@@ -243,6 +243,40 @@ test.describe('Enter results', () => {
     });
   });
 
+  test('Older game data is backfilled before saving a result in a later round', async ({
+    game,
+  }) => {
+    await test.step('Seed a round-3 game without the newer adjusted prediction field', async () => {
+      await seedGameState(game, {
+        gameStarted: true,
+        currentRound: 3,
+        totalRounds: 10,
+        overlay: 'result',
+        players: ['A', 'B', 'C'].map((name) => ({
+          name,
+          predictions: [0, 0, 0],
+          results: [0, 0],
+          points: [20, 40],
+        })),
+      });
+      await openApp(game);
+    });
+    await test.step('Submit the result and verify the migrated state is valid JSON', async () => {
+      await submitResults(game, [1, 1, 1]);
+      const stored = await game.evaluate(() => localStorage.getItem('wizard_state_v2'));
+      expect(stored).not.toBeNull();
+      expect(
+        JSON.parse(stored ?? '{}').players.map(
+          (player: { adjustedPredictions: number[] }) => player.adjustedPredictions
+        )
+      ).toEqual([
+        [0, 0, 0],
+        [0, 0, 0],
+        [0, 0, 0],
+      ]);
+    });
+  });
+
   test('Wolke: value < 1 forbidden (wolkeMinOne)', async ({ game }) => {
     await test.step('Seed round 4 with the anniversary rule', async () => {
       await seedRound4(game, { useAnniversaryRules: true });

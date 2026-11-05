@@ -109,6 +109,13 @@ export const useGameStore = create<GameState>((set, get) => {
       if (!players[i].points) players[i].points = [];
       if (!players[i].wolkeUsed) players[i].wolkeUsed = [];
       if (!players[i].receivedResults) players[i].receivedResults = [];
+      // Older persisted games do not have adjusted predictions yet. Backfill every
+      // earlier round before writing the current one so the array contains no JSON holes.
+      for (let roundIndex = 0; roundIndex <= r; roundIndex++) {
+        if (typeof players[i].adjustedPredictions[roundIndex] !== 'number') {
+          players[i].adjustedPredictions[roundIndex] = players[i].predictions[roundIndex] ?? 0;
+        }
+      }
       players[i].results[r] = value;
       players[i].adjustedPredictions[r] =
         meta?.adjustedPrediction ?? players[i].predictions[r] ?? 0;

@@ -1,4 +1,5 @@
 import type { Player } from '../domain/types';
+import { evaluateWolke, recalculateCumulativePoints } from '../domain/scoring';
 
 export const LEGACY_GAME_STORAGE_KEY = 'wizard_state_v1';
 export const GAME_STORAGE_KEY = 'wizard_state_v2';
@@ -108,16 +109,22 @@ export function validateGameState(input: unknown): input is PersistedGameV2 {
   });
 }
 
-function migratePlayer(player: unknown): PersistedPlayerV2 | null {
+function migratePlayer(
+  player: unknown,
+  useAnniversaryRules: boolean,
+  totalRounds: number
+): PersistedPlayerV2 | null {
   if (!isRecord(player) || typeof player.name !== 'string' || player.name.trim() === '') {
     return null;
   }
 
   const predictions = player.predictions ?? [];
+  const hasAdjustedPredictions = Array.isArray(player.adjustedPredictions);
   const adjustedPredictions = player.adjustedPredictions ?? [];
   const results = player.results ?? [];
   const points = player.points ?? [];
   const wolkeUsed = player.wolkeUsed ?? [];
+  const hasReceivedResults = Array.isArray(player.receivedResults);
   const receivedResults = player.receivedResults ?? results;
 
   if (
@@ -131,15 +138,44 @@ function migratePlayer(player: unknown): PersistedPlayerV2 | null {
     return null;
   }
 
-  return {
+  const isLegacyResultShape = !hasAdjustedPredictions;
+  const actualResults = isLegacyResultShape && hasReceivedResults ? receivedResults : results;
+  const migratedAdjustedPredictions = isLegacyResultShape
+    ? predictions.map((prediction, roundIndex) => {
+        const result = actualResults[roundIndex];
+        return useAnniversaryRules && wolkeUsed[roundIndex] && typeof result === 'number'
+          ? evaluateWolke(prediction, result, true, true).adjustedPrediction
+          : prediction;
+      })
+    : predictions.map((prediction, roundIndex) => adjustedPredictions[roundIndex] ?? prediction);
+  const migratedPoints = isLegacyResultShape
+    ? recalculateCumulativePoints(predictions, actualResults, [], migratedAdjustedPredictions)
+    : points;
+
+  const migrated: PersistedPlayerV2 = {
     name: player.name,
     predictions,
-    adjustedPredictions,
-    results,
-    points,
+    adjustedPredictions: migratedAdjustedPredictions,
+    results: actualResults,
+    points: migratedPoints,
     wolkeUsed,
     receivedResults,
   };
+
+  if (
+    ![
+      migrated.predictions,
+      migrated.adjustedPredictions,
+      migrated.results,
+      migrated.points,
+      migrated.wolkeUsed,
+      migrated.receivedResults,
+    ].every((array) => (array?.length ?? 0) <= totalRounds)
+  ) {
+    return null;
+  }
+
+  return migrated;
 }
 
 /** Convert both the unversioned V1 shape and V2 into the current format. */
@@ -160,7 +196,9 @@ export function migrateGameState(input: unknown): PersistedGameV2 | null {
     return null;
   }
 
-  const players = raw.players.map(migratePlayer);
+  const players = raw.players.map((player) =>
+    migratePlayer(player, raw.useAnniversaryRules as boolean, raw.totalRounds as number)
+  );
   if (players.some((player): player is null => player === null)) return null;
 
   const migrated: PersistedGameV2 = {
@@ -208,7 +246,11 @@ export function toPersistedGame(
     players: state.players.map((player) => ({
       name: player.name,
       predictions: player.predictions,
-      adjustedPredictions: player.adjustedPredictions ?? [],
+      // Backfill this field for older games before validation. Using map avoids
+      // sparse arrays, which JSON serializes as null and the validator rejects.
+      adjustedPredictions: player.predictions.map(
+        (prediction, roundIndex) => player.adjustedPredictions?.[roundIndex] ?? prediction
+      ),
       results: player.results,
       points: player.points,
       wolkeUsed: player.wolkeUsed ?? [],
@@ -265,7 +307,17 @@ export function loadPersistedGame(): PersistedGameV2 | null {
   const currentRaw = readStorage(GAME_STORAGE_KEY);
   if (currentRaw !== null) {
     const current = parsePersistedGame(currentRaw);
-    if (current) return current;
+    if (current) {
+      // A valid V2 payload may still use an older V2 shape. Persist the normalized
+      // representation so migration is completed even without a later user action.
+      const normalized = serializeGameState(current);
+      if (normalized !== currentRaw) {
+        if (!writeStorage(GAME_STORAGE_KEY, normalized)) {
+          console.warn('Game state was migrated in memory but could not be persisted.');
+        }
+      }
+      return current;
+    }
     console.warn('Stored V2 game state is invalid; resetting the game.');
     removeStorage(GAME_STORAGE_KEY);
     removeStorage(LEGACY_GAME_STORAGE_KEY);

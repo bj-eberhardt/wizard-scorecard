@@ -68,6 +68,48 @@ test.describe('Persistence and migration', () => {
     expect(migrated.players[0].receivedResults).toEqual([]);
   });
 
+  test('migrates old Wolke results to actual tricks and recalculates points', async ({ game }) => {
+    await seedRaw(game, STATE_KEY, {
+      version: 2,
+      currentRound: 2,
+      totalRounds: 5,
+      gameStarted: true,
+      useAnniversaryRules: true,
+      useNotEqual: false,
+      overlay: 'none',
+      players: [
+        {
+          name: 'A',
+          predictions: [0],
+          // Old V2 stored Wolke's rewritten result (1) here.
+          results: [1],
+          points: [-10],
+          wolkeUsed: [true],
+          receivedResults: [3],
+        },
+        ...players.slice(1),
+      ],
+    });
+
+    await openApp(game);
+
+    const tricks = game.getByTestId(T.scoreboard.cell(0, 0, 'tricks'));
+    await expect(tricks).toHaveAttribute('data-tricks', '3');
+    await expect(tricks).toHaveAttribute('data-wolke', 'true');
+    await expect(game.getByTestId(T.scoreboard.cell(0, 0, 'points'))).toHaveAttribute(
+      'data-points',
+      '-20'
+    );
+
+    const migrated = await game.evaluate(
+      (key) => JSON.parse(localStorage.getItem(key) ?? 'null'),
+      STATE_KEY
+    );
+    expect(migrated.players[0].results).toEqual([3]);
+    expect(migrated.players[0].adjustedPredictions).toEqual([1]);
+    expect(migrated.players[0].points).toEqual([-20]);
+  });
+
   test('rejects malformed JSON and starts a new game without touching settings', async ({
     game,
   }) => {
