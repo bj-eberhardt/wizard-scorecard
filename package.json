@@ -11,6 +11,7 @@
     "prettier:check": "prettier --check src/**/*.{ts,tsx,js,jsx} e2e/**/*.ts playwright.config.ts vite.config.ts vitest.config.ts",
     "typecheck": "tsc -p tsconfig.json --noEmit",
     "test:unit": "vitest run",
+    "test:unit:ci": "vitest run --reporter=default --reporter=junit --outputFile=test-results/vitest-junit.xml",
     "test:unit:watch": "vitest",
     "format": "npm run prettier && npm run lint",
     "prepare": "husky",
