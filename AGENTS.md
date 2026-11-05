@@ -169,8 +169,10 @@ playerCount) % playerCount`, the seat to the LEFT of the start player (`getCurre
   Invalid sums expose `errors.resultSum` or `errors.resultSumAnniversary`; range and
   Wolke-specific errors take precedence.
 
-`resetGame()` clears the store and removes `wizard_state_v1`. `gameStore` writes
-`localStorage` after every mutation via an internal `save()`.
+`resetGame()` clears the store and removes both `wizard_state_v2` and the legacy
+`wizard_state_v1`. `gameStore` writes the versioned V2 payload after every mutation
+through `src/store/persistence.ts`. Invalid stored game data is discarded with a
+warning and the app starts a fresh configuration; settings are kept independently.
 
 ---
 
@@ -178,8 +180,9 @@ playerCount) % playerCount`, the seat to the LEFT of the start player (`getCurre
 
 | Key                  | Owner                                  | Contents                                                                                                                     |
 | -------------------- | -------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------- |
-| `wizard_state_v1`    | `gameStore.ts`                         | full running game (`players`, `currentRound`, `totalRounds`, `gameStarted`, `useAnniversaryRules`, `useNotEqual`, `overlay`) |
-| `wizard_settings_v1` | `settingsStore.ts` (zustand `persist`) | remembered `playerNames` (6 slots), `useAnniversaryRules`, `useNotEqual`, explicit `language` choice (`'de'                  | 'en' | null`) |
+| `wizard_state_v2`    | `gameStore.ts` + `store/persistence.ts` | versioned full running game (`version: 2`, `players`, `currentRound`, `totalRounds`, `gameStarted`, `useAnniversaryRules`, `useNotEqual`, `overlay`) |
+| `wizard_state_v1`    | migration input only                  | legacy running-game payload; migrated to V2 once it validates and writes successfully |
+| `wizard_settings_v1` | `settingsStore.ts` (zustand `persist`) | validated remembered `playerNames` (6 slots), `useAnniversaryRules`, `useNotEqual`, explicit `language` choice (`'de'` | `'en'` | `null`) |
 | `i18nextLng`         | i18next browser detector               | active language                                                                                                              |
 
 E2E fixtures clear both game/settings keys before every test. See §8.

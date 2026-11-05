@@ -1,4 +1,13 @@
 import { create } from 'zustand';
+import {
+  GAME_STORAGE_KEY,
+  LEGACY_GAME_STORAGE_KEY,
+  loadPersistedGame,
+  removeStorage,
+  serializeGameState,
+  toPersistedGame,
+  writeStorage,
+} from './persistence';
 
 export interface Player {
   name: string;
@@ -42,8 +51,6 @@ interface GameState {
   getCurrentDealerIndex: () => number;
 }
 
-const STORAGE_KEY = 'wizard_state_v1';
-
 // helper to compute total rounds by player count
 export function roundsForCount(n: number) {
   if (n === 3) return 20;
@@ -70,20 +77,8 @@ function getDealerIndex(round: number, playerCount: number): number {
   return (getStartPlayerIndex(round, playerCount) - 1 + playerCount) % playerCount;
 }
 
-function loadFromStorage(): Partial<GameState> | null {
-  try {
-    const raw = localStorage.getItem(STORAGE_KEY);
-    if (!raw) return null;
-    return JSON.parse(raw);
-  } catch (e) {
-    console.error('Failed to load state', e);
-    return null;
-  }
-}
-
 export const useGameStore = create<GameState>((set, get) => {
-  // try load
-  const saved = loadFromStorage();
+  const saved = loadPersistedGame();
 
   const initialPlayers: Player[] = saved?.players ?? [];
   const initialCurrentRound: number = saved?.currentRound ?? 1;
@@ -96,19 +91,12 @@ export const useGameStore = create<GameState>((set, get) => {
   const initialOverlay: OverlayState = saved?.overlay ?? 'none';
 
   const save = () => {
+    const state = get();
+    const persisted = toPersistedGame(state);
     try {
-      const s = {
-        players: get().players,
-        currentRound: get().currentRound,
-        totalRounds: get().totalRounds,
-        gameStarted: get().gameStarted,
-        useAnniversaryRules: get().useAnniversaryRules,
-        useNotEqual: get().useNotEqual,
-        overlay: get().overlay,
-      };
-      localStorage.setItem(STORAGE_KEY, JSON.stringify(s));
-    } catch (e) {
-      console.error('Save failed', e);
+      writeStorage(GAME_STORAGE_KEY, serializeGameState(persisted));
+    } catch (error) {
+      console.warn('Save failed because the game state was invalid.', error);
     }
   };
 
@@ -190,7 +178,8 @@ export const useGameStore = create<GameState>((set, get) => {
         false
       );
       try {
-        localStorage.removeItem(STORAGE_KEY);
+        removeStorage(GAME_STORAGE_KEY);
+        removeStorage(LEGACY_GAME_STORAGE_KEY);
       } catch {
         // ignore
       }

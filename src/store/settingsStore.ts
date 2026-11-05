@@ -20,10 +20,36 @@ interface SettingsState {
   setLanguage: (language: SupportedLanguage) => void;
 }
 
+const DEFAULT_PLAYER_NAMES = ['', '', '', '', '', ''];
+
+function isRecord(value: unknown): value is Record<string, unknown> {
+  return typeof value === 'object' && value !== null && !Array.isArray(value);
+}
+
+function normalizePersistedSettings(
+  input: unknown
+): Pick<SettingsState, 'playerNames' | 'useAnniversaryRules' | 'useNotEqual' | 'language'> {
+  const value = isRecord(input) ? input : {};
+  const playerNames = value.playerNames;
+
+  return {
+    playerNames:
+      Array.isArray(playerNames) &&
+      playerNames.length <= DEFAULT_PLAYER_NAMES.length &&
+      playerNames.every((name) => typeof name === 'string')
+        ? playerNames
+        : [...DEFAULT_PLAYER_NAMES],
+    useAnniversaryRules:
+      typeof value.useAnniversaryRules === 'boolean' ? value.useAnniversaryRules : false,
+    useNotEqual: typeof value.useNotEqual === 'boolean' ? value.useNotEqual : false,
+    language: isSupportedLanguage(value.language) ? value.language : null,
+  };
+}
+
 const useSettingsStore = create<SettingsState>()(
   persist<SettingsState>(
     (set) => ({
-      playerNames: ['', '', '', '', '', ''],
+      playerNames: [...DEFAULT_PLAYER_NAMES],
       useAnniversaryRules: false,
       useNotEqual: false,
       language: null,
@@ -34,6 +60,12 @@ const useSettingsStore = create<SettingsState>()(
     }),
     {
       name: 'wizard_settings_v1',
+      version: 2,
+      migrate: (persistedState) => normalizePersistedSettings(persistedState) as SettingsState,
+      merge: (persistedState, currentState) => ({
+        ...currentState,
+        ...normalizePersistedSettings(persistedState),
+      }),
     }
   )
 );

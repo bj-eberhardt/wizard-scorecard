@@ -13,7 +13,8 @@ import { T } from '../src/test-ids';
  *    `data-*` attributes, never via visible text.
  */
 
-export const STATE_KEY = 'wizard_state_v1';
+export const STATE_KEY = 'wizard_state_v2';
+export const LEGACY_STATE_KEY = 'wizard_state_v1';
 export const SETTINGS_KEY = 'wizard_settings_v1';
 
 export type SeedPlayer = {
@@ -84,11 +85,38 @@ export async function openApp(
  * wins for the first load.
  */
 export async function seedGameState(page: Page, state: SeedState) {
+  const data = {
+    version: 2,
+    players: (state.players ?? []).map((player) => ({
+      name: player.name,
+      predictions: player.predictions ?? [],
+      results: player.results ?? [],
+      points: player.points ?? [],
+      wolkeUsed: player.wolkeUsed ?? [],
+      receivedResults: player.receivedResults ?? player.results ?? [],
+    })),
+    currentRound: state.currentRound ?? 1,
+    totalRounds: state.totalRounds ?? 1,
+    gameStarted: state.gameStarted ?? false,
+    useAnniversaryRules: state.useAnniversaryRules ?? false,
+    useNotEqual: state.useNotEqual ?? false,
+    overlay: state.overlay ?? 'none',
+  };
   await page.addInitScript(
     (payload) => {
       localStorage.setItem(payload.key, JSON.stringify(payload.data));
     },
-    { key: STATE_KEY, data: state }
+    { key: STATE_KEY, data }
+  );
+}
+
+/** Seed an unversioned V1 state for migration coverage. */
+export async function seedLegacyGameState(page: Page, state: SeedState) {
+  await page.addInitScript(
+    (payload) => {
+      localStorage.setItem(payload.key, JSON.stringify(payload.data));
+    },
+    { key: LEGACY_STATE_KEY, data: state }
   );
 }
 
