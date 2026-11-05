@@ -31,6 +31,8 @@ export function ResultOverlay({
     useAnniversaryRules,
     setOverlay,
     setSkipPredictionIntro,
+    skipResultIntro,
+    setSkipResultIntro,
   } = useGameStore();
   const startPlayerIndex = getStartPlayerIndex(currentRound, players.length);
   const rotatedPlayers = rotateByStartIndex(players, startPlayerIndex);
@@ -150,6 +152,8 @@ export function ResultOverlay({
         adjustedPrediction: wolke.adjustedPrediction,
       });
     });
+    setSkipPredictionIntro(false);
+    setSkipResultIntro(false);
     advanceRound();
     close();
   };
@@ -173,7 +177,7 @@ export function ResultOverlay({
           imageTestId={T.result.introImage}
           overlayClassName="absolute inset-0 z-10 flex items-center justify-center rounded-lg bg-panel transition-opacity duration-500"
           durationMs={5000}
-          skipAnimation={skipIntroAnimation || overlayTiming.skipIntroAnimation}
+          skipAnimation={skipIntroAnimation || skipResultIntro || overlayTiming.skipIntroAnimation}
         >
           {rotatedPlayers.map((p, i) => (
             <div
@@ -262,6 +266,7 @@ export function ResultOverlay({
                 setError('');
                 setErrorKey('');
                 setSkipPredictionIntro(true);
+                setSkipResultIntro(true);
                 setOverlay('prediction');
               }}
               data-testid={T.result.revert}

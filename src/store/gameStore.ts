@@ -25,6 +25,7 @@ interface GameState {
   useNotEqual: boolean;
   overlay: OverlayState;
   skipPredictionIntro: boolean;
+  skipResultIntro: boolean;
   setPlayerNames: (names: string[]) => void;
   setTotalRounds: (rounds: number) => void;
   setPrediction: (playerIndex: number, value: number) => void;
@@ -42,6 +43,7 @@ interface GameState {
   setUseNotEqual: (use: boolean) => void;
   setOverlay: (o: OverlayState) => void;
   setSkipPredictionIntro: (skip: boolean) => void;
+  setSkipResultIntro: (skip: boolean) => void;
   saveToStorage: () => void;
   getCurrentStartPlayerIndex: () => number;
   getCurrentDealerIndex: () => number;
@@ -79,6 +81,7 @@ export const useGameStore = create<GameState>((set, get) => {
     useNotEqual: initialUseNotEqual,
     overlay: initialOverlay,
     skipPredictionIntro: false,
+    skipResultIntro: false,
     setPlayerNames: (names: string[]) => {
       const players = names.map((name) => ({
         name,
@@ -97,6 +100,7 @@ export const useGameStore = create<GameState>((set, get) => {
           gameStarted: true,
           currentRound: 1,
           skipPredictionIntro: false,
+          skipResultIntro: false,
         },
         false
       );
@@ -167,6 +171,7 @@ export const useGameStore = create<GameState>((set, get) => {
           useNotEqual: false,
           overlay: 'none',
           skipPredictionIntro: false,
+          skipResultIntro: false,
         },
         false
       );
@@ -201,6 +206,7 @@ export const useGameStore = create<GameState>((set, get) => {
           gameStarted: true,
           overlay: 'prediction',
           skipPredictionIntro: false,
+          skipResultIntro: false,
         },
         false
       );
@@ -220,6 +226,9 @@ export const useGameStore = create<GameState>((set, get) => {
     },
     setSkipPredictionIntro: (skip) => {
       set({ skipPredictionIntro: skip }, false);
+    },
+    setSkipResultIntro: (skip) => {
+      set({ skipResultIntro: skip }, false);
     },
     saveToStorage: save,
     getCurrentStartPlayerIndex: () => {

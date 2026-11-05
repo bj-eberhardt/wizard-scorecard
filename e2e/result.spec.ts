@@ -356,6 +356,27 @@ test.describe('Enter results', () => {
     });
   });
 
+  test('Reverting an unsubmitted result round also skips the result intro', async ({ game }) => {
+    await test.step('Open a new result round with animation enabled', async () => {
+      await seedRound4(game);
+      await openApp(game, { showIntroAnimation: true });
+      await expect(game.getByTestId(T.result.intro)).toBeVisible();
+    });
+
+    await test.step('Return to prediction without showing its intro', async () => {
+      await game.getByTestId(T.result.revert).click();
+      await expect(game.getByTestId(T.prediction.overlay)).toBeVisible();
+      await expect(game.getByTestId(T.prediction.intro)).toHaveCount(0);
+    });
+
+    await test.step('Start the round without replaying the result intro', async () => {
+      await game.getByTestId(T.prediction.submit).click();
+      await expect(game.getByTestId(T.result.overlay)).toBeVisible();
+      await expect(game.getByTestId(T.result.intro)).toHaveCount(0);
+      await expect(game.getByTestId(T.result.introImage)).toHaveCount(0);
+    });
+  });
+
   test('Mobile: result stepper works with Wolke @mobile', async ({ game }) => {
     await test.step('Seed a result overlay with anniversary rules', async () => {
       await seedRound4(game, { useAnniversaryRules: true });
