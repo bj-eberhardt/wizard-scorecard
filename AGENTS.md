@@ -312,7 +312,8 @@ Use these instead of re-implementing flows:
   states). `locale: 'de' | 'en'` sets `i18nextLng` before load — note that a persisted
   explicit language choice in `wizard_settings_v1` OVERRIDES it (tests seed/clear the
   settings key accordingly).
-- `seedGameState(page, partialState)` — inject a `wizard_state_v1` object BEFORE boot
+- `seedGameState(page, partialState)` — inject a normalized `wizard_state_v2` object BEFORE boot;
+  `seedLegacyGameState(page, partialState)` is used for V1 migration coverage
   to jump straight to mid-game / game-over / tie states without clicking rounds.
 - `startGame(page, { players, rounds?, wolke?, notEqual? })` — fill config + start,
   asserts the prediction overlay is shown.
@@ -359,6 +360,8 @@ map to the rotated players, not the roster order.
   six-player board on a phone is still wider than the viewport and still horizontally scrollable
   (the centring wrapper must shrink to the screen, not outgrow it)
 - `waiting.spec.ts` — real (un-bypassed) splash + submit-lock timing, no `?e2e`
+- `persistence.spec.ts` — V2 loading, V1 migration, malformed/corrupt-state reset, settings
+  normalization, unknown-field tolerance, reset cleanup, and storage-write failures
 
 ### 8.6 Adding a new selector / test — checklist
 

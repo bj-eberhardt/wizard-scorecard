@@ -112,11 +112,20 @@ export async function seedGameState(page: Page, state: SeedState) {
 
 /** Seed an unversioned V1 state for migration coverage. */
 export async function seedLegacyGameState(page: Page, state: SeedState) {
+  const data = {
+    players: state.players ?? [],
+    currentRound: state.currentRound ?? 1,
+    totalRounds: state.totalRounds ?? 1,
+    gameStarted: state.gameStarted ?? false,
+    useAnniversaryRules: state.useAnniversaryRules ?? false,
+    useNotEqual: state.useNotEqual ?? false,
+    overlay: state.overlay ?? 'none',
+  };
   await page.addInitScript(
     (payload) => {
       localStorage.setItem(payload.key, JSON.stringify(payload.data));
     },
-    { key: LEGACY_STATE_KEY, data: state }
+    { key: LEGACY_STATE_KEY, data }
   );
 }
 

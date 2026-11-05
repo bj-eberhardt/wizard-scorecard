@@ -49,7 +49,6 @@ test.describe('Persistence and migration', () => {
       overlay: 'prediction',
       players,
     });
-
     await openApp(game);
 
     await expect(game.getByTestId(T.prediction.overlay)).toBeVisible();
@@ -92,8 +91,10 @@ test.describe('Persistence and migration', () => {
 
     await expect(game.getByTestId(T.config.root)).toBeVisible();
     await expect(game.getByTestId(T.footer.root)).toBeVisible();
-    await expect(game.evaluate((key) => localStorage.getItem(key), STATE_KEY)).toBeNull();
-    await expect(game.evaluate((key) => localStorage.getItem(key), SETTINGS_KEY)).not.toBeNull();
+    await expect(await game.evaluate((key) => localStorage.getItem(key), STATE_KEY)).toBeNull();
+    await expect(
+      await game.evaluate((key) => localStorage.getItem(key), SETTINGS_KEY)
+    ).not.toBeNull();
   });
 
   test('ignores unknown V2 fields', async ({ game }) => {
@@ -129,8 +130,10 @@ test.describe('Persistence and migration', () => {
     await game.getByTestId(T.app.confirmYes).click();
 
     await expect(game.getByTestId(T.config.root)).toBeVisible();
-    await expect(game.evaluate((key) => localStorage.getItem(key), STATE_KEY)).toBeNull();
-    await expect(game.evaluate((key) => localStorage.getItem(key), LEGACY_STATE_KEY)).toBeNull();
+    await expect(await game.evaluate((key) => localStorage.getItem(key), STATE_KEY)).toBeNull();
+    await expect(
+      await game.evaluate((key) => localStorage.getItem(key), LEGACY_STATE_KEY)
+    ).toBeNull();
   });
 
   test('continues in memory when game storage writes fail', async ({ game }) => {
@@ -218,6 +221,6 @@ for (const [label, invalid] of [
     await seedRaw(game, STATE_KEY, invalid);
     await openApp(game);
     await expect(game.getByTestId(T.config.root)).toBeVisible();
-    await expect(game.evaluate((key) => localStorage.getItem(key), STATE_KEY)).toBeNull();
+    await expect(await game.evaluate((key) => localStorage.getItem(key), STATE_KEY)).toBeNull();
   });
 }
