@@ -7,6 +7,7 @@ import {
   STATE_KEY,
   LEGACY_STATE_KEY,
   SETTINGS_KEY,
+  INVALID_STATE_KEY,
 } from './fixtures';
 import { T } from '../src/test-ids';
 
@@ -108,6 +109,7 @@ test.describe('Persistence and migration', () => {
     expect(migrated.players[0].results).toEqual([3]);
     expect(migrated.players[0].adjustedPredictions).toEqual([1]);
     expect(migrated.players[0].points).toEqual([-20]);
+    await expect(game.getByTestId(T.app.nextRound)).toBeVisible();
   });
 
   test('rejects malformed JSON and starts a new game without touching settings', async ({
@@ -134,6 +136,9 @@ test.describe('Persistence and migration', () => {
     await expect(game.getByTestId(T.config.root)).toBeVisible();
     await expect(game.getByTestId(T.footer.root)).toBeVisible();
     await expect(await game.evaluate((key) => localStorage.getItem(key), STATE_KEY)).toBeNull();
+    await expect(await game.evaluate((key) => localStorage.getItem(key), INVALID_STATE_KEY)).toBe(
+      '{not-json'
+    );
     await expect(
       await game.evaluate((key) => localStorage.getItem(key), SETTINGS_KEY)
     ).not.toBeNull();

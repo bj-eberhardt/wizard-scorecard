@@ -171,4 +171,10 @@ describe('game-state migration', () => {
 
     expect(validateGameState(migrated)).toBe(true);
   });
+
+  it('preserves the running-game cursor during migration', () => {
+    const migrated = migrateGameState(game({ currentRound: 3, totalRounds: 15, overlay: 'none' }));
+
+    expect(migrated).toMatchObject({ currentRound: 3, totalRounds: 15, overlay: 'none' });
+  });
 });

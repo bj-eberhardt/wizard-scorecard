@@ -16,6 +16,8 @@ import { T } from '../src/test-ids';
 export const STATE_KEY = 'wizard_state_v2';
 export const LEGACY_STATE_KEY = 'wizard_state_v1';
 export const SETTINGS_KEY = 'wizard_settings_v1';
+export const INVALID_STATE_KEY = 'wizard_state_v2_backup';
+export const INVALID_LEGACY_STATE_KEY = 'wizard_state_v1_backup';
 
 export type SeedPlayer = {
   name: string;

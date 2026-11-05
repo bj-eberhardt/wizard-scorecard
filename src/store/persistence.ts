@@ -3,6 +3,8 @@ import { evaluateWolke, recalculateCumulativePoints } from '../domain/scoring';
 
 export const LEGACY_GAME_STORAGE_KEY = 'wizard_state_v1';
 export const GAME_STORAGE_KEY = 'wizard_state_v2';
+export const INVALID_GAME_STORAGE_KEY = 'wizard_state_v2_backup';
+export const INVALID_LEGACY_GAME_STORAGE_KEY = 'wizard_state_v1_backup';
 
 export type PersistedOverlay = 'prediction' | 'result' | 'none';
 
@@ -319,9 +321,10 @@ export function loadPersistedGame(): PersistedGameV2 | null {
       return current;
     }
     console.warn('Stored V2 game state is invalid; resetting the game.');
+    // Keep a recovery copy. A failed migration must never destroy the only
+    // remaining game data before the user has had a chance to recover it.
+    writeStorage(INVALID_GAME_STORAGE_KEY, currentRaw);
     removeStorage(GAME_STORAGE_KEY);
-    removeStorage(LEGACY_GAME_STORAGE_KEY);
-    return null;
   }
 
   const legacyRaw = readStorage(LEGACY_GAME_STORAGE_KEY);
@@ -329,6 +332,7 @@ export function loadPersistedGame(): PersistedGameV2 | null {
   const migrated = parsePersistedGame(legacyRaw);
   if (!migrated) {
     console.warn('Stored legacy game state is invalid; resetting the game.');
+    writeStorage(INVALID_LEGACY_GAME_STORAGE_KEY, legacyRaw);
     removeStorage(LEGACY_GAME_STORAGE_KEY);
     return null;
   }

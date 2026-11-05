@@ -1,6 +1,8 @@
 import { create } from 'zustand';
 import {
   GAME_STORAGE_KEY,
+  INVALID_GAME_STORAGE_KEY,
+  INVALID_LEGACY_GAME_STORAGE_KEY,
   LEGACY_GAME_STORAGE_KEY,
   loadPersistedGame,
   removeStorage,
@@ -158,6 +160,8 @@ export const useGameStore = create<GameState>((set, get) => {
       try {
         removeStorage(GAME_STORAGE_KEY);
         removeStorage(LEGACY_GAME_STORAGE_KEY);
+        removeStorage(INVALID_GAME_STORAGE_KEY);
+        removeStorage(INVALID_LEGACY_GAME_STORAGE_KEY);
       } catch {
         // ignore
       }
