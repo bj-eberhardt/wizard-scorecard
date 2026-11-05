@@ -24,6 +24,7 @@ interface GameState {
   useAnniversaryRules: boolean;
   useNotEqual: boolean;
   overlay: OverlayState;
+  skipPredictionIntro: boolean;
   setPlayerNames: (names: string[]) => void;
   setTotalRounds: (rounds: number) => void;
   setPrediction: (playerIndex: number, value: number) => void;
@@ -40,6 +41,7 @@ interface GameState {
   setUseAnniversaryRules: (use: boolean) => void;
   setUseNotEqual: (use: boolean) => void;
   setOverlay: (o: OverlayState) => void;
+  setSkipPredictionIntro: (skip: boolean) => void;
   saveToStorage: () => void;
   getCurrentStartPlayerIndex: () => number;
   getCurrentDealerIndex: () => number;
@@ -76,6 +78,7 @@ export const useGameStore = create<GameState>((set, get) => {
     useAnniversaryRules: initialUseAnniversaryRules,
     useNotEqual: initialUseNotEqual,
     overlay: initialOverlay,
+    skipPredictionIntro: false,
     setPlayerNames: (names: string[]) => {
       const players = names.map((name) => ({
         name,
@@ -87,7 +90,16 @@ export const useGameStore = create<GameState>((set, get) => {
         receivedResults: [],
       }));
       const rounds = roundsForCount(players.length);
-      set({ players, totalRounds: rounds, gameStarted: true, currentRound: 1 }, false);
+      set(
+        {
+          players,
+          totalRounds: rounds,
+          gameStarted: true,
+          currentRound: 1,
+          skipPredictionIntro: false,
+        },
+        false
+      );
       save();
     },
     setTotalRounds: (r) => {
@@ -154,6 +166,7 @@ export const useGameStore = create<GameState>((set, get) => {
           useAnniversaryRules: false,
           useNotEqual: false,
           overlay: 'none',
+          skipPredictionIntro: false,
         },
         false
       );
@@ -181,7 +194,16 @@ export const useGameStore = create<GameState>((set, get) => {
         wolkeUsed: [],
         receivedResults: [],
       }));
-      set({ players: fresh, currentRound: 1, gameStarted: true, overlay: 'prediction' }, false);
+      set(
+        {
+          players: fresh,
+          currentRound: 1,
+          gameStarted: true,
+          overlay: 'prediction',
+          skipPredictionIntro: false,
+        },
+        false
+      );
       save();
     },
     setUseAnniversaryRules: (use) => {
@@ -195,6 +217,9 @@ export const useGameStore = create<GameState>((set, get) => {
     setOverlay: (o) => {
       set({ overlay: o }, false);
       save();
+    },
+    setSkipPredictionIntro: (skip) => {
+      set({ skipPredictionIntro: skip }, false);
     },
     saveToStorage: save,
     getCurrentStartPlayerIndex: () => {

@@ -9,6 +9,7 @@ interface IntroAnimationProps {
   imageTestId: string;
   overlayClassName: string;
   durationMs: number;
+  skipAnimation?: boolean;
   children: ReactNode;
 }
 
@@ -18,16 +19,16 @@ export function IntroAnimation({
   imageTestId,
   overlayClassName,
   durationMs,
+  skipAnimation = false,
   children,
 }: IntroAnimationProps) {
-  const animationEnabled = appSettings.showDialogIntroAnimation;
-  const [started, setStarted] = useState(() => !animationEnabled);
+  const animationEnabled = appSettings.showDialogIntroAnimation && !skipAnimation;
   const [visible, setVisible] = useState(animationEnabled);
   const [mounted, setMounted] = useState(animationEnabled);
   const [complete, setComplete] = useState(() => !animationEnabled);
 
   useEffect(() => {
-    if (!started || !mounted) return;
+    if (!mounted) return;
 
     let transitionTimer: number | undefined;
     const animationTimer = window.setTimeout(() => {
@@ -40,7 +41,7 @@ export function IntroAnimation({
       window.clearTimeout(animationTimer);
       if (transitionTimer !== undefined) window.clearTimeout(transitionTimer);
     };
-  }, [durationMs, mounted, started]);
+  }, [durationMs, mounted]);
 
   return (
     <div className="relative min-h-80">
@@ -55,7 +56,6 @@ export function IntroAnimation({
             src={src}
             alt=""
             data-testid={imageTestId}
-            onLoad={() => setStarted(true)}
             onError={() => {
               setComplete(true);
               setMounted(false);

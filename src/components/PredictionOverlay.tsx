@@ -13,10 +13,24 @@ import {
   rotateByStartIndex,
   validatePredictions,
 } from '../domain/gameRules';
+import { shouldSkipPredictionIntro } from '../domain/overlayRules';
 
-export function PredictionOverlay({ close }: { close: () => void }) {
+export function PredictionOverlay({
+  close,
+  skipIntroAnimation = false,
+}: {
+  close: () => void;
+  skipIntroAnimation?: boolean;
+}) {
   const { t } = useTranslation();
-  const { players, setPrediction, currentRound, useNotEqual } = useGameStore();
+  const {
+    players,
+    setPrediction,
+    currentRound,
+    useNotEqual,
+    skipPredictionIntro,
+    setSkipPredictionIntro,
+  } = useGameStore();
   const startPlayerIndex = getStartPlayerIndex(currentRound, players.length);
   const [predictions, setPredictions] = useState<number[]>(() => {
     const roundIndex = currentRound - 1;
@@ -66,6 +80,7 @@ export function PredictionOverlay({ close }: { close: () => void }) {
       const originalIndex = getOriginalPlayerIndex(i, startPlayerIndex, players.length);
       setPrediction(originalIndex, val);
     });
+    setSkipPredictionIntro(false);
     close();
   };
 
@@ -119,6 +134,7 @@ export function PredictionOverlay({ close }: { close: () => void }) {
           imageTestId={T.prediction.introImage}
           overlayClassName="absolute inset-0 flex items-center justify-center bg-panel transition-opacity duration-500"
           durationMs={4000}
+          skipAnimation={skipIntroAnimation || shouldSkipPredictionIntro(skipPredictionIntro)}
         >
           {rotatedPlayers.map((p, i) => (
             <div

@@ -314,14 +314,45 @@ test.describe('Enter results', () => {
 
   test('Revert button returns to the prediction overlay', async ({ game }) => {
     await test.step('Seed round 4 and open the overlay', async () => {
-      await seedRound4(game);
-      await openApp(game);
+      await seedRound4(game, {
+        players: [
+          {
+            name: 'P0',
+            predictions: [1, 2, 2, 2],
+            results: [1, 2, 2, 2],
+            points: [30, 50, 100, 130],
+          },
+          {
+            name: 'P1',
+            predictions: [1, 2, 2, 2],
+            results: [1, 2, 2, 1],
+            points: [30, 50, 100, 120],
+          },
+          {
+            name: 'P2',
+            predictions: [1, 2, 2, 2],
+            results: [1, 2, 2, 1],
+            points: [30, 50, 100, 120],
+          },
+        ],
+      });
+      await openApp(game, { showIntroAnimation: true });
       await expect(game.getByTestId(T.result.overlay)).toBeVisible();
     });
     await test.step('Click revert -> prediction overlay appears', async () => {
       await game.getByTestId(T.result.revert).click();
       await expect(game.getByTestId(T.prediction.overlay)).toBeVisible();
       await expect(game.getByTestId(T.result.overlay)).toHaveCount(0);
+      await expect(game.getByTestId(T.prediction.intro)).toHaveCount(0);
+      await expect(game.getByTestId(T.prediction.introImage)).toHaveCount(0);
+      await expect(game.getByTestId(T.prediction.input(0))).toBeVisible();
+    });
+    await test.step('Submit the correction prediction without replaying the result intro', async () => {
+      await game.getByTestId(T.prediction.submit).click();
+      await expect(game.getByTestId(T.result.overlay)).toBeVisible();
+      await expect(game.getByTestId(T.result.intro)).toHaveCount(0);
+      await expect(game.getByTestId(T.result.introImage)).toHaveCount(0);
+      await expect(game.getByTestId(T.result.submit)).toHaveAttribute('data-submit-ready', 'true');
     });
   });
 

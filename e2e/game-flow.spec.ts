@@ -122,6 +122,49 @@ test.describe('Game flow (integration)', () => {
     });
   });
 
+  test('Correcting a completed round skips the intro and submit countdown', async ({ game }) => {
+    await test.step('Seed a completed round and enable dialog intros', async () => {
+      await seedGameState(game, {
+        players: [
+          {
+            name: 'Anna',
+            predictions: [1],
+            results: [1],
+            points: [30],
+            receivedResults: [1],
+          },
+          {
+            name: 'Ben',
+            predictions: [0],
+            results: [0],
+            points: [20],
+            receivedResults: [0],
+          },
+          {
+            name: 'Cia',
+            predictions: [0],
+            results: [0],
+            points: [20],
+            receivedResults: [0],
+          },
+        ],
+        currentRound: 2,
+        totalRounds: 5,
+        gameStarted: true,
+      });
+      await openApp(game, { showIntroAnimation: true });
+    });
+
+    await test.step('Open correction without showing the intro or countdown', async () => {
+      await game.getByTestId(T.app.correctLastRound).click();
+      await expect(game.getByTestId(T.result.overlay)).toBeVisible();
+      await expect(game.getByTestId(T.result.intro)).toHaveCount(0);
+      await expect(game.getByTestId(T.result.introImage)).toHaveCount(0);
+      await expect(game.getByTestId(T.result.submit)).toHaveAttribute('data-submit-ready', 'true');
+      await expect(game.getByTestId(T.result.input(0))).toBeVisible();
+    });
+  });
+
   test('Last completed round correction preserves Wolke entries', async ({ game }) => {
     await test.step('Finish a Wolke round', async () => {
       await openApp(game);

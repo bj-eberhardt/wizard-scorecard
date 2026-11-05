@@ -13,11 +13,25 @@ import {
   rotateByStartIndex,
 } from '../domain/gameRules';
 import { evaluateWolke, validateResultSum } from '../domain/scoring';
+import { getResultOverlayTiming } from '../domain/overlayRules';
 
-export function ResultOverlay({ close }: { close: () => void }) {
+export function ResultOverlay({
+  close,
+  skipIntroAnimation = false,
+}: {
+  close: () => void;
+  skipIntroAnimation?: boolean;
+}) {
   const { t } = useTranslation();
-  const { players, currentRound, setResult, advanceRound, useAnniversaryRules, setOverlay } =
-    useGameStore();
+  const {
+    players,
+    currentRound,
+    setResult,
+    advanceRound,
+    useAnniversaryRules,
+    setOverlay,
+    setSkipPredictionIntro,
+  } = useGameStore();
   const startPlayerIndex = getStartPlayerIndex(currentRound, players.length);
   const rotatedPlayers = rotateByStartIndex(players, startPlayerIndex);
   const isCorrection = players.some(
@@ -25,6 +39,7 @@ export function ResultOverlay({ close }: { close: () => void }) {
       typeof player.receivedResults?.[currentRound - 1] === 'number' ||
       typeof player.results?.[currentRound - 1] === 'number'
   );
+  const overlayTiming = getResultOverlayTiming(isCorrection, isE2E());
   const [results, setResults] = useState<number[]>(() => {
     const roundIndex = currentRound - 1;
     return rotatedPlayers.map((player) =>
@@ -40,7 +55,9 @@ export function ResultOverlay({ close }: { close: () => void }) {
   // raw i18n key of the current error, exposed via data-error-key for E2E
   const [errorKey, setErrorKey] = useState<string>('');
   // prevent immediate submit: disable OK for a short time after the overlay opens
-  const [submitDisabled, setSubmitDisabled] = useState<boolean>(() => !isCorrection);
+  const [submitDisabled, setSubmitDisabled] = useState<boolean>(
+    () => overlayTiming.submitDisabledInitially
+  );
   const timerRef = useRef<number | null>(null);
 
   // A correction reopens a round that already has stored result data. It should be
@@ -54,17 +71,20 @@ export function ResultOverlay({ close }: { close: () => void }) {
     // enable submit after 2 seconds (immediately in e2e runs to keep tests fast)
     // This state update is intentional: it is the timer's state transition.
     // eslint-disable-next-line @eslint-react/set-state-in-effect
-    setSubmitDisabled(!isCorrection);
+    setSubmitDisabled(overlayTiming.submitDisabledInitially);
     if (timerRef.current) {
       window.clearTimeout(timerRef.current);
     }
-    if (isCorrection) return;
-    timerRef.current = window.setTimeout(() => setSubmitDisabled(false), isE2E() ? 0 : 2000);
+    if (!overlayTiming.submitDisabledInitially && overlayTiming.submitLockMs === 0) return;
+    timerRef.current = window.setTimeout(
+      () => setSubmitDisabled(false),
+      overlayTiming.submitLockMs
+    );
     return () => {
       if (timerRef.current) window.clearTimeout(timerRef.current);
       timerRef.current = null;
     };
-  }, [isCorrection]);
+  }, [overlayTiming.submitDisabledInitially, overlayTiming.submitLockMs]);
 
   const clearError = () => {
     if (error) setError('');
@@ -153,6 +173,7 @@ export function ResultOverlay({ close }: { close: () => void }) {
           imageTestId={T.result.introImage}
           overlayClassName="absolute inset-0 z-10 flex items-center justify-center rounded-lg bg-panel transition-opacity duration-500"
           durationMs={5000}
+          skipAnimation={skipIntroAnimation || overlayTiming.skipIntroAnimation}
         >
           {rotatedPlayers.map((p, i) => (
             <div
@@ -240,6 +261,7 @@ export function ResultOverlay({ close }: { close: () => void }) {
               onClick={() => {
                 setError('');
                 setErrorKey('');
+                setSkipPredictionIntro(true);
                 setOverlay('prediction');
               }}
               data-testid={T.result.revert}
