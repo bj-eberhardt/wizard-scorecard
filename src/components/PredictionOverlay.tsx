@@ -6,22 +6,22 @@ import { NumberStepper } from './NumberStepper';
 import { ValidationError } from './ValidationError';
 import { IntroAnimation } from './IntroAnimation';
 import predictionIntro from '../assets/prediction-intro.gif';
+import {
+  getDealerIndex,
+  getOriginalPlayerIndex,
+  getStartPlayerIndex,
+  rotateByStartIndex,
+  validatePredictions,
+} from '../domain/gameRules';
 
 export function PredictionOverlay({ close }: { close: () => void }) {
   const { t } = useTranslation();
-  const {
-    players,
-    setPrediction,
-    currentRound,
-    getCurrentStartPlayerIndex,
-    getCurrentDealerIndex,
-    useNotEqual,
-  } = useGameStore();
-  const startPlayerIndex = getCurrentStartPlayerIndex();
+  const { players, setPrediction, currentRound, useNotEqual } = useGameStore();
+  const startPlayerIndex = getStartPlayerIndex(currentRound, players.length);
   const [predictions, setPredictions] = useState<number[]>(() => {
     const roundIndex = currentRound - 1;
-    const rotated = [...players.slice(startPlayerIndex), ...players.slice(0, startPlayerIndex)];
-    return rotated.map((player) => player.predictions?.[roundIndex] ?? 0);
+    const rotated = rotateByStartIndex(players, startPlayerIndex);
+    return rotated.map((player) => player.predictions[roundIndex] ?? 0);
   });
   const [error, setError] = useState<string>('');
   // raw i18n key of the current error, exposed via data-error-key for E2E
@@ -33,51 +33,37 @@ export function PredictionOverlay({ close }: { close: () => void }) {
   };
 
   // seat to the left of the start player: shuffles and deals this round
-  const dealerIndex = getCurrentDealerIndex();
+  const dealerIndex = getDealerIndex(currentRound, players.length);
 
-  const rotatedPlayers = [
-    ...players.slice(startPlayerIndex),
-    ...players.slice(0, startPlayerIndex),
-  ];
+  const rotatedPlayers = rotateByStartIndex(players, startPlayerIndex);
 
   const submit = () => {
-    const tooSmallInputPlayerIndex = predictions
-      .map((val, i) => (val < 0 ? i : -1))
-      .filter((i) => i !== -1);
+    const validation = validatePredictions(predictions, currentRound, useNotEqual);
 
-    if (tooSmallInputPlayerIndex.length > 0) {
+    if (!validation.valid && validation.kind === 'tooSmall') {
       showError('errors.predictionTooSmall', {
-        playerNames: tooSmallInputPlayerIndex.map((i) => rotatedPlayers[i].name).join(', '),
+        playerNames: validation.playerIndexes.map((i) => rotatedPlayers[i].name).join(', '),
       });
       return;
     }
 
-    const tooLargeInputPlayerIndex = predictions
-      .map((val, i) => (val > currentRound ? i : -1))
-      .filter((i) => i !== -1);
-
-    if (tooLargeInputPlayerIndex.length > 0) {
+    if (!validation.valid && validation.kind === 'tooLarge') {
       showError('errors.predictionTooLarge', {
-        playerNames: tooLargeInputPlayerIndex.map((i) => rotatedPlayers[i].name).join(', '),
+        playerNames: validation.playerIndexes.map((i) => rotatedPlayers[i].name).join(', '),
       });
       return;
     }
 
-    // if NotEqual rule is enabled, ensure the sum of all predictions is NOT equal to the current round number
-    if (useNotEqual) {
-      const sum = predictions.reduce((a, b) => a + b, 0);
-      if (sum === currentRound) {
-        const lastPlayer = rotatedPlayers[rotatedPlayers.length - 1];
-        showError('errors.predictionNotEqualLast', {
-          playerName: lastPlayer?.name ?? '',
-          round: currentRound,
-        });
-        return;
-      }
+    if (!validation.valid && validation.kind === 'notEqual') {
+      showError('errors.predictionNotEqualLast', {
+        playerName: rotatedPlayers[validation.lastPlayerIndex]?.name ?? '',
+        round: currentRound,
+      });
+      return;
     }
 
     predictions.forEach((val, i) => {
-      const originalIndex = (i + startPlayerIndex) % players.length;
+      const originalIndex = getOriginalPlayerIndex(i, startPlayerIndex, players.length);
       setPrediction(originalIndex, val);
     });
     close();

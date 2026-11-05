@@ -7,23 +7,19 @@ import { NumberStepper } from './NumberStepper';
 import { ValidationError } from './ValidationError';
 import { IntroAnimation } from './IntroAnimation';
 import resultIntro from '../assets/result-intro.gif';
+import {
+  getOriginalPlayerIndex,
+  getStartPlayerIndex,
+  rotateByStartIndex,
+} from '../domain/gameRules';
+import { evaluateWolke, validateResultSum } from '../domain/scoring';
 
 export function ResultOverlay({ close }: { close: () => void }) {
   const { t } = useTranslation();
-  const {
-    players,
-    currentRound,
-    setResult,
-    advanceRound,
-    useAnniversaryRules,
-    getCurrentStartPlayerIndex,
-    setOverlay,
-  } = useGameStore();
-  const startPlayerIndex = getCurrentStartPlayerIndex();
-  const rotatedPlayers = [
-    ...players.slice(startPlayerIndex),
-    ...players.slice(0, startPlayerIndex),
-  ];
+  const { players, currentRound, setResult, advanceRound, useAnniversaryRules, setOverlay } =
+    useGameStore();
+  const startPlayerIndex = getStartPlayerIndex(currentRound, players.length);
+  const rotatedPlayers = rotateByStartIndex(players, startPlayerIndex);
   const isCorrection = players.some(
     (player) =>
       typeof player.receivedResults?.[currentRound - 1] === 'number' ||
@@ -114,9 +110,8 @@ export function ResultOverlay({ close }: { close: () => void }) {
       return;
     }
 
-    const totalResults = results.reduce((sum, value) => sum + value, 0);
-    const validResultSums = useAnniversaryRules ? [currentRound - 1, currentRound] : [currentRound];
-    if (!validResultSums.includes(totalResults)) {
+    const sumValidation = validateResultSum(results, currentRound, useAnniversaryRules);
+    if (!sumValidation.valid) {
       showError(useAnniversaryRules ? 'errors.resultSumAnniversary' : 'errors.resultSum', {
         round: currentRound,
         roundMinusOne: currentRound - 1,
@@ -125,20 +120,14 @@ export function ResultOverlay({ close }: { close: () => void }) {
     }
 
     results.forEach((val, i) => {
-      const originalIndex = (i + startPlayerIndex) % players.length;
-      let actualResult = val;
+      const originalIndex = getOriginalPlayerIndex(i, startPlayerIndex, players.length);
       const prediction = players[originalIndex].predictions[currentRound - 1];
-      let wolkeApplied = false;
-      if (useAnniversaryRules && wolkeFlags[i]) {
-        wolkeApplied = true;
-        if (Math.abs(prediction - val) === 1) {
-          actualResult = prediction;
-        } else {
-          actualResult = prediction + 1;
-        }
-      }
+      const wolke = evaluateWolke(prediction, val, useAnniversaryRules, wolkeFlags[i]);
       // pass the raw entered value (received tricks) so it can be shown in the tooltip
-      setResult(originalIndex, actualResult, { wolkeUsed: wolkeApplied, receivedTricks: val });
+      setResult(originalIndex, wolke.effectiveResult, {
+        wolkeUsed: wolke.wolkeApplied,
+        receivedTricks: val,
+      });
     });
     advanceRound();
     close();

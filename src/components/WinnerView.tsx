@@ -2,7 +2,7 @@ import { useMemo } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Trophy, Target } from 'lucide-react';
 import { useGameStore } from '../store/gameStore';
-import { rankPlayers } from '../store/stats';
+import { rankPlayers } from '../domain/ranking';
 import { T } from '../test-ids';
 import WinnerConfetti from './WinnerConfetti';
 import WinnerStatsPanel from './WinnerStatsPanel';

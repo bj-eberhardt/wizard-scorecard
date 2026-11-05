@@ -25,9 +25,9 @@ async function seedRound4(game: import('@playwright/test').Page, extra: object =
     totalRounds: 15,
     overlay: 'result',
     players: [
-      { name: 'P0', predictions: [1, 2, 2, 2], points: [30, 50, 100] },
-      { name: 'P1', predictions: [1, 2, 2, 2], points: [30, 50, 100] },
-      { name: 'P2', predictions: [1, 2, 2, 2], points: [30, 50, 100] },
+      { name: 'P0', predictions: [1, 2, 2, 2], results: [1, 2, 2], points: [30, 50, 100] },
+      { name: 'P1', predictions: [1, 2, 2, 2], results: [1, 2, 2], points: [30, 50, 100] },
+      { name: 'P2', predictions: [1, 2, 2, 2], results: [1, 2, 2], points: [30, 50, 100] },
     ],
     ...extra,
   });

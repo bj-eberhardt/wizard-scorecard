@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { ChevronDown, ChevronUp } from 'lucide-react';
-import type { RankedPlayer } from '../store/stats';
+import type { RankedPlayer } from '../domain/ranking';
 import { T } from '../test-ids';
 
 interface WinnerStatsPanelProps {

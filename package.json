@@ -6,10 +6,12 @@
     "dev": "vite --host",
     "build": "vite build",
     "preview": "vite preview",
-    "lint": "eslint src e2e playwright.config.ts vite.config.ts",
-    "prettier": "prettier --write src/**/*.{ts,tsx,js,jsx} e2e/**/*.ts playwright.config.ts vite.config.ts",
-    "prettier:check": "prettier --check src/**/*.{ts,tsx,js,jsx} e2e/**/*.ts playwright.config.ts vite.config.ts",
+    "lint": "eslint src e2e playwright.config.ts vite.config.ts vitest.config.ts",
+    "prettier": "prettier --write src/**/*.{ts,tsx,js,jsx} e2e/**/*.ts playwright.config.ts vite.config.ts vitest.config.ts",
+    "prettier:check": "prettier --check src/**/*.{ts,tsx,js,jsx} e2e/**/*.ts playwright.config.ts vite.config.ts vitest.config.ts",
     "typecheck": "tsc -p tsconfig.json --noEmit",
+    "test:unit": "vitest run",
+    "test:unit:watch": "vitest",
     "format": "npm run prettier && npm run lint",
     "prepare": "husky",
     "test:e2e": "playwright test",
@@ -52,6 +54,7 @@
     "tailwindcss": "^4.3.3",
     "typescript": "^5.9.2",
     "typescript-eslint": "^8.72.1",
-    "vite": "8.3.5"
+    "vite": "8.3.5",
+    "vitest": "^5.1.0"
   }
 }

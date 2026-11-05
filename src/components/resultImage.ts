@@ -1,4 +1,4 @@
-import type { RankedPlayer } from '../store/stats';
+import type { RankedPlayer } from '../domain/ranking';
 import i18n from '../i18n/i18n';
 
 /**

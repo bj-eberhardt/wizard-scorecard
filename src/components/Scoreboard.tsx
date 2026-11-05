@@ -1,5 +1,6 @@
 import React from 'react';
-import { Player, useGameStore } from '../store/gameStore';
+import { useGameStore } from '../store/gameStore';
+import type { Player } from '../domain/types';
 import { useTranslation } from 'react-i18next';
 import { T } from '../test-ids';
 

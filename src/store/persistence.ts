@@ -1,4 +1,4 @@
-import type { Player } from './gameStore';
+import type { Player } from '../domain/types';
 
 export const LEGACY_GAME_STORAGE_KEY = 'wizard_state_v1';
 export const GAME_STORAGE_KEY = 'wizard_state_v2';

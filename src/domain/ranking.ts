@@ -1,4 +1,4 @@
-import type { Player } from './gameStore';
+import type { Player } from './types';
 
 /**
  * Pure statistics functions for a single finished game (F25).
@@ -17,7 +17,7 @@ export interface PlayerStats {
   worstRoundDelta: number;
   /** Number of rounds this player used Wolke. */
   wolkeCount: number;
-  /** Number of Wolke rounds where the effective result equals the prediction (Wolke "worked"). */
+  /** Number of Wolke rounds where the effective result equals the prediction. */
   wolkeSuccess: number;
 }
 
@@ -35,8 +35,6 @@ export interface RankedPlayer {
 /** Compute per-player statistics from the round arrays. */
 export function computePlayerStats(player: Player): PlayerStats {
   const { predictions, results, points, wolkeUsed } = player;
-
-  // Nenner = Anzahl der Runden mit Punkten (points.length)
   const hitTotal = points.length;
 
   let hitCorrect = 0;
@@ -45,24 +43,21 @@ export function computePlayerStats(player: Player): PlayerStats {
   let wolkeCount = 0;
   let wolkeSuccess = 0;
 
-  for (let r = 0; r < hitTotal; r++) {
-    const pred = predictions[r] ?? 0;
-    const result = results[r] ?? 0;
-    if (pred === result) hitCorrect++;
+  for (let roundIndex = 0; roundIndex < hitTotal; roundIndex++) {
+    const prediction = predictions[roundIndex] ?? 0;
+    const result = results[roundIndex] ?? 0;
+    if (prediction === result) hitCorrect++;
 
-    const delta = r === 0 ? points[r] : points[r] - points[r - 1];
+    const delta =
+      roundIndex === 0 ? points[roundIndex] : points[roundIndex] - points[roundIndex - 1];
     if (delta > bestRoundDelta) bestRoundDelta = delta;
     if (delta < worstRoundDelta) worstRoundDelta = delta;
   }
 
-  if (wolkeUsed) {
-    for (let r = 0; r < wolkeUsed.length; r++) {
-      if (wolkeUsed[r]) {
-        wolkeCount++;
-        // Wolke "worked" when the effective result equals the prediction
-        if ((predictions[r] ?? 0) === (results[r] ?? 0)) wolkeSuccess++;
-      }
-    }
+  for (let roundIndex = 0; roundIndex < wolkeUsed.length; roundIndex++) {
+    if (!wolkeUsed[roundIndex]) continue;
+    wolkeCount++;
+    if ((predictions[roundIndex] ?? 0) === (results[roundIndex] ?? 0)) wolkeSuccess++;
   }
 
   const hitRate = hitTotal > 0 ? Math.round((hitCorrect / hitTotal) * 100) : null;
@@ -84,30 +79,30 @@ export function computePlayerStats(player: Player): PlayerStats {
  * Tie-break order: roster index (stable, first-occurrence wins for tie display).
  */
 export function rankPlayers(players: Player[], totalRounds: number): RankedPlayer[] {
-  const enriched = players.map((player, idx) => ({
+  const enriched = players.map((player, index) => ({
     player,
-    idx,
+    index,
     finalPoints: player.points[totalRounds - 1] ?? 0,
     stats: computePlayerStats(player),
   }));
 
-  // Sort descending by finalPoints, stable by original index
-  enriched.sort((a, b) => b.finalPoints - a.finalPoints || a.idx - b.idx);
+  enriched.sort((a, b) => b.finalPoints - a.finalPoints || a.index - b.index);
 
   const maxPoints = enriched.length > 0 ? enriched[0].finalPoints : 0;
 
-  return enriched.map((e, i, arr) => {
-    // Competition rank: number of items with strictly higher points + 1
-    const higherCount = arr.filter((other) => other.finalPoints > e.finalPoints).length;
+  return enriched.map((entry, index, sorted) => {
+    const higherCount = sorted.filter((other) => other.finalPoints > entry.finalPoints).length;
     const rank = higherCount + 1;
-    const tied = arr.some((other, j) => j !== i && other.finalPoints === e.finalPoints);
+    const tied = sorted.some(
+      (other, otherIndex) => otherIndex !== index && other.finalPoints === entry.finalPoints
+    );
     return {
-      player: e.player,
+      player: entry.player,
       rank,
-      finalPoints: e.finalPoints,
+      finalPoints: entry.finalPoints,
       tied,
-      stats: e.stats,
-      gapToLeader: maxPoints - e.finalPoints,
+      stats: entry.stats,
+      gapToLeader: maxPoints - entry.finalPoints,
     } satisfies RankedPlayer;
   });
 }
@@ -119,17 +114,16 @@ export function buildTextSummary(
   rateLabel = 'Rate'
 ): string {
   const lines: string[] = [];
-  for (const rp of ranked) {
-    const rateStr = rp.stats.hitRate !== null ? `${rp.stats.hitRate}%` : '-';
-    lines.push(`${rp.rank}. ${rp.player.name}  ${rp.finalPoints}  ${rateLabel}: ${rateStr}`);
+  for (const rankedPlayer of ranked) {
+    const rate = rankedPlayer.stats.hitRate !== null ? `${rankedPlayer.stats.hitRate}%` : '-';
+    lines.push(
+      `${rankedPlayer.rank}. ${rankedPlayer.player.name}  ${rankedPlayer.finalPoints}  ${rateLabel}: ${rate}`
+    );
   }
   return `Wizard — ${dateStr}\n${lines.join('\n')}`;
 }
 
-/**
- * Sanitize a player name for use in a filename: strip diacritics,
- * replace non-alphanumeric with hyphens, max 40 chars.
- */
+/** Sanitize a player name for use in a filename. */
 export function sanitizeNameForFile(name: string): string {
   return name
     .normalize('NFD')

@@ -8,19 +8,11 @@ import {
   toPersistedGame,
   writeStorage,
 } from './persistence';
+import { getDealerIndex, getStartPlayerIndex, roundsForCount } from '../domain/gameRules';
+import { recalculateCumulativePoints } from '../domain/scoring';
+import type { OverlayState, Player } from '../domain/types';
 
-export interface Player {
-  name: string;
-  predictions: number[];
-  results: number[];
-  points: number[];
-  // per-round flag whether 'Wolke' (anniversary rule) was applied
-  wolkeUsed?: boolean[];
-  // store the original prediction at the time of result (for display/history)
-  receivedResults?: number[];
-}
-
-type OverlayState = 'prediction' | 'result' | 'none';
+export type { OverlayState, Player } from '../domain/types';
 
 interface GameState {
   players: Player[];
@@ -49,32 +41,6 @@ interface GameState {
   saveToStorage: () => void;
   getCurrentStartPlayerIndex: () => number;
   getCurrentDealerIndex: () => number;
-}
-
-// helper to compute total rounds by player count
-export function roundsForCount(n: number) {
-  if (n === 3) return 20;
-  if (n === 4) return 15;
-  if (n === 5) return 12;
-  if (n >= 6) return 10;
-  return 0;
-}
-
-// helper to get the starting player index for the current round
-function getStartPlayerIndex(round: number, playerCount: number): number {
-  return (round - 1) % playerCount;
-}
-
-/**
- * Helper to get the dealer (shuffler) index for the current round. Wizard rule: the
- * player to the LEFT of the dealer opens the round, so the dealer is the seat directly
- * before the start player — which is the LAST row of the rotated overlay order and, in
- * that order, also the player who predicts last (`errors.predictionNotEqualLast`).
- * Derived on demand, never stored: it adds nothing to the persisted game state.
- */
-function getDealerIndex(round: number, playerCount: number): number {
-  if (playerCount < 1) return 0;
-  return (getStartPlayerIndex(round, playerCount) - 1 + playerCount) % playerCount;
 }
 
 export const useGameStore = create<GameState>((set, get) => {
@@ -137,10 +103,6 @@ export const useGameStore = create<GameState>((set, get) => {
     setResult: (i, value, meta) => {
       const players = JSON.parse(JSON.stringify(get().players));
       const r = get().currentRound - 1;
-      const prediction = players[i].predictions?.[r] ?? 0;
-      const lastPoints = players[i].points?.[r - 1] ?? 0;
-      const correct = prediction === value;
-      const points = correct ? 20 + value * 10 : -Math.abs(prediction - value) * 10;
       if (!players[i].results) players[i].results = [];
       if (!players[i].points) players[i].points = [];
       if (!players[i].wolkeUsed) players[i].wolkeUsed = [];
@@ -150,7 +112,11 @@ export const useGameStore = create<GameState>((set, get) => {
       players[i].wolkeUsed[r] = meta?.wolkeUsed ?? false;
       // store the raw entered tricks (received) so we can display what was typed
       players[i].receivedResults[r] = meta?.receivedTricks ?? value;
-      players[i].points[r] = lastPoints + points;
+      players[i].points = recalculateCumulativePoints(
+        players[i].predictions,
+        players[i].results,
+        players[i].points.slice(0, r)
+      );
       set({ players }, false);
       save();
     },

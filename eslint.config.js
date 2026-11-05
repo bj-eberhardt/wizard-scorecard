@@ -38,7 +38,7 @@ export default tseslint.config(
     // Playwright E2E code and the Vite/Playwright configs are not React.
     // The eslint-react rules-of-hooks check falsely flags the Playwright fixture
     // callback parameter `use`, so disable the React-only rules for these files.
-    files: ['e2e/**/*.ts', 'playwright.config.ts', 'vite.config.ts'],
+    files: ['e2e/**/*.ts', 'playwright.config.ts', 'vite.config.ts', 'vitest.config.ts'],
     rules: {
       '@eslint-react/rules-of-hooks': 'off',
       '@eslint-react/no-missing-key': 'off',

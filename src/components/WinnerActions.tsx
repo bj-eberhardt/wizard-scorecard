@@ -1,10 +1,10 @@
 import { useMemo, useState } from 'react';
 import { useTranslation } from 'react-i18next';
-import type { RankedPlayer } from '../store/stats';
-import { buildTextSummary, sanitizeNameForFile } from '../store/stats';
+import type { RankedPlayer } from '../domain/ranking';
+import { buildTextSummary, sanitizeNameForFile } from '../domain/ranking';
 import { renderResultImage, downloadBlob } from './resultImage';
 import { useGameStore } from '../store/gameStore';
-import type { Player } from '../store/gameStore';
+import type { Player } from '../domain/types';
 import useSettingsStore from '../store/settingsStore';
 import { appSettings } from '../settings';
 import { T } from '../test-ids';

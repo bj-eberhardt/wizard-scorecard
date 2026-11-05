@@ -2,7 +2,7 @@ import React, { useState, useEffect, useRef } from 'react';
 import { GripVertical, Plus, X } from 'lucide-react';
 import useSettingsStore from '../store/settingsStore';
 import { useTranslation } from 'react-i18next';
-import { roundsForCount } from '../store/gameStore';
+import { roundsForCount } from '../domain/gameRules';
 import InfoTooltip from './InfoTooltip';
 import { useDragReorder } from '../hooks/useDragReorder';
 import { T } from '../test-ids';

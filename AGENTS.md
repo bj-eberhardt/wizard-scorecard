@@ -33,6 +33,7 @@ phone: fast input, readable from a distance, error-tolerant.
 | Format + lint        | `npm run format`            | `prettier --write` (src + e2e + configs) then `eslint`                              |
 | Check formatting     | `npm run prettier:check`    | no writes; used by CI and the pre-commit hook                                       |
 | Type check           | `npm run typecheck`         | `tsc -p tsconfig.json --noEmit` over src + e2e + configs (Vite does NOT type-check) |
+| Unit tests           | `npm run test:unit`         | Vitest tests for pure domain modules                                                |
 | Install hooks        | `npm run prepare`           | sets up Husky (`core.hooksPath=.husky/_`); runs automatically on `npm install`      |
 | E2E (all)            | `npm run test:e2e`          | builds + serves preview on 4173 itself                                              |
 | E2E (interactive UI) | `npm run test:e2e:ui`       | Playwright UI runner (watch, click-to-run, time-travel)                             |
@@ -94,6 +95,11 @@ src/
   store/
     gameStore.ts        # the running game (zustand, manual localStorage save)
     settingsStore.ts    # remembered names/rules across games (zustand persist)
+  domain/
+    types.ts            # shared domain state types
+    gameRules.ts        # rounds, rotation and prediction/result validation
+    scoring.ts          # points, Wolke evaluation and cumulative scoring
+    ranking.ts          # pure statistics, ranking and export helpers
   i18n/
     i18n.ts             # init: LanguageDetector + react-i18next, fallback 'de'
     locales/de/translation.json
@@ -102,8 +108,9 @@ e2e/
   fixtures.ts           # custom `game` fixture + page-object helpers
   *.spec.ts             # feature specs (see §8 coverage map)
 playwright.config.ts    # projects, webServer, baseURL
+vitest.config.ts        # node-environment unit tests for src/domain
 vite.config.ts          # react plugin, base './', __APP_VERSION__ define
-tsconfig.json           # includes: src, e2e, playwright.config.ts, vite.config.ts
+tsconfig.json           # includes: src, e2e and root test/build configs
 .github/workflows/       # e2e.yml, pull_request.yml, build_and_push.yml, dependabot
 Dockerfile              # node:24-alpine build -> nginx:alpine serve
 ```
@@ -140,7 +147,7 @@ Key rules (all implemented in `gameStore.ts` / `ResultOverlay.tsx`):
   row-index → original player via `(i + startPlayerIndex) % playerCount`.
 - **Dealer (shuffler):** derived only, never persisted — `dealerIndex = (startIndex - 1 +
 playerCount) % playerCount`, the seat to the LEFT of the start player (`getCurrentDealerIndex()`
-  in `gameStore.ts`). That is also the LAST row of the rotated overlay order and therefore the
+  in `domain/gameRules.ts`). That is also the LAST row of the rotated overlay order and therefore the
   player who predicts last (the `predictionNotEqualLast` case). `PredictionOverlay` names both
   roles in one info box under its title, as a single running sentence joined by a middot
   (two i18n keys, so each language keeps its own word order; cards per player = `currentRound`);
@@ -178,12 +185,12 @@ warning and the app starts a fresh configuration; settings are kept independentl
 
 ## 6. Persistence (localStorage keys)
 
-| Key                  | Owner                                  | Contents                                                                                                                     |
-| -------------------- | -------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------- |
+| Key                  | Owner                                   | Contents                                                                                                                                             |
+| -------------------- | --------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------- |
 | `wizard_state_v2`    | `gameStore.ts` + `store/persistence.ts` | versioned full running game (`version: 2`, `players`, `currentRound`, `totalRounds`, `gameStarted`, `useAnniversaryRules`, `useNotEqual`, `overlay`) |
-| `wizard_state_v1`    | migration input only                  | legacy running-game payload; migrated to V2 once it validates and writes successfully |
-| `wizard_settings_v1` | `settingsStore.ts` (zustand `persist`) | validated remembered `playerNames` (6 slots), `useAnniversaryRules`, `useNotEqual`, explicit `language` choice (`'de'` | `'en'` | `null`) |
-| `i18nextLng`         | i18next browser detector               | active language                                                                                                              |
+| `wizard_state_v1`    | migration input only                    | legacy running-game payload; migrated to V2 once it validates and writes successfully                                                                |
+| `wizard_settings_v1` | `settingsStore.ts` (zustand `persist`)  | validated remembered `playerNames` (6 slots), `useAnniversaryRules`, `useNotEqual`, explicit `language` choice (`'de'`                               | `'en'` | `null`) |
+| `i18nextLng`         | i18next browser detector                | active language                                                                                                                                      |
 
 E2E fixtures clear both game/settings keys before every test. See §8.
 
@@ -362,6 +369,10 @@ map to the rotated players, not the roster order.
 - `waiting.spec.ts` — real (un-bypassed) splash + submit-lock timing, no `?e2e`
 - `persistence.spec.ts` — V2 loading, V1 migration, malformed/corrupt-state reset, settings
   normalization, unknown-field tolerance, reset cleanup, and storage-write failures
+
+Pure domain tests live in `src/domain/*.test.ts` and run with `npm run test:unit`.
+They cover rotation, prediction/result validation, points, Wolke and ranking; Playwright
+remains the integration proof for complete user flows.
 
 ### 8.6 Adding a new selector / test — checklist
 
