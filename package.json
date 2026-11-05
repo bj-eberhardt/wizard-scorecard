@@ -28,7 +28,7 @@
     "i18next": "^26.5.12",
     "i18next-browser-languagedetector": "^8.2.4",
     "lucide-react": "^1.66.0",
-    "react": "^18.2.0",
+    "react": "^19.3.1",
     "react-dom": "^18.3.1",
     "react-i18next": "^17.1.9",
     "zustand": "^5.0.16"
@@ -39,7 +39,7 @@
     "@playwright/test": "^1.64.1",
     "@tailwindcss/postcss": "^4.3.3",
     "@types/node": "^26.6.6",
-    "@types/react": "^18.2.6",
+    "@types/react": "^19.3.0",
     "@types/react-dom": "^18.3.7",
     "@typescript-eslint/eslint-plugin": "^8.65.0",
     "@typescript-eslint/parser": "^8.72.0",
